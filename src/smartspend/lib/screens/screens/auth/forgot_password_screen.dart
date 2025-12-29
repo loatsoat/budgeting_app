@@ -71,12 +71,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               onPressed: widget.onBackToLogin,
               icon: Icon(
                 Icons.arrow_back,
-                color: Colors.white.withValues(alpha: 0.6),
+                color: const Color(0xFF00F5FF),
               ),
-              label: Text(
+              label: const Text(
                 'Back to Login',
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.6),
+                  color: Color(0xFF00F5FF),
                 ),
               ),
             ),

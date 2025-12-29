@@ -56,6 +56,33 @@ class SubcategoryBudget {
   SubcategoryBudget({required this.budgeted, required this.spent});
 }
 
+// Savings Goal Model
+class SavingsGoal {
+  final String id;
+  String name;
+  double targetAmount;
+  double currentAmount;
+  String? description;
+  DateTime? targetDate;
+  Color color;
+  String emoji;
+
+  SavingsGoal({
+    required this.id,
+    required this.name,
+    required this.targetAmount,
+    this.currentAmount = 0,
+    this.description,
+    this.targetDate,
+    this.color = const Color(0xFF00F5FF),
+    this.emoji = '🎯',
+  });
+
+  double get progressPercentage => targetAmount > 0 ? (currentAmount / targetAmount).clamp(0.0, 1.0) : 0.0;
+  double get remainingAmount => (targetAmount - currentAmount).clamp(0.0, double.infinity);
+  bool get isCompleted => currentAmount >= targetAmount;
+}
+
 // Default Categories Configuration
 final Map<String, CategoryData> defaultCategories = {
   'income': CategoryData(

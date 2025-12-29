@@ -30,6 +30,9 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
   final ValueNotifier<int> _walletTabNotifier = ValueNotifier<int>(0);
   bool _walletShowingList = false;
   
+  // Savings Goals
+  List<SavingsGoal> savingsGoals = [];
+  
   // Sample bank transactions
   List<Transaction> bankTransactions = [
     Transaction(
@@ -71,6 +74,9 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
       'Gym': SubcategoryBudget(budgeted: 10, spent: 10),
     },
     'food': {'Groceries': SubcategoryBudget(budgeted: 30, spent: 30)},
+    'savings': {
+      'Savings': SubcategoryBudget(budgeted: 0, spent: 0),
+    },
   };
 
   // Animation controller
@@ -177,6 +183,15 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                             onTransactionEdit: _editTransaction,
                             tabNotifier: _walletTabNotifier,
                             onListStateChanged: (isList) => setState(() => _walletShowingList = isList),
+                            savingsGoals: savingsGoals,
+                            onGoalCreated: (goal) => setState(() => savingsGoals.add(goal)),
+                            onGoalUpdated: (goal) {
+                              setState(() {
+                                final index = savingsGoals.indexWhere((g) => g.id == goal.id);
+                                if (index != -1) savingsGoals[index] = goal;
+                              });
+                            },
+                            onTransactionAdded: _addTransaction,
                           ),
                   ),
                 ],
@@ -727,6 +742,13 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
       builder: (context) => AddTransactionDialog(
         categories: categories,
         onTransactionAdded: _addTransaction,
+        savingsGoals: savingsGoals,
+        onGoalUpdated: (goal) {
+          setState(() {
+            final index = savingsGoals.indexWhere((g) => g.id == goal.id);
+            if (index != -1) savingsGoals[index] = goal;
+          });
+        },
       ),
     );
   }
@@ -735,7 +757,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
     setState(() {
       transactions.add(transaction);
       
-      if (!transaction.excludeFromBudget && transaction.type == TransactionType.expense) {
+      if (transaction.type == TransactionType.expense) {
         final categoryKey = transaction.categoryKey;
         
         if (!categoryBudgets.containsKey(categoryKey)) {
@@ -749,7 +771,10 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
           );
         }
         
-        categoryBudgets[categoryKey]![transaction.category]!.spent += transaction.amount;
+        // Only count towards budget if not excluded
+        if (!transaction.excludeFromBudget) {
+          categoryBudgets[categoryKey]![transaction.category]!.spent += transaction.amount;
+        }
       }
     });
 
@@ -769,6 +794,13 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
         existingTransaction: transaction,
         onTransactionAdded: _addTransaction,
         onTransactionUpdated: _updateTransaction,
+        savingsGoals: savingsGoals,
+        onGoalUpdated: (goal) {
+          setState(() {
+            final index = savingsGoals.indexWhere((g) => g.id == goal.id);
+            if (index != -1) savingsGoals[index] = goal;
+          });
+        },
       ),
     );
   }
@@ -833,6 +865,13 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
               backgroundColor: const Color(0xFF4CAF50),
             ),
           );
+        },
+        savingsGoals: savingsGoals,
+        onGoalUpdated: (goal) {
+          setState(() {
+            final index = savingsGoals.indexWhere((g) => g.id == goal.id);
+            if (index != -1) savingsGoals[index] = goal;
+          });
         },
       ),
     );

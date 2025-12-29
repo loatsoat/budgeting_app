@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../models/budget_models.dart';
 import '../../weekly_wrap_screen.dart';
+import '../../../widgets/savings_goal_card.dart';
+import '../../../widgets/goal_dialogs.dart';
 
 class WalletOverviewContent extends StatefulWidget {
   final List<Transaction>? transactions;
@@ -10,6 +12,10 @@ class WalletOverviewContent extends StatefulWidget {
   final Function(Transaction)? onTransactionEdit;
   final ValueChanged<bool>? onListStateChanged;
   final ValueNotifier<int>? tabNotifier;
+  final List<SavingsGoal>? savingsGoals;
+  final Function(SavingsGoal)? onGoalCreated;
+  final Function(SavingsGoal)? onGoalUpdated;
+  final Function(Transaction)? onTransactionAdded;
 
   const WalletOverviewContent({
     super.key,
@@ -20,6 +26,10 @@ class WalletOverviewContent extends StatefulWidget {
     this.totalSpent,
     this.onListStateChanged,
     this.tabNotifier,
+    this.savingsGoals,
+    this.onGoalCreated,
+    this.onGoalUpdated,
+    this.onTransactionAdded,
   });
 
   @override
@@ -59,7 +69,7 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
 
   void _onExternalTabChange() {
     final val = widget.tabNotifier?.value ?? selectedTab;
-    if (val != selectedTab) {
+    if (val != selectedTab && mounted) {
       setState(() {
         selectedTab = val;
       });
@@ -69,6 +79,7 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
 
   @override
   void dispose() {
+    widget.tabNotifier?.removeListener(_onExternalTabChange);
     _animationController.dispose();
     super.dispose();
   }
@@ -564,7 +575,140 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
     return const SizedBox.shrink();
   }
 
+  Widget _buildSavingsGoalsSection() {
+    final goals = widget.savingsGoals ?? [];
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Savings Goals',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                if (widget.onGoalCreated != null) {
+                  showCreateGoalDialog(context, widget.onGoalCreated!);
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF00F5FF), Color(0xFF00D4E6)],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.add, color: Colors.white, size: 18),
+                    SizedBox(width: 4),
+                    Text(
+                      'New Goal',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        if (goals.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.1),
+              ),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.track_changes,
+                  size: 48,
+                  color: Colors.white.withValues(alpha: 0.3),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'No Goals Yet',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Create a savings goal to start tracking',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.5),
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          ...goals.map((goal) => SavingsGoalCard(
+                goal: goal,
+                onTap: () {
+                  // Could add edit dialog here
+                },
+                onAddMoney: () {
+                  showAddMoneyDialog(context, goal, (amount) {
+                    // Update the goal
+                    final updatedGoal = goal;
+                    updatedGoal.currentAmount += amount;
+                    widget.onGoalUpdated?.call(updatedGoal);
+                    
+                    // Create a transaction for the savings
+                    if (widget.onTransactionAdded != null) {
+                      final transaction = Transaction(
+                        id: DateTime.now().millisecondsSinceEpoch.toString(),
+                        type: TransactionType.expense,
+                        amount: amount,
+                        category: 'Savings',
+                        categoryKey: 'savings',
+                        note: 'Saved for ${goal.name}',
+                        date: DateTime.now(),
+                        excludeFromBudget: true, // Don't count towards budget
+                        description: 'Added to savings goal: ${goal.name}',
+                      );
+                      widget.onTransactionAdded?.call(transaction);
+                    }
+                    
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Added €${amount.toStringAsFixed(0)} to ${goal.name}'),
+                        backgroundColor: const Color(0xFF4CAF50),
+                      ),
+                    );
+                  });
+                },
+              )),
+      ],
+    );
+  }
+
   Widget _buildOverviewContent() {
+    final double bottomNavReserve = MediaQuery.of(context).padding.bottom + 140.0;
+    
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -573,12 +717,16 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
           const SizedBox(height: 20),
           _buildWeeklyInsightsCard(),
           const SizedBox(height: 20),
+          _buildSavingsGoalsSection(),
+          SizedBox(height: bottomNavReserve),
         ],
       ),
     );
   }
 
   Widget _buildListContent() {
+    final double bottomNavReserve = MediaQuery.of(context).padding.bottom + 140.0;
+    
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -588,6 +736,7 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
           _buildMonthSelectorLite(),
           const SizedBox(height: 24),
           _buildTransactionsListLite(),
+          SizedBox(height: bottomNavReserve),
         ],
       ),
     );

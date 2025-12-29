@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../widgets/widgets/animated_background.dart';
+import '../budget/widgets/budget_animated_background.dart';
 import 'login_screen.dart';
 import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
@@ -15,8 +15,24 @@ class AuthScreen extends StatefulWidget {
   State<AuthScreen> createState() => _AuthScreenState();
 }
 
-class _AuthScreenState extends State<AuthScreen> {
+class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
   AuthScreenType _currentScreen = AuthScreenType.login;
+  late AnimationController _rotationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _rotationController = AnimationController(
+      duration: const Duration(seconds: 20),
+      vsync: this,
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _rotationController.dispose();
+    super.dispose();
+  }
 
   void _switchScreen(AuthScreenType type) {
     setState(() {
@@ -27,18 +43,27 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          const AnimatedBackground(),
-          SafeArea(
-            child: Center(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                child: _buildCurrentScreen(),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF0A0E1A), Color(0xFF1A1F33), Color(0xFF0A0E1A)],
+          ),
+        ),
+        child: Stack(
+          children: [
+            BudgetAnimatedBackground(controller: _rotationController),
+            SafeArea(
+              child: Center(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: _buildCurrentScreen(),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

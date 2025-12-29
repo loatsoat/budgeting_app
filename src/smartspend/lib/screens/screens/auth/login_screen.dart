@@ -91,23 +91,31 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 height: 80,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF395587), Color(0xFF4a6aa0), Color(0xFF5577b3)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  color: Colors.transparent,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF395587).withValues(alpha: 0.4 + _pulseAnimation.value * 0.2),
+                      color: const Color(0xFF00F5FF).withValues(alpha: 0.3 + _pulseAnimation.value * 0.2),
                       blurRadius: 40 + _pulseAnimation.value * 20,
                       spreadRadius: 0,
                     ),
                   ],
                 ),
-                child: const Icon(
-                  Icons.auto_awesome,
-                  size: 40,
-                  color: Colors.white,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    width: 40,
+                    height: 40,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      // Fallback to icon if image not found
+                      return const Icon(
+                        Icons.account_balance_wallet,
+                        size: 40,
+                        color: Color(0xFF00F5FF),
+                      );
+                    },
+                  ),
                 ),
               );
             },
@@ -184,7 +192,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       child: const Text(
                         'Forgot Password?',
                         style: TextStyle(
-                          color: Color(0xFF4a6aa0),
+                          color: Color(0xFF00F5FF),
                           fontSize: 14,
                         ),
                       ),
@@ -230,7 +238,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 child: const Text(
                   'Sign Up',
                   style: TextStyle(
-                    color: Color(0xFF4a6aa0),
+                    color: Color(0xFF00F5FF),
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),

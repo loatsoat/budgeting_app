@@ -6,6 +6,8 @@ class AddTransactionDialog extends StatefulWidget {
   final Function(Transaction)? onTransactionUpdated;
   final Map<String, CategoryData> categories;
   final Transaction? existingTransaction;
+  final List<SavingsGoal>? savingsGoals;
+  final Function(SavingsGoal)? onGoalUpdated;
 
   const AddTransactionDialog({
     super.key,
@@ -13,6 +15,8 @@ class AddTransactionDialog extends StatefulWidget {
     required this.categories,
     this.existingTransaction,
     this.onTransactionUpdated,
+    this.savingsGoals,
+    this.onGoalUpdated,
   });
 
   @override
@@ -27,6 +31,7 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
   String _selectedCategoryKey = 'food';
   DateTime _selectedDate = DateTime.now();
   bool _excludeFromBudget = false;
+  String? _selectedGoalId;
   bool get _isEditing => widget.existingTransaction != null;
 
   @override
@@ -78,6 +83,13 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
       date: _selectedDate,
       excludeFromBudget: _excludeFromBudget,
     );
+
+    // If savings category and goal selected, update the goal
+    if (_selectedCategoryKey == 'savings' && _selectedGoalId != null && widget.savingsGoals != null) {
+      final goal = widget.savingsGoals!.firstWhere((g) => g.id == _selectedGoalId);
+      goal.currentAmount += normalizedAmount;
+      widget.onGoalUpdated?.call(goal);
+    }
 
     if (_isEditing) {
       widget.onTransactionUpdated?.call(transaction);
@@ -230,6 +242,13 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                       
                       const SizedBox(height: 20),
                       
+                      // Goal Selector (only for savings category)
+                      if (_selectedCategoryKey == 'savings' && widget.savingsGoals != null && widget.savingsGoals!.isNotEmpty)
+                        _buildGoalSelector(),
+                      
+                      if (_selectedCategoryKey == 'savings' && widget.savingsGoals != null && widget.savingsGoals!.isNotEmpty)
+                        const SizedBox(height: 20),
+                      
                       // Note Input
                       _buildNoteInput(),
                       
@@ -357,6 +376,150 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
             Icon(
               Icons.chevron_right,
               color: Colors.white.withValues(alpha: 0.4),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGoalSelector() {
+    final selectedGoal = _selectedGoalId != null 
+        ? widget.savingsGoals?.firstWhere((g) => g.id == _selectedGoalId, orElse: () => widget.savingsGoals!.first)
+        : null;
+    
+    return GestureDetector(
+      onTap: _showGoalPicker,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selectedGoal?.color.withValues(alpha: 0.3) ?? Colors.white.withValues(alpha: 0.1),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: selectedGoal?.color.withValues(alpha: 0.2) ?? Colors.white.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  selectedGoal?.emoji ?? '🎯',
+                  style: const TextStyle(fontSize: 20),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Savings Goal:',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.6),
+                      fontSize: 12,
+                    ),
+                  ),
+                  Text(
+                    selectedGoal?.name ?? 'Select a goal',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              color: Colors.white.withValues(alpha: 0.4),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showGoalPicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF1A2B3F), Color(0xFF0F1A2E)],
+          ),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Text(
+                'Select Savings Goal',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Flexible(
+              child: ListView(
+                shrinkWrap: true,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                children: [
+                  ...?widget.savingsGoals?.map((goal) => ListTile(
+                        leading: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: goal.color.withValues(alpha: 0.2),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(goal.emoji, style: const TextStyle(fontSize: 20)),
+                          ),
+                        ),
+                        title: Text(
+                          goal.name,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        subtitle: Text(
+                          '€${goal.currentAmount.toStringAsFixed(0)} / €${goal.targetAmount.toStringAsFixed(0)}',
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                        ),
+                        trailing: _selectedGoalId == goal.id
+                            ? Icon(Icons.check_circle, color: goal.color)
+                            : null,
+                        onTap: () {
+                          setState(() => _selectedGoalId = goal.id);
+                          Navigator.pop(context);
+                        },
+                      )),
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
           ],
         ),
