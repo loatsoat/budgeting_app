@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../services/simple_auth_manager.dart';
 import '../../../widgets/widgets/glassmorphic_card.dart';
 import '../../../widgets/widgets/gradient_button.dart';
@@ -52,22 +53,74 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
     setState(() => _isLoading = true);
 
-    final authManager = SimpleAuthManager.instance;
-    final success = await authManager.login(
-      _emailController.text.trim(),
-      _passwordController.text,
-    );
+    try {
+      final authManager = SimpleAuthManager.instance;
+      final success = await authManager.login(
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
 
-    setState(() => _isLoading = false);
+      setState(() => _isLoading = false);
 
-    if (success) {
-      widget.onAuthSuccess();
-    } else {
+      if (success && mounted) {
+        widget.onAuthSuccess();
+      }
+    } on FirebaseAuthException catch (e) {
+      setState(() => _isLoading = false);
+      
       if (mounted) {
+        String errorMessage;
+        switch (e.code) {
+          case 'user-not-found':
+            errorMessage = 'Kein Benutzer mit dieser Email gefunden';
+            break;
+          case 'wrong-password':
+            errorMessage = 'Falsches Passwort';
+            break;
+          case 'invalid-email':
+            errorMessage = 'Ungültige Email-Adresse';
+            break;
+          case 'user-disabled':
+            errorMessage = 'Dieser Account wurde deaktiviert';
+            break;
+          case 'too-many-requests':
+            errorMessage = 'Zu viele Versuche. Bitte später erneut versuchen';
+            break;
+          case 'network-request-failed':
+            errorMessage = 'Netzwerkfehler. Bitte Verbindung prüfen';
+            break;
+          default:
+            errorMessage = e.message ?? 'Login fehlgeschlagen';
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Invalid email or password'),
+          SnackBar(
+            content: Text(errorMessage),
             backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      
+      if (mounted) {
+        String errorMessage = e.toString().replaceFirst('Exception: ', '');
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }

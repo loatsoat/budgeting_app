@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../services/simple_auth_manager.dart';
 import '../../../widgets/widgets/glassmorphic_card.dart';
 import '../../../widgets/widgets/gradient_button.dart';
@@ -25,6 +26,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
   bool _isLoading = false;
 
   @override
@@ -41,9 +43,14 @@ class _SignupScreenState extends State<SignupScreen> {
 
     if (_passwordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Passwords do not match'),
+        SnackBar(
+          content: const Text('Passwords do not match'),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       );
       return;
@@ -51,23 +58,72 @@ class _SignupScreenState extends State<SignupScreen> {
 
     setState(() => _isLoading = true);
 
-    final authManager = SimpleAuthManager.instance;
-    final success = await authManager.signup(
-      _usernameController.text.trim(),
-      _emailController.text.trim(),
-      _passwordController.text,
-    );
+    try {
+      final authManager = SimpleAuthManager.instance;
+      final success = await authManager.signup(
+        _usernameController.text.trim(),
+        _emailController.text.trim(),
+        _passwordController.text,
+      );
 
-    setState(() => _isLoading = false);
+      setState(() => _isLoading = false);
 
-    if (success) {
-      widget.onAuthSuccess();
-    } else {
+      if (success && mounted) {
+        widget.onAuthSuccess();
+      }
+    } on FirebaseAuthException catch (e) {
+      setState(() => _isLoading = false);
+      
       if (mounted) {
+        String errorMessage;
+        switch (e.code) {
+          case 'email-already-in-use':
+            errorMessage = 'Diese Email-Adresse wird bereits verwendet';
+            break;
+          case 'weak-password':
+            errorMessage = 'Passwort ist zu schwach (mindestens 6 Zeichen)';
+            break;
+          case 'invalid-email':
+            errorMessage = 'Ungültige Email-Adresse';
+            break;
+          case 'operation-not-allowed':
+            errorMessage = 'Email/Password Anmeldung ist nicht aktiviert';
+            break;
+          case 'network-request-failed':
+            errorMessage = 'Netzwerkfehler. Bitte Verbindung prüfen';
+            break;
+          default:
+            errorMessage = e.message ?? 'Registrierung fehlgeschlagen';
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Signup failed. Please try again.'),
+          SnackBar(
+            content: Text(errorMessage),
             backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      
+      if (mounted) {
+        String errorMessage = e.toString().replaceFirst('Exception: ', '');
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -87,9 +143,9 @@ class _SignupScreenState extends State<SignupScreen> {
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
               onPressed: widget.onBackToLogin,
-              icon: Icon(
+              icon: const Icon(
                 Icons.arrow_back,
-                color: const Color(0xFF00F5FF),
+                color: Color(0xFF00F5FF),
               ),
               label: const Text(
                 'Back to Login',
@@ -135,6 +191,9 @@ class _SignupScreenState extends State<SignupScreen> {
                       if (value == null || value.isEmpty) {
                         return 'Please enter a username';
                       }
+                      if (value.length < 3) {
+                        return 'Username must be at least 3 characters';
+                      }
                       return null;
                     },
                   ),
@@ -149,7 +208,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your email';
                       }
-                      if (!value.contains('@')) {
+                      if (!value.contains('@') || !value.contains('.')) {
                         return 'Please enter a valid email';
                       }
                       return null;
@@ -159,7 +218,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   CustomTextField(
                     controller: _passwordController,
                     label: 'Password',
-                    hint: 'Create a password',
+                    hint: 'Create a password (min. 6 characters)',
                     prefixIcon: Icons.lock_outline,
                     obscureText: _obscurePassword,
                     suffixIcon: IconButton(
@@ -187,10 +246,22 @@ class _SignupScreenState extends State<SignupScreen> {
                     label: 'Confirm Password',
                     hint: 'Confirm your password',
                     prefixIcon: Icons.lock_outline,
-                    obscureText: _obscurePassword,
+                    obscureText: _obscureConfirmPassword,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                        color: Colors.white.withValues(alpha: 0.4),
+                      ),
+                      onPressed: () {
+                        setState(() => _obscureConfirmPassword = !_obscureConfirmPassword);
+                      },
+                    ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please confirm your password';
+                      }
+                      if (value != _passwordController.text) {
+                        return 'Passwords do not match';
                       }
                       return null;
                     },

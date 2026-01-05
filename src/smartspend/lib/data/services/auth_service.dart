@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
 class AuthService {
@@ -5,63 +6,88 @@ class AuthService {
   factory AuthService() => _instance;
   AuthService._internal();
 
-  // Mock authentication state
-  bool _isAuthenticated = false;
-  String? _currentUser;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  bool get isAuthenticated => _isAuthenticated;
-  String? get currentUser => _currentUser;
+  // Get current user
+  User? get currentUser => _auth.currentUser;
+  
+  // Check if authenticated
+  bool get isAuthenticated => _auth.currentUser != null;
+  
+  // Get current user email
+  String? get currentUserEmail => _auth.currentUser?.email;
 
-  // Restore session from persistent storage
-  void restoreSession(String user) {
-    _isAuthenticated = true;
-    _currentUser = user;
-  }
+  // Auth state changes stream
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
 
-  // Mock login method
+  // Login with email & password
   Future<bool> login(String email, String password) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(seconds: 1));
-    
-    // Mock validation
-    if (email.isNotEmpty && password.isNotEmpty) {
-      _isAuthenticated = true;
-      _currentUser = email;
+    try {
+      await _auth.signInWithEmailAndPassword(
+        email: email.trim(),
+        password: password,
+      );
+      debugPrint('✅ Login erfolgreich: $email');
       return true;
+    } on FirebaseAuthException catch (e) {
+      debugPrint('❌ Login Fehler: ${e.code} - ${e.message}');
+      rethrow;
+    } catch (e) {
+      debugPrint('❌ Login Fehler: $e');
+      return false;
     }
-    return false;
   }
 
-  // Mock signup method
+  // Sign up with email & password
   Future<bool> signup(String name, String email, String password) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(seconds: 1));
-    
-    // Mock validation
-    if (name.isNotEmpty && email.isNotEmpty && password.isNotEmpty) {
-      _isAuthenticated = true;
-      _currentUser = email;
+    try {
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email.trim(),
+        password: password,
+      );
+      
+      // Update display name
+      await userCredential.user?.updateDisplayName(name);
+      
+      debugPrint('✅ Registrierung erfolgreich: $email');
       return true;
+    } on FirebaseAuthException catch (e) {
+      debugPrint('❌ Registrierung Fehler: ${e.code} - ${e.message}');
+      rethrow;
+    } catch (e) {
+      debugPrint('❌ Registrierung Fehler: $e');
+      return false;
     }
-    return false;
   }
 
-  // Mock password reset method
+  // Reset password
   Future<bool> resetPassword(String email) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(seconds: 1));
-    
-    // Mock validation
-    if (email.isNotEmpty) {
-      debugPrint('Password reset email sent to: $email');
+    try {
+      await _auth.sendPasswordResetEmail(email: email.trim());
+      debugPrint('✅ Password Reset Email gesendet an: $email');
       return true;
+    } on FirebaseAuthException catch (e) {
+      debugPrint('❌ Password Reset Fehler: ${e.code} - ${e.message}');
+      rethrow;
+    } catch (e) {
+      debugPrint('❌ Password Reset Fehler: $e');
+      return false;
     }
-    return false;
   }
 
-  // Logout method
-  void logout() {
-    _isAuthenticated = false;
-    _currentUser = null;
+  // Logout
+  Future<void> logout() async {
+    try {
+      await _auth.signOut();
+      debugPrint('✅ Logout erfolgreich');
+    } catch (e) {
+      debugPrint('❌ Logout Fehler: $e');
+    }
+  }
+
+  // Restore session (nicht nötig bei Firebase, wird automatisch gemacht)
+  void restoreSession(String user) {
+    // Firebase handhabt Session automatisch
+    debugPrint('Firebase Session wird automatisch verwaltet');
   }
 }

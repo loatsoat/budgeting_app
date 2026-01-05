@@ -1,8 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'themes/app_theme.dart';
 import 'widgets/simple_auth_wrapper.dart';
 
-void main() {
+void main() async {
+  // Firebase initialisieren
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print('✅ Firebase erfolgreich verbunden!');
+  } catch (e) {
+    print('❌ Firebase Fehler: $e');
+  }
+  
   runApp(const HCIApp());
 }
 
@@ -27,46 +41,56 @@ class SimpleHomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Prüfe Firebase Status
+    bool isFirebaseConnected = Firebase.apps.isNotEmpty;
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('HCI App'),
+        title: const Text('SmartSpend'),
         centerTitle: true,
       ),
-      body: const Center(
+      body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Firebase Status Icon
             Icon(
-              Icons.check_circle,
+              isFirebaseConnected ? Icons.cloud_done : Icons.cloud_off,
               size: 80,
-              color: Colors.green,
+              color: isFirebaseConnected ? Colors.green : Colors.red,
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
             Text(
-              'Flutter App Ready!',
+              isFirebaseConnected 
+                ? '✅ Firebase Connected!' 
+                : '❌ Firebase Not Connected',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
+                color: isFirebaseConnected ? Colors.green : Colors.red,
               ),
             ),
-            SizedBox(height: 16),
-            Text(
-              'Your React TypeScript components have been\nsuccessfully converted to Dart Flutter!',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
+            const SizedBox(height: 16),
+            if (isFirebaseConnected) ...[
+              Text(
+                'Project: ${Firebase.app().options.projectId}',
+                style: const TextStyle(fontSize: 16),
               ),
-            ),
-            SizedBox(height: 32),
-            Card(
+              const SizedBox(height: 8),
+              const Text(
+                'Storage: smartspend-f94b7.firebasestorage.app',
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+              ),
+            ],
+            const SizedBox(height: 32),
+            const Card(
               margin: EdgeInsets.symmetric(horizontal: 32),
               child: Padding(
                 padding: EdgeInsets.all(24),
                 child: Column(
                   children: [
                     Text(
-                      'Converted Components:',
+                      'Ready Features:',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
@@ -74,11 +98,11 @@ class SimpleHomeScreen extends StatelessWidget {
                     ),
                     SizedBox(height: 16),
                     Text(
-                      '✅ Button, Input, Card\n'
-                      '✅ Alert, Badge, Checkbox\n'
-                      '✅ Dialog, Switch, Avatar\n'
-                      '✅ Progress, Tabs, Tooltip\n'
-                      '✅ And many more!',
+                      '✅ Firebase Authentication\n'
+                      '✅ Cloud Firestore Database\n'
+                      '✅ Real-time Data Sync\n'
+                      '✅ User Management\n'
+                      '✅ Secure Storage',
                       textAlign: TextAlign.center,
                     ),
                   ],
