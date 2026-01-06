@@ -44,6 +44,28 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _securityQuestionMeta = const VerificationMeta(
+    'securityQuestion',
+  );
+  @override
+  late final GeneratedColumn<String> securityQuestion = GeneratedColumn<String>(
+    'security_question',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _securityAnswerHashMeta =
+      const VerificationMeta('securityAnswerHash');
+  @override
+  late final GeneratedColumn<String> securityAnswerHash =
+      GeneratedColumn<String>(
+        'security_answer_hash',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -57,7 +79,14 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
     defaultValue: currentDateAndTime,
   );
   @override
-  List<GeneratedColumn> get $columns => [id, username, passwordHash, createdAt];
+  List<GeneratedColumn> get $columns => [
+    id,
+    username,
+    passwordHash,
+    securityQuestion,
+    securityAnswerHash,
+    createdAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -92,6 +121,28 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
     } else if (isInserting) {
       context.missing(_passwordHashMeta);
     }
+    if (data.containsKey('security_question')) {
+      context.handle(
+        _securityQuestionMeta,
+        securityQuestion.isAcceptableOrUnknown(
+          data['security_question']!,
+          _securityQuestionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_securityQuestionMeta);
+    }
+    if (data.containsKey('security_answer_hash')) {
+      context.handle(
+        _securityAnswerHashMeta,
+        securityAnswerHash.isAcceptableOrUnknown(
+          data['security_answer_hash']!,
+          _securityAnswerHashMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_securityAnswerHashMeta);
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -119,6 +170,14 @@ class $UsersTable extends Users with TableInfo<$UsersTable, User> {
         DriftSqlType.string,
         data['${effectivePrefix}password_hash'],
       )!,
+      securityQuestion: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}security_question'],
+      )!,
+      securityAnswerHash: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}security_answer_hash'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -136,11 +195,15 @@ class User extends DataClass implements Insertable<User> {
   final int id;
   final String username;
   final String passwordHash;
+  final String securityQuestion;
+  final String securityAnswerHash;
   final DateTime createdAt;
   const User({
     required this.id,
     required this.username,
     required this.passwordHash,
+    required this.securityQuestion,
+    required this.securityAnswerHash,
     required this.createdAt,
   });
   @override
@@ -149,6 +212,8 @@ class User extends DataClass implements Insertable<User> {
     map['id'] = Variable<int>(id);
     map['username'] = Variable<String>(username);
     map['password_hash'] = Variable<String>(passwordHash);
+    map['security_question'] = Variable<String>(securityQuestion);
+    map['security_answer_hash'] = Variable<String>(securityAnswerHash);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -158,6 +223,8 @@ class User extends DataClass implements Insertable<User> {
       id: Value(id),
       username: Value(username),
       passwordHash: Value(passwordHash),
+      securityQuestion: Value(securityQuestion),
+      securityAnswerHash: Value(securityAnswerHash),
       createdAt: Value(createdAt),
     );
   }
@@ -171,6 +238,10 @@ class User extends DataClass implements Insertable<User> {
       id: serializer.fromJson<int>(json['id']),
       username: serializer.fromJson<String>(json['username']),
       passwordHash: serializer.fromJson<String>(json['passwordHash']),
+      securityQuestion: serializer.fromJson<String>(json['securityQuestion']),
+      securityAnswerHash: serializer.fromJson<String>(
+        json['securityAnswerHash'],
+      ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -181,6 +252,8 @@ class User extends DataClass implements Insertable<User> {
       'id': serializer.toJson<int>(id),
       'username': serializer.toJson<String>(username),
       'passwordHash': serializer.toJson<String>(passwordHash),
+      'securityQuestion': serializer.toJson<String>(securityQuestion),
+      'securityAnswerHash': serializer.toJson<String>(securityAnswerHash),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -189,11 +262,15 @@ class User extends DataClass implements Insertable<User> {
     int? id,
     String? username,
     String? passwordHash,
+    String? securityQuestion,
+    String? securityAnswerHash,
     DateTime? createdAt,
   }) => User(
     id: id ?? this.id,
     username: username ?? this.username,
     passwordHash: passwordHash ?? this.passwordHash,
+    securityQuestion: securityQuestion ?? this.securityQuestion,
+    securityAnswerHash: securityAnswerHash ?? this.securityAnswerHash,
     createdAt: createdAt ?? this.createdAt,
   );
   User copyWithCompanion(UsersCompanion data) {
@@ -203,6 +280,12 @@ class User extends DataClass implements Insertable<User> {
       passwordHash: data.passwordHash.present
           ? data.passwordHash.value
           : this.passwordHash,
+      securityQuestion: data.securityQuestion.present
+          ? data.securityQuestion.value
+          : this.securityQuestion,
+      securityAnswerHash: data.securityAnswerHash.present
+          ? data.securityAnswerHash.value
+          : this.securityAnswerHash,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -213,13 +296,22 @@ class User extends DataClass implements Insertable<User> {
           ..write('id: $id, ')
           ..write('username: $username, ')
           ..write('passwordHash: $passwordHash, ')
+          ..write('securityQuestion: $securityQuestion, ')
+          ..write('securityAnswerHash: $securityAnswerHash, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, username, passwordHash, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    username,
+    passwordHash,
+    securityQuestion,
+    securityAnswerHash,
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -227,6 +319,8 @@ class User extends DataClass implements Insertable<User> {
           other.id == this.id &&
           other.username == this.username &&
           other.passwordHash == this.passwordHash &&
+          other.securityQuestion == this.securityQuestion &&
+          other.securityAnswerHash == this.securityAnswerHash &&
           other.createdAt == this.createdAt);
 }
 
@@ -234,30 +328,43 @@ class UsersCompanion extends UpdateCompanion<User> {
   final Value<int> id;
   final Value<String> username;
   final Value<String> passwordHash;
+  final Value<String> securityQuestion;
+  final Value<String> securityAnswerHash;
   final Value<DateTime> createdAt;
   const UsersCompanion({
     this.id = const Value.absent(),
     this.username = const Value.absent(),
     this.passwordHash = const Value.absent(),
+    this.securityQuestion = const Value.absent(),
+    this.securityAnswerHash = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   UsersCompanion.insert({
     this.id = const Value.absent(),
     required String username,
     required String passwordHash,
+    required String securityQuestion,
+    required String securityAnswerHash,
     this.createdAt = const Value.absent(),
   }) : username = Value(username),
-       passwordHash = Value(passwordHash);
+       passwordHash = Value(passwordHash),
+       securityQuestion = Value(securityQuestion),
+       securityAnswerHash = Value(securityAnswerHash);
   static Insertable<User> custom({
     Expression<int>? id,
     Expression<String>? username,
     Expression<String>? passwordHash,
+    Expression<String>? securityQuestion,
+    Expression<String>? securityAnswerHash,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (username != null) 'username': username,
       if (passwordHash != null) 'password_hash': passwordHash,
+      if (securityQuestion != null) 'security_question': securityQuestion,
+      if (securityAnswerHash != null)
+        'security_answer_hash': securityAnswerHash,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -266,12 +373,16 @@ class UsersCompanion extends UpdateCompanion<User> {
     Value<int>? id,
     Value<String>? username,
     Value<String>? passwordHash,
+    Value<String>? securityQuestion,
+    Value<String>? securityAnswerHash,
     Value<DateTime>? createdAt,
   }) {
     return UsersCompanion(
       id: id ?? this.id,
       username: username ?? this.username,
       passwordHash: passwordHash ?? this.passwordHash,
+      securityQuestion: securityQuestion ?? this.securityQuestion,
+      securityAnswerHash: securityAnswerHash ?? this.securityAnswerHash,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -288,6 +399,12 @@ class UsersCompanion extends UpdateCompanion<User> {
     if (passwordHash.present) {
       map['password_hash'] = Variable<String>(passwordHash.value);
     }
+    if (securityQuestion.present) {
+      map['security_question'] = Variable<String>(securityQuestion.value);
+    }
+    if (securityAnswerHash.present) {
+      map['security_answer_hash'] = Variable<String>(securityAnswerHash.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -300,6 +417,8 @@ class UsersCompanion extends UpdateCompanion<User> {
           ..write('id: $id, ')
           ..write('username: $username, ')
           ..write('passwordHash: $passwordHash, ')
+          ..write('securityQuestion: $securityQuestion, ')
+          ..write('securityAnswerHash: $securityAnswerHash, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -322,6 +441,8 @@ typedef $$UsersTableCreateCompanionBuilder =
       Value<int> id,
       required String username,
       required String passwordHash,
+      required String securityQuestion,
+      required String securityAnswerHash,
       Value<DateTime> createdAt,
     });
 typedef $$UsersTableUpdateCompanionBuilder =
@@ -329,6 +450,8 @@ typedef $$UsersTableUpdateCompanionBuilder =
       Value<int> id,
       Value<String> username,
       Value<String> passwordHash,
+      Value<String> securityQuestion,
+      Value<String> securityAnswerHash,
       Value<DateTime> createdAt,
     });
 
@@ -352,6 +475,16 @@ class $$UsersTableFilterComposer extends Composer<_$AppDatabase, $UsersTable> {
 
   ColumnFilters<String> get passwordHash => $composableBuilder(
     column: $table.passwordHash,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get securityQuestion => $composableBuilder(
+    column: $table.securityQuestion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get securityAnswerHash => $composableBuilder(
+    column: $table.securityAnswerHash,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -385,6 +518,16 @@ class $$UsersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get securityQuestion => $composableBuilder(
+    column: $table.securityQuestion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get securityAnswerHash => $composableBuilder(
+    column: $table.securityAnswerHash,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -408,6 +551,16 @@ class $$UsersTableAnnotationComposer
 
   GeneratedColumn<String> get passwordHash => $composableBuilder(
     column: $table.passwordHash,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get securityQuestion => $composableBuilder(
+    column: $table.securityQuestion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get securityAnswerHash => $composableBuilder(
+    column: $table.securityAnswerHash,
     builder: (column) => column,
   );
 
@@ -446,11 +599,15 @@ class $$UsersTableTableManager
                 Value<int> id = const Value.absent(),
                 Value<String> username = const Value.absent(),
                 Value<String> passwordHash = const Value.absent(),
+                Value<String> securityQuestion = const Value.absent(),
+                Value<String> securityAnswerHash = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => UsersCompanion(
                 id: id,
                 username: username,
                 passwordHash: passwordHash,
+                securityQuestion: securityQuestion,
+                securityAnswerHash: securityAnswerHash,
                 createdAt: createdAt,
               ),
           createCompanionCallback:
@@ -458,11 +615,15 @@ class $$UsersTableTableManager
                 Value<int> id = const Value.absent(),
                 required String username,
                 required String passwordHash,
+                required String securityQuestion,
+                required String securityAnswerHash,
                 Value<DateTime> createdAt = const Value.absent(),
               }) => UsersCompanion.insert(
                 id: id,
                 username: username,
                 passwordHash: passwordHash,
+                securityQuestion: securityQuestion,
+                securityAnswerHash: securityAnswerHash,
                 createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0

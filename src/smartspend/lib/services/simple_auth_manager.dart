@@ -104,12 +104,18 @@ class SimpleAuthManager extends ChangeNotifier {
     }
   }
 
-  // Sign up with username & password
-  Future<bool> signup(String username, String password) async {
+  // Sign up with username, password, and security question
+  Future<bool> signup(
+    String username,
+    String password,
+    String securityQuestion,
+    String securityAnswer,
+  ) async {
     try {
       debugPrint('🔄 Starte Registrierung für: $username');
       
       final trimmedUsername = username.trim();
+      final trimmedAnswer = securityAnswer.trim();
       
       if (trimmedUsername.isEmpty) {
         throw Exception('Bitte Benutzername eingeben');
@@ -122,6 +128,14 @@ class SimpleAuthManager extends ChangeNotifier {
       if (password.length < 6) {
         throw Exception('Passwort muss mindestens 6 Zeichen haben');
       }
+
+      if (securityQuestion.isEmpty) {
+        throw Exception('Bitte Sicherheitsfrage auswählen');
+      }
+
+      if (trimmedAnswer.isEmpty) {
+        throw Exception('Bitte Antwort auf Sicherheitsfrage eingeben');
+      }
       
       // Check if username already exists
       final exists = await _db.usernameExists(trimmedUsername);
@@ -129,9 +143,15 @@ class SimpleAuthManager extends ChangeNotifier {
         throw Exception('Benutzername bereits vergeben');
       }
       
-      // Hash password and create user
+      // Hash password, security answer, and create user
       final passwordHash = _hashPassword(password);
-      final userId = await _db.createUser(trimmedUsername, passwordHash);
+      final answerHash = _hashPassword(trimmedAnswer.toLowerCase());
+      await _db.createUser(
+        trimmedUsername,
+        passwordHash,
+        securityQuestion,
+        answerHash,
+      );
       
       // Get the created user
       final user = await _db.getUserByUsername(trimmedUsername);
@@ -139,15 +159,8 @@ class SimpleAuthManager extends ChangeNotifier {
         throw Exception('Fehler beim Erstellen des Benutzers');
       }
 
-      _currentUser = SimpleUser(
-        id: userId,
-        username: user.username,
-        createdAt: user.createdAt,
-      );
-
-      await _saveAuthState();
-      debugPrint('✅ Account erstellt und eingeloggt');
-      notifyListeners();
+      // Don't auto-login after signup
+      debugPrint('✅ Account erfolgreich erstellt');
       return true;
     } catch (e) {
       debugPrint('❌ Registrierung Fehler: $e');
@@ -155,20 +168,86 @@ class SimpleAuthManager extends ChangeNotifier {
     }
   }
 
-  // Reset password (not implemented in offline mode)
-  Future<bool> resetPassword(String username) async {
+  // Get security question for username
+  Future<String> getSecurityQuestion(String username) async {
     try {
       final trimmedUsername = username.trim();
       
-      final exists = await _db.usernameExists(trimmedUsername);
-      if (!exists) {
+      final user = await _db.getUserByUsername(trimmedUsername);
+      if (user == null) {
         throw Exception('Kein Benutzer mit diesem Namen gefunden');
       }
       
-      debugPrint('ℹ️ Password Reset ist im Offline-Modus nicht verfügbar');
-      throw Exception('Password Reset ist im Offline-Modus nicht verfügbar');
+      return user.securityQuestion;
+    } catch (e) {
+      debugPrint('❌ Fehler beim Abrufen der Sicherheitsfrage: $e');
+      rethrow;
+    }
+  }
+
+  // Verify security answer and reset password
+  Future<bool> resetPasswordWithSecurityAnswer(
+    String username,
+    String securityAnswer,
+    String newPassword,
+  ) async {
+    try {
+      final trimmedUsername = username.trim();
+      final trimmedAnswer = securityAnswer.trim();
+      
+      if (newPassword.length < 6) {
+        throw Exception('Neues Passwort muss mindestens 6 Zeichen haben');
+      }
+
+      // Hash the answer and validate
+      final answerHash = _hashPassword(trimmedAnswer.toLowerCase());
+      final isValid = await _db.validateSecurityAnswer(
+        trimmedUsername,
+        answerHash,
+      );
+
+      if (!isValid) {
+        throw Exception('Falsche Antwort auf Sicherheitsfrage');
+      }
+
+      // Update password
+      final newPasswordHash = _hashPassword(newPassword);
+      await _db.updatePassword(trimmedUsername, newPasswordHash);
+      
+      debugPrint('✅ Passwort erfolgreich zurückgesetzt');
+      return true;
     } catch (e) {
       debugPrint('❌ Password Reset Fehler: $e');
+      rethrow;
+    }
+  }
+
+  // Verify password for current user (used in settings)
+  Future<bool> verifyPassword(String username, String password) async {
+    try {
+      final passwordHash = _hashPassword(password);
+      final user = await _db.validateLogin(username, passwordHash);
+      return user != null;
+    } catch (e) {
+      debugPrint('❌ Password Verification Fehler: $e');
+      return false;
+    }
+  }
+
+  // Change password (requires current password verification first)
+  Future<bool> changePassword(String username, String newPassword) async {
+    try {
+      if (newPassword.length < 6) {
+        throw Exception('Neues Passwort muss mindestens 6 Zeichen haben');
+      }
+
+      final newPasswordHash = _hashPassword(newPassword);
+      await _db.updatePassword(username, newPasswordHash);
+      
+      debugPrint('✅ Passwort erfolgreich geändert');
+      return true;
+    } catch (e) {
+      debugPrint('❌ Password Change Fehler: $e');
       rethrow;
     }
   }

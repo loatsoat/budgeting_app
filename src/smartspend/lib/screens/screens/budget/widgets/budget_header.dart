@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../services/simple_auth_manager.dart';
-import '../../../../utils/db_admin.dart';
+import '../../settings/settings_screen.dart';
+import '../../../../widgets/currency_converter_dialog.dart';
 
 class BudgetStatusBar extends StatelessWidget {
   const BudgetStatusBar({super.key});
@@ -75,23 +76,197 @@ class BudgetHeader extends StatelessWidget {
   final String activeTab;
   final bool isEditingBudgets;
   final VoidCallback onEditToggle;
+  final double? budgetAmount;
 
   const BudgetHeader({
     super.key,
     required this.activeTab,
     required this.isEditingBudgets,
     required this.onEditToggle,
+    this.budgetAmount,
   });
 
-  void _handleMenuSelection(BuildContext context, String value) {
-    if (value == 'logout') {
-      _showLogoutDialog(context);
-    } else if (value == 'admin') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const DatabaseAdminScreen()),
-      );
-    }
+  String _getInitial(BuildContext context) {
+    final username = SimpleAuthManager.instance.currentUser?.username ?? 'U';
+    return username[0].toUpperCase();
+  }
+
+  void _showProfileMenu(BuildContext context) {
+    final authManager = SimpleAuthManager.instance;
+    final username = authManager.currentUser?.username ?? 'Unknown';
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF2A3F5F),
+              Color(0xFF1A2F4F),
+            ],
+          ),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          border: Border.all(
+            color: const Color(0xFF00F5FF).withValues(alpha: 0.3),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            // Drag indicator
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Profile Section
+            Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  colors: [
+                    Color(0xFF00F5FF),
+                    Color(0xFF00B8FF),
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF00F5FF).withValues(alpha: 0.3),
+                    blurRadius: 20,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  username[0].toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              username,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Logged in',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.6),
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Divider
+            Container(
+              height: 1,
+              margin: const EdgeInsets.symmetric(horizontal: 24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.transparent,
+                    Colors.white.withValues(alpha: 0.2),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Settings Button
+            ListTile(
+              leading: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF00F5FF).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.settings,
+                  color: Color(0xFF00F5FF),
+                  size: 20,
+                ),
+              ),
+              title: const Text(
+                'Settings',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              trailing: const Icon(
+                Icons.arrow_forward_ios,
+                color: Colors.white,
+                size: 16,
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SettingsScreen(),
+                  ),
+                );
+              },
+            ),
+            
+            // Logout Button
+            ListTile(
+              leading: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF6B9D).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.logout,
+                  color: Color(0xFFFF6B9D),
+                  size: 20,
+                ),
+              ),
+              title: const Text(
+                'Logout',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _showLogoutDialog(context);
+              },
+            ),
+            
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showLogoutDialog(BuildContext context) {
@@ -306,59 +481,43 @@ class BudgetHeader extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          PopupMenuButton<String>(
-            onSelected: (value) => _handleMenuSelection(context, value),
-            icon: const Icon(Icons.settings, color: Colors.white, size: 24),
-            color: const Color(0xFF2A3F5F),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: const Color(0xFF00F5FF).withValues(alpha: 0.3)),
+          // Profile Avatar Button
+          GestureDetector(
+            onTap: () => _showProfileMenu(context),
+            child: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  colors: [
+                    Color(0xFF00F5FF),
+                    Color(0xFF00B8FF),
+                  ],
+                ),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.3),
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF00F5FF).withValues(alpha: 0.3),
+                    blurRadius: 10,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  _getInitial(context),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
             ),
-            itemBuilder: (context) => [
-              PopupMenuItem<String>(
-                value: 'admin',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.admin_panel_settings,
-                      color: const Color(0xFF00F5FF),
-                      size: 20,
-                    ),
-                    const SizedBox(width: 12),
-                    const Text(
-                      'Datenbank Admin',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const PopupMenuDivider(),
-              PopupMenuItem<String>(
-                value: 'logout',
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.logout,
-                      color: const Color(0xFFFF6B9D),
-                      size: 20,
-                    ),
-                    const SizedBox(width: 12),
-                    const Text(
-                      'Logout',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
           ),
           const Text(
             'Personal Wallet',
@@ -368,17 +527,51 @@ class BudgetHeader extends StatelessWidget {
               letterSpacing: 0.5,
             ),
           ),
-          if (activeTab == 'budget')
-            IconButton(
-              onPressed: onEditToggle,
-              icon: Icon(
-                isEditingBudgets ? Icons.check : Icons.edit,
-                color: Colors.white70,
-                size: 24,
+          Row(
+            children: [
+              // Currency Converter Button - Always visible
+              GestureDetector(
+                onTap: () {
+                  final amount = budgetAmount ?? 0;
+                  showDialog(
+                    context: context,
+                    builder: (context) => CurrencyConverterDialog(
+                      amount: amount,
+                      title: 'Your Budget',
+                    ),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF00F5FF).withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: const Color(0xFF00F5FF).withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.currency_exchange,
+                    color: Color(0xFF00F5FF),
+                    size: 24,
+                  ),
+                ),
               ),
-            )
-          else
-            const SizedBox(width: 48),
+              const SizedBox(width: 8),
+              // Edit Button (for budget tab)
+              if (activeTab == 'budget')
+                IconButton(
+                  onPressed: onEditToggle,
+                  icon: Icon(
+                    isEditingBudgets ? Icons.check : Icons.edit,
+                    color: Colors.white70,
+                    size: 24,
+                  ),
+                )
+              else
+                const SizedBox(width: 48),
+            ],
+          ),
         ],
       ),
     );

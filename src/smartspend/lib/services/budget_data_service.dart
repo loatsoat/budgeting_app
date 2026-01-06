@@ -1,6 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import '../models/budget_models.dart';
 
 class BudgetDataService {
@@ -13,6 +14,7 @@ class BudgetDataService {
     required List<Transaction> transactions,
     required Map<String, CategoryData> categories,
     required Map<String, Map<String, SubcategoryBudget>> categoryBudgets,
+    List<SavingsGoal>? savingsGoals,
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -49,6 +51,21 @@ class BudgetDataService {
       });
       await prefs.setString('${userKey}categoryBudgets', jsonEncode(budgetsJson));
 
+      // Save savings goals
+      if (savingsGoals != null) {
+        final savingsGoalsJson = savingsGoals.map((g) => {
+          'id': g.id,
+          'name': g.name,
+          'targetAmount': g.targetAmount,
+          'currentAmount': g.currentAmount,
+          'description': g.description,
+          'targetDate': g.targetDate?.toIso8601String(),
+          'color': g.color.value,
+          'emoji': g.emoji,
+        }).toList();
+        await prefs.setString('${userKey}savingsGoals', jsonEncode(savingsGoalsJson));
+      }
+
       debugPrint('✅ Budget data saved for user $userId');
     } catch (e) {
       debugPrint('❌ Error saving budget data: $e');
@@ -62,7 +79,7 @@ class BudgetDataService {
       final userKey = '$_keyPrefix${userId}_';
 
       // Load total budget
-      final totalBudget = prefs.getDouble('${userKey}totalBudget') ?? 1000.0;
+      final totalBudget = prefs.getDouble('${userKey}totalBudget') ?? 0.0;
 
       // Load transactions
       final transactionsString = prefs.getString('${userKey}transactions');
@@ -102,12 +119,30 @@ class BudgetDataService {
         });
       }
 
+      // Load savings goals
+      final savingsGoalsString = prefs.getString('${userKey}savingsGoals');
+      List<SavingsGoal> savingsGoals = [];
+      if (savingsGoalsString != null) {
+        final List<dynamic> savingsGoalsJson = jsonDecode(savingsGoalsString);
+        savingsGoals = savingsGoalsJson.map((g) => SavingsGoal(
+          id: g['id'],
+          name: g['name'],
+          targetAmount: g['targetAmount'].toDouble(),
+          currentAmount: g['currentAmount']?.toDouble() ?? 0,
+          description: g['description'],
+          targetDate: g['targetDate'] != null ? DateTime.parse(g['targetDate']) : null,
+          color: Color(g['color']),
+          emoji: g['emoji'] ?? '🎯',
+        )).toList();
+      }
+
       debugPrint('✅ Budget data loaded for user $userId');
 
       return {
         'totalBudget': totalBudget,
         'transactions': transactions,
         'categoryBudgets': categoryBudgets,
+        'savingsGoals': savingsGoals,
       };
     } catch (e) {
       debugPrint('❌ Error loading budget data: $e');
@@ -124,6 +159,7 @@ class BudgetDataService {
       await prefs.remove('${userKey}totalBudget');
       await prefs.remove('${userKey}transactions');
       await prefs.remove('${userKey}categoryBudgets');
+      await prefs.remove('${userKey}savingsGoals');
 
       debugPrint('✅ Budget data cleared for user $userId');
     } catch (e) {

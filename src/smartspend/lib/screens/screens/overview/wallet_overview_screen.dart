@@ -93,13 +93,26 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
           children: [
             _buildTabSelector(),
             Expanded(
-              child: selectedTab == 0
-                  ? _buildOverviewContent()
-                  : _buildListContent(),
+              child: _buildOverviewContent(),
             ),
           ],
         );
       },
+    );
+  }
+
+  void _showAllTransactionsSheet() {
+    final allTransactions = widget.transactions ?? [];
+    final categories = widget.categories ?? {};
+    
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => _TransactionsByMonthSheet(
+        transactions: allTransactions,
+        categories: categories,
+      ),
     );
   }
 
@@ -115,28 +128,38 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
         ),
         child: Center(
           child: GestureDetector(
-            onTap: () {
-              setState(() => selectedTab = selectedTab == 1 ? 0 : 1);
-              // notify parent and external notifier
-              widget.tabNotifier?.value = selectedTab;
-              widget.onListStateChanged?.call(selectedTab == 1);
-            },
+            onTap: () => _showAllTransactionsSheet(),
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: selectedTab == 1 ? const Color(0xFF00F5FF) : Colors.transparent,
-                borderRadius: BorderRadius.circular(20),
-                border: selectedTab == 1 ? null : Border.all(color: Colors.white.withValues(alpha: 0.06)),
-              ),
-                child: Text(
-                'LIST',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: selectedTab == 1 ? const Color(0xFF1A1F3A) : Colors.white.withValues(alpha: 0.7),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF00F5FF), Color(0xFF00B8FF)],
                 ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF00F5FF).withValues(alpha: 0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.receipt_long, color: Color(0xFF1A1F3A), size: 20),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'VIEW ALL TRANSACTIONS',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Color(0xFF1A1F3A),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -862,12 +885,169 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
     );
   }
 
+  void _showTransactionDetails(Transaction transaction, Map<String, CategoryData> categories) {
+    final categoryData = categories[transaction.categoryKey];
+    final isExpense = transaction.type == TransactionType.expense;
+    
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF2A3F5F),
+              Color(0xFF1A2F4F),
+            ],
+          ),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          border: Border.all(
+            color: const Color(0xFF00F5FF).withValues(alpha: 0.3),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            // Drag indicator
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Transaction Icon
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: categoryData?.solidColor.withValues(alpha: 0.2) ?? Colors.grey.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: categoryData?.solidColor.withValues(alpha: 0.4) ?? Colors.grey.withValues(alpha: 0.4),
+                  width: 2,
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  categoryData?.icon ?? '💰',
+                  style: const TextStyle(fontSize: 40),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Transaction Amount
+            Text(
+              '${isExpense ? '-' : '+'}€${transaction.amount.toStringAsFixed(2)}',
+              style: TextStyle(
+                color: isExpense ? const Color(0xFFFF6B9D) : const Color(0xFF4CAF50),
+                fontSize: 36,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            
+            // Category Name
+            Text(
+              transaction.category,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Transaction Details
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.1),
+                ),
+              ),
+              child: Column(
+                children: [
+                  _buildDetailRow('Type', isExpense ? 'Expense' : 'Income', isExpense ? const Color(0xFFFF6B9D) : const Color(0xFF4CAF50)),
+                  const SizedBox(height: 12),
+                  _buildDetailRow('Date', _formatDate(transaction.date), Colors.white70),
+                  const SizedBox(height: 12),
+                  _buildDetailRow('Note', transaction.note.isNotEmpty ? transaction.note : 'No note', Colors.white70),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Edit Button
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  widget.onTransactionEdit?.call(transaction);
+                },
+                icon: const Icon(Icons.edit),
+                label: const Text('Edit Transaction'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00F5FF),
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildDetailRow(String label, String value, Color valueColor) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.6),
+            fontSize: 14,
+          ),
+        ),
+        Flexible(
+          child: Text(
+            value,
+            style: TextStyle(
+              color: valueColor,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.right,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildTransactionItem(Transaction transaction, Map<String, CategoryData> categories) {
     final categoryData = categories[transaction.categoryKey];
     final isExpense = transaction.type == TransactionType.expense;
     
     return GestureDetector(
-      onTap: () => widget.onTransactionEdit?.call(transaction),
+      onTap: () => _showTransactionDetails(transaction, categories),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
@@ -967,5 +1147,515 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
       decoration: BoxDecoration(color: color.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
       child: Icon(icon, color: color, size: 20),
     );
+  }
+}
+
+// Stateful Widget for Month-based Transaction Filtering
+class _TransactionsByMonthSheet extends StatefulWidget {
+  final List<Transaction> transactions;
+  final Map<String, CategoryData> categories;
+
+  const _TransactionsByMonthSheet({
+    required this.transactions,
+    required this.categories,
+  });
+
+  @override
+  State<_TransactionsByMonthSheet> createState() => _TransactionsByMonthSheetState();
+}
+
+class _TransactionsByMonthSheetState extends State<_TransactionsByMonthSheet> {
+  late DateTime selectedMonth;
+
+  @override
+  void initState() {
+    super.initState();
+    // Start with current month
+    final now = DateTime.now();
+    selectedMonth = DateTime(now.year, now.month);
+  }
+
+  List<Transaction> _getFilteredTransactions() {
+    return widget.transactions.where((transaction) {
+      return transaction.date.year == selectedMonth.year &&
+             transaction.date.month == selectedMonth.month;
+    }).toList();
+  }
+
+  void _previousMonth() {
+    setState(() {
+      selectedMonth = DateTime(selectedMonth.year, selectedMonth.month - 1);
+    });
+  }
+
+  void _nextMonth() {
+    setState(() {
+      selectedMonth = DateTime(selectedMonth.year, selectedMonth.month + 1);
+    });
+  }
+
+  String _getMonthYearText() {
+    final months = ['January', 'February', 'March', 'April', 'May', 'June',
+                   'July', 'August', 'September', 'October', 'November', 'December'];
+    return '${months[selectedMonth.month - 1]} ${selectedMonth.year}';
+  }
+
+  bool _canGoNext() {
+    final now = DateTime.now();
+    final currentMonth = DateTime(now.year, now.month);
+    return selectedMonth.isBefore(currentMonth);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filteredTransactions = _getFilteredTransactions();
+    
+    return DraggableScrollableSheet(
+      initialChildSize: 0.9,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (context, scrollController) => Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF2A3F5F),
+              Color(0xFF1A2F4F),
+            ],
+          ),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          border: Border.all(
+            color: const Color(0xFF00F5FF).withValues(alpha: 0.3),
+          ),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            // Drag indicator
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF00F5FF).withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.receipt_long,
+                      color: Color(0xFF00F5FF),
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Transactions',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          '${filteredTransactions.length} in ${_getMonthYearText()}',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.6),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close, color: Colors.white70),
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Month Selector
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: const Color(0xFF00F5FF).withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      onPressed: _previousMonth,
+                      icon: const Icon(Icons.chevron_left, color: Colors.white),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                    Text(
+                      _getMonthYearText(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: _canGoNext() ? _nextMonth : null,
+                      icon: Icon(
+                        Icons.chevron_right,
+                        color: _canGoNext() ? Colors.white : Colors.white.withValues(alpha: 0.3),
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 16),
+            Divider(color: Colors.white.withValues(alpha: 0.1), height: 1),
+            
+            // Transactions List
+            Expanded(
+              child: filteredTransactions.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.inbox_outlined,
+                            size: 64,
+                            color: Colors.white.withValues(alpha: 0.3),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No transactions in ${_getMonthYearText()}',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.6),
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: scrollController,
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      itemCount: filteredTransactions.length,
+                      itemBuilder: (context, index) {
+                        final transaction = filteredTransactions[index];
+                        return _buildTransactionItem(
+                          context,
+                          transaction,
+                          widget.categories,
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTransactionItem(
+    BuildContext context,
+    Transaction transaction,
+    Map<String, CategoryData> categories,
+  ) {
+    final categoryData = categories[transaction.categoryKey];
+    final isExpense = transaction.type == TransactionType.expense;
+
+    return GestureDetector(
+      onTap: () {
+        // Show transaction details
+        _showTransactionDetails(context, transaction, categories);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+          ),
+        ),
+        child: Row(
+          children: [
+            // Category Icon
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: categoryData?.solidColor.withValues(alpha: 0.2) ??
+                    Colors.grey.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  categoryData?.icon ?? '💰',
+                  style: const TextStyle(fontSize: 18),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+
+            // Transaction Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    transaction.category,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    transaction.note,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.6),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Amount and Date
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '${isExpense ? '-' : '+'}€${transaction.amount.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    color: isExpense
+                        ? const Color(0xFFFF6B9D)
+                        : const Color(0xFF4CAF50),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _formatDate(transaction.date),
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.5),
+                    fontSize: 10,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showTransactionDetails(
+    BuildContext context,
+    Transaction transaction,
+    Map<String, CategoryData> categories,
+  ) {
+    final categoryData = categories[transaction.categoryKey];
+    final isExpense = transaction.type == TransactionType.expense;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF2A3F5F),
+              Color(0xFF1A2F4F),
+            ],
+          ),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          border: Border.all(
+            color: const Color(0xFF00F5FF).withValues(alpha: 0.3),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Transaction Details',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close, color: Colors.white70),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Category Icon and Name
+            Row(
+              children: [
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: categoryData?.solidColor.withValues(alpha: 0.2) ??
+                        Colors.grey.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      categoryData?.icon ?? '💰',
+                      style: const TextStyle(fontSize: 30),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        transaction.category,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        transaction.note,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.6),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 24),
+            Divider(color: Colors.white.withValues(alpha: 0.1)),
+            const SizedBox(height: 16),
+
+            // Amount
+            _buildDetailRow(
+              'Amount',
+              '${isExpense ? '-' : '+'}€${transaction.amount.toStringAsFixed(2)}',
+              isExpense ? const Color(0xFFFF6B9D) : const Color(0xFF4CAF50),
+            ),
+            const SizedBox(height: 16),
+
+            // Date
+            _buildDetailRow(
+              'Date',
+              '${transaction.date.day}/${transaction.date.month}/${transaction.date.year}',
+              Colors.white,
+            ),
+            const SizedBox(height: 16),
+
+            // Type
+            _buildDetailRow(
+              'Type',
+              transaction.type == TransactionType.expense
+                  ? 'Expense'
+                  : transaction.type == TransactionType.income
+                      ? 'Income'
+                      : 'Transfer',
+              Colors.white,
+            ),
+
+            if (transaction.merchant != null) ...[
+              const SizedBox(height: 16),
+              _buildDetailRow('Merchant', transaction.merchant!, Colors.white),
+            ],
+
+            if (transaction.description != null) ...[
+              const SizedBox(height: 16),
+              _buildDetailRow(
+                  'Description', transaction.description!, Colors.white),
+            ],
+
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value, Color valueColor) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.6),
+            fontSize: 14,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            color: valueColor,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final transactionDate = DateTime(date.year, date.month, date.day);
+
+    if (transactionDate == today) {
+      return 'Today';
+    } else if (transactionDate == today.subtract(const Duration(days: 1))) {
+      return 'Yesterday';
+    } else {
+      return '${date.day}/${date.month}';
+    }
   }
 }

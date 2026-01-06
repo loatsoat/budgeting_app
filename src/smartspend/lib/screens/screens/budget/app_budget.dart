@@ -103,6 +103,9 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
           totalBudget = data['totalBudget'];
           transactions = data['transactions'];
           categoryBudgets = data['categoryBudgets'];
+          if (data['savingsGoals'] != null) {
+            savingsGoals = data['savingsGoals'];
+          }
         });
       }
     }
@@ -118,6 +121,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
         transactions: transactions,
         categories: categories,
         categoryBudgets: categoryBudgets,
+        savingsGoals: savingsGoals,
       );
     }
   }
@@ -140,7 +144,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
   }
 
   double get budgetLeft => totalBudget - totalSpent;
-  double get budgetPercentage => (totalSpent / totalBudget) * 100;
+  double get budgetPercentage => totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -167,6 +171,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                   BudgetHeader(
                     activeTab: activeTab,
                     isEditingBudgets: isEditingBudgets,
+                    budgetAmount: totalBudget,
                     onEditToggle: () {
                       setState(() {
                         if (isEditingBudgets) {
@@ -190,12 +195,16 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                             tabNotifier: _walletTabNotifier,
                             onListStateChanged: (isList) => setState(() => _walletShowingList = isList),
                             savingsGoals: savingsGoals,
-                            onGoalCreated: (goal) => setState(() => savingsGoals.add(goal)),
+                            onGoalCreated: (goal) {
+                              setState(() => savingsGoals.add(goal));
+                              _saveUserBudgetData(); // Save after goal creation
+                            },
                             onGoalUpdated: (goal) {
                               setState(() {
                                 final index = savingsGoals.indexWhere((g) => g.id == goal.id);
                                 if (index != -1) savingsGoals[index] = goal;
                               });
+                              _saveUserBudgetData(); // Save after goal update
                             },
                             onTransactionAdded: _addTransaction,
                           ),
@@ -758,6 +767,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
             final index = savingsGoals.indexWhere((g) => g.id == goal.id);
             if (index != -1) savingsGoals[index] = goal;
           });
+          _saveUserBudgetData(); // Save after goal update
         },
       ),
     );
@@ -788,6 +798,8 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
       }
     });
 
+    _saveUserBudgetData(); // Save after adding transaction
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Transaction added: €${transaction.amount.toStringAsFixed(2)}'),
@@ -810,6 +822,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
             final index = savingsGoals.indexWhere((g) => g.id == goal.id);
             if (index != -1) savingsGoals[index] = goal;
           });
+          _saveUserBudgetData(); // Save after goal update
         },
       ),
     );
@@ -850,6 +863,8 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
       }
     });
 
+    _saveUserBudgetData(); // Save after updating transaction
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Transaction updated: €${updatedTransaction.amount.toStringAsFixed(2)}'),
@@ -882,6 +897,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
             final index = savingsGoals.indexWhere((g) => g.id == goal.id);
             if (index != -1) savingsGoals[index] = goal;
           });
+          _saveUserBudgetData(); // Save after goal update
         },
       ),
     );

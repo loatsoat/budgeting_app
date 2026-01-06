@@ -23,15 +23,27 @@ class _SignupScreenState extends State<SignupScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _securityAnswerController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
+  
+  // Security questions
+  String? _selectedSecurityQuestion;
+  final List<String> _securityQuestions = [
+    'What was the name of your first pet?',
+    'What city were you born in?',
+    'What is your mother\'s maiden name?',
+    'What was your childhood nickname?',
+    'What is the name of your favorite teacher?',
+  ];
 
   @override
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _securityAnswerController.dispose();
     super.dispose();
   }
 
@@ -53,6 +65,21 @@ class _SignupScreenState extends State<SignupScreen> {
       return;
     }
 
+    if (_selectedSecurityQuestion == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please select a security question'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
@@ -60,12 +87,27 @@ class _SignupScreenState extends State<SignupScreen> {
       final success = await authManager.signup(
         _usernameController.text.trim(),
         _passwordController.text,
+        _selectedSecurityQuestion!,
+        _securityAnswerController.text,
       );
 
       setState(() => _isLoading = false);
 
       if (success && mounted) {
-        widget.onAuthSuccess();
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Account created successfully! Please login.'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+        // Navigate back to login
+        widget.onBackToLogin();
       }
     } catch (e) {
       setState(() => _isLoading = false);
@@ -203,6 +245,71 @@ class _SignupScreenState extends State<SignupScreen> {
                       }
                       if (value != _passwordController.text) {
                         return 'Passwords do not match';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  // Security Question Section
+                  Text(
+                    'Security Question',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.9),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2A2F4A),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.1),
+                      ),
+                    ),
+                    child: DropdownButtonFormField<String>(
+                      value: _selectedSecurityQuestion,
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                        border: InputBorder.none,
+                        hintText: 'Select a security question',
+                        hintStyle: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.4),
+                        ),
+                      ),
+                      dropdownColor: const Color(0xFF2A2F4A),
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                      icon: Icon(
+                        Icons.arrow_drop_down,
+                        color: Colors.white.withValues(alpha: 0.6),
+                      ),
+                      items: _securityQuestions.map((question) {
+                        return DropdownMenuItem<String>(
+                          value: question,
+                          child: Text(
+                            question,
+                            style: const TextStyle(fontSize: 13),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() => _selectedSecurityQuestion = value);
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  CustomTextField(
+                    controller: _securityAnswerController,
+                    label: 'Security Answer',
+                    hint: 'Enter your answer',
+                    prefixIcon: Icons.security,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter an answer';
                       }
                       return null;
                     },

@@ -67,7 +67,7 @@ class CircularBudgetChart extends StatelessWidget {
                   width: 180,
                   height: 180,
                   child: CircularProgressIndicator(
-                    value: budgetPercentage / 100,
+                    value: (budgetPercentage / 100).clamp(0.0, 1.0),
                     strokeWidth: 8,
                     backgroundColor: Colors.white.withValues(alpha: 0.1),
                     valueColor: AlwaysStoppedAnimation<Color>(
