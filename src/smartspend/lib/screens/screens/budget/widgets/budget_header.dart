@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../services/simple_auth_manager.dart';
+import '../../../../utils/db_admin.dart';
 
 class BudgetStatusBar extends StatelessWidget {
   const BudgetStatusBar({super.key});
@@ -85,6 +86,11 @@ class BudgetHeader extends StatelessWidget {
   void _handleMenuSelection(BuildContext context, String value) {
     if (value == 'logout') {
       _showLogoutDialog(context);
+    } else if (value == 'admin') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const DatabaseAdminScreen()),
+      );
     }
   }
 
@@ -309,6 +315,28 @@ class BudgetHeader extends StatelessWidget {
               side: BorderSide(color: const Color(0xFF00F5FF).withValues(alpha: 0.3)),
             ),
             itemBuilder: (context) => [
+              PopupMenuItem<String>(
+                value: 'admin',
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.admin_panel_settings,
+                      color: const Color(0xFF00F5FF),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    const Text(
+                      'Datenbank Admin',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
               PopupMenuItem<String>(
                 value: 'logout',
                 child: Row(

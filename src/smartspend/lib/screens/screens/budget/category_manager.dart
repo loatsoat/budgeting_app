@@ -363,11 +363,11 @@ Future<void> showEditBudgetDialog(
           fillColor: const Color(0xFF1A1F33),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: const Color(0xFF00F5FF).withOpacity(0.2)),
+            borderSide: BorderSide(color: const Color(0xFF00F5FF).withValues(alpha: 0.2)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: const Color(0xFF00F5FF).withOpacity(0.12)),
+            borderSide: BorderSide(color: const Color(0xFF00F5FF).withValues(alpha: 0.12)),
           ),
         ),
       ),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../../../services/simple_auth_manager.dart';
 import '../../../widgets/widgets/glassmorphic_card.dart';
 import '../../../widgets/widgets/gradient_button.dart';
@@ -22,7 +21,6 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
-  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
@@ -32,7 +30,6 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   void dispose() {
     _usernameController.dispose();
-    _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -62,7 +59,6 @@ class _SignupScreenState extends State<SignupScreen> {
       final authManager = SimpleAuthManager.instance;
       final success = await authManager.signup(
         _usernameController.text.trim(),
-        _emailController.text.trim(),
         _passwordController.text,
       );
 
@@ -70,44 +66,6 @@ class _SignupScreenState extends State<SignupScreen> {
 
       if (success && mounted) {
         widget.onAuthSuccess();
-      }
-    } on FirebaseAuthException catch (e) {
-      setState(() => _isLoading = false);
-      
-      if (mounted) {
-        String errorMessage;
-        switch (e.code) {
-          case 'email-already-in-use':
-            errorMessage = 'Diese Email-Adresse wird bereits verwendet';
-            break;
-          case 'weak-password':
-            errorMessage = 'Passwort ist zu schwach (mindestens 6 Zeichen)';
-            break;
-          case 'invalid-email':
-            errorMessage = 'Ungültige Email-Adresse';
-            break;
-          case 'operation-not-allowed':
-            errorMessage = 'Email/Password Anmeldung ist nicht aktiviert';
-            break;
-          case 'network-request-failed':
-            errorMessage = 'Netzwerkfehler. Bitte Verbindung prüfen';
-            break;
-          default:
-            errorMessage = e.message ?? 'Registrierung fehlgeschlagen';
-        }
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.all(16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            duration: const Duration(seconds: 4),
-          ),
-        );
       }
     } catch (e) {
       setState(() => _isLoading = false);
@@ -184,32 +142,15 @@ class _SignupScreenState extends State<SignupScreen> {
                 children: [
                   CustomTextField(
                     controller: _usernameController,
-                    label: 'Username',
-                    hint: 'Choose a username',
+                    label: 'Benutzername',
+                    hint: 'Benutzername wählen',
                     prefixIcon: Icons.person_outline,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter a username';
+                        return 'Bitte Benutzername eingeben';
                       }
                       if (value.length < 3) {
-                        return 'Username must be at least 3 characters';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  CustomTextField(
-                    controller: _emailController,
-                    label: 'Email',
-                    hint: 'Enter your email',
-                    prefixIcon: Icons.email_outlined,
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      if (!value.contains('@') || !value.contains('.')) {
-                        return 'Please enter a valid email';
+                        return 'Benutzername muss mindestens 3 Zeichen haben';
                       }
                       return null;
                     },

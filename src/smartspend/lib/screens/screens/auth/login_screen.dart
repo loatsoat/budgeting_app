@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../../../services/simple_auth_manager.dart';
 import '../../../widgets/widgets/glassmorphic_card.dart';
 import '../../../widgets/widgets/gradient_button.dart';
@@ -23,7 +22,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _isLoading = false;
@@ -42,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     _pulseController.dispose();
     super.dispose();
@@ -56,7 +55,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     try {
       final authManager = SimpleAuthManager.instance;
       final success = await authManager.login(
-        _emailController.text.trim(),
+        _usernameController.text.trim(),
         _passwordController.text,
       );
 
@@ -64,47 +63,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
       if (success && mounted) {
         widget.onAuthSuccess();
-      }
-    } on FirebaseAuthException catch (e) {
-      setState(() => _isLoading = false);
-      
-      if (mounted) {
-        String errorMessage;
-        switch (e.code) {
-          case 'user-not-found':
-            errorMessage = 'Kein Benutzer mit dieser Email gefunden';
-            break;
-          case 'wrong-password':
-            errorMessage = 'Falsches Passwort';
-            break;
-          case 'invalid-email':
-            errorMessage = 'Ungültige Email-Adresse';
-            break;
-          case 'user-disabled':
-            errorMessage = 'Dieser Account wurde deaktiviert';
-            break;
-          case 'too-many-requests':
-            errorMessage = 'Zu viele Versuche. Bitte später erneut versuchen';
-            break;
-          case 'network-request-failed':
-            errorMessage = 'Netzwerkfehler. Bitte Verbindung prüfen';
-            break;
-          default:
-            errorMessage = e.message ?? 'Login fehlgeschlagen';
-        }
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.all(16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            duration: const Duration(seconds: 4),
-          ),
-        );
       }
     } catch (e) {
       setState(() => _isLoading = false);
@@ -121,6 +79,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
+            duration: const Duration(seconds: 4),
           ),
         );
       }
@@ -199,17 +158,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   CustomTextField(
-                    controller: _emailController,
-                    label: 'Email',
-                    hint: 'Enter your email',
-                    prefixIcon: Icons.email_outlined,
-                    keyboardType: TextInputType.emailAddress,
+                    controller: _usernameController,
+                    label: 'Benutzername',
+                    hint: 'Benutzername eingeben',
+                    prefixIcon: Icons.person_outline,
+                    keyboardType: TextInputType.text,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Please enter a valid email';
+                        return 'Bitte Benutzername eingeben';
                       }
                       return null;
                     },

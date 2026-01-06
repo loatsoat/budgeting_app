@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../data/services/auth_service.dart';
+import '../../../services/simple_auth_manager.dart';
 import '../../../widgets/widgets/glassmorphic_card.dart';
 import '../../../widgets/widgets/gradient_button.dart';
 import '../../../widgets/widgets/custom_text_field.dart';
@@ -18,12 +18,12 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   bool _isLoading = false;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     super.dispose();
   }
 
@@ -32,26 +32,31 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     setState(() => _isLoading = true);
 
-    final success = await AuthService().resetPassword(
-      _emailController.text.trim(),
-    );
-
-    setState(() => _isLoading = false);
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            success
-                ? 'Password reset link sent to your email!'
-                : 'Email not found',
-          ),
-          backgroundColor: success ? Colors.green : Colors.red,
-        ),
+    try {
+      await SimpleAuthManager.instance.resetPassword(
+        _usernameController.text.trim(),
       );
+      
+      setState(() => _isLoading = false);
 
-      if (success) {
-        Future.delayed(const Duration(seconds: 2), widget.onBackToLogin);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Password Reset ist im Offline-Modus nicht verfügbar'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceFirst('Exception: ', '')),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -109,17 +114,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   CustomTextField(
-                    controller: _emailController,
-                    label: 'Email',
-                    hint: 'Enter your email',
-                    prefixIcon: Icons.email_outlined,
-                    keyboardType: TextInputType.emailAddress,
+                    controller: _usernameController,
+                    label: 'Benutzername',
+                    hint: 'Benutzername eingeben',
+                    prefixIcon: Icons.person_outline,
+                    keyboardType: TextInputType.text,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Please enter a valid email';
+                        return 'Bitte Benutzername eingeben';
                       }
                       return null;
                     },

@@ -1,92 +1,174 @@
 import 'package:flutter/foundation.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
+import '../data/database.dart';
+
+class SimpleUser {
+  final int id;
+  final String username;
+  final DateTime createdAt;
+
+  SimpleUser({
+    required this.id,
+    required this.username,
+    required this.createdAt,
+  });
+}
 
 class SimpleAuthManager extends ChangeNotifier {
   static final SimpleAuthManager _instance = SimpleAuthManager._internal();
   static SimpleAuthManager get instance => _instance;
   
+  SimpleUser? _currentUser;
+  late final AppDatabase _db;
+
   SimpleAuthManager._internal() {
-    // Listen to Firebase auth state changes
-    FirebaseAuth.instance.authStateChanges().listen((User? user) {
-      notifyListeners();
-    });
+    _db = AppDatabase();
+    _loadSession();
   }
 
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-
   // Check if user is authenticated
-  bool get isAuthenticated => _auth.currentUser != null;
+  bool get isAuthenticated => _currentUser != null;
 
   // Get current user
-  User? get currentUser => _auth.currentUser;
+  SimpleUser? get currentUser => _currentUser;
 
-  // Get current user email
-  String? get currentUserEmail => _auth.currentUser?.email;
+  // Get current user email (using username for compatibility)
+  String? get currentUserEmail => _currentUser?.username;
 
   // Get current user name
-  String? get currentUserName => _auth.currentUser?.displayName;
+  String? get currentUserName => _currentUser?.username;
 
-  // Login with email & password
-  Future<bool> login(String email, String password) async {
+  // Hash password using SHA-256
+  String _hashPassword(String password) {
+    final bytes = utf8.encode(password);
+    final digest = sha256.convert(bytes);
+    return digest.toString();
+  }
+
+  // Load session from SharedPreferences
+  Future<void> _loadSession() async {
     try {
-      await _auth.signInWithEmailAndPassword(
-        email: email.trim(),
-        password: password,
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('user_id');
+      final username = prefs.getString('username');
+      final createdAtStr = prefs.getString('created_at');
+
+      if (userId != null && username != null && createdAtStr != null) {
+        _currentUser = SimpleUser(
+          id: userId,
+          username: username,
+          createdAt: DateTime.parse(createdAtStr),
+        );
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('❌ Fehler beim Laden der Session: $e');
+    }
+  }
+
+  // Login with username & password
+  Future<bool> login(String username, String password) async {
+    try {
+      final trimmedUsername = username.trim();
+      
+      if (trimmedUsername.isEmpty) {
+        throw Exception('Bitte Benutzername eingeben');
+      }
+      
+      if (password.isEmpty) {
+        throw Exception('Bitte Passwort eingeben');
+      }
+
+      final passwordHash = _hashPassword(password);
+      final user = await _db.validateLogin(trimmedUsername, passwordHash);
+
+      if (user == null) {
+        throw Exception('Benutzername oder Passwort falsch');
+      }
+
+      _currentUser = SimpleUser(
+        id: user.id,
+        username: user.username,
+        createdAt: user.createdAt,
       );
-      debugPrint('✅ Login erfolgreich: $email');
+
+      await _saveAuthState();
+      debugPrint('✅ Login erfolgreich: ${user.username}');
       notifyListeners();
       return true;
-    } on FirebaseAuthException catch (e) {
-      debugPrint('❌ Login Fehler: ${e.code} - ${e.message}');
+    } catch (e) {
+      debugPrint('❌ Login Fehler: $e');
       rethrow;
     }
   }
 
-  // Sign up with email & password
-  // Sign up with email & password
-Future<bool> signup(String name, String email, String password) async {
-  try {
-    debugPrint('🔄 Starte Registrierung für: $email');
-    
-    UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-      email: email.trim(),
-      password: password,
-    );
-    
-    debugPrint('✅ Account erstellt');
-    
-    // Update display name
-    await userCredential.user?.updateDisplayName(name);
-    debugPrint('✅ Display Name gesetzt: $name');
-    
-    // SENDE VERIFIZIERUNGS-EMAIL
-    debugPrint('📧 Versuche Verifizierungs-Email zu senden...');
-    await userCredential.user?.sendEmailVerification();
-    debugPrint('✅ sendEmailVerification() erfolgreich aufgerufen');
-    
-    // Prüfe User Status
-    debugPrint('📊 User Email: ${userCredential.user?.email}');
-    debugPrint('📊 Email Verified: ${userCredential.user?.emailVerified}');
-    
-    notifyListeners();
-    return true;
-  } on FirebaseAuthException catch (e) {
-    debugPrint('❌ Registrierung Fehler: ${e.code} - ${e.message}');
-    rethrow;
-  } catch (e) {
-    debugPrint('❌ Unerwarteter Fehler: $e');
-    rethrow;
-  }
-}
-
-  // Reset password
-  Future<bool> resetPassword(String email) async {
+  // Sign up with username & password
+  Future<bool> signup(String username, String password) async {
     try {
-      await _auth.sendPasswordResetEmail(email: email.trim());
-      debugPrint('✅ Password Reset Email gesendet an: $email');
+      debugPrint('🔄 Starte Registrierung für: $username');
+      
+      final trimmedUsername = username.trim();
+      
+      if (trimmedUsername.isEmpty) {
+        throw Exception('Bitte Benutzername eingeben');
+      }
+      
+      if (trimmedUsername.length < 3) {
+        throw Exception('Benutzername muss mindestens 3 Zeichen haben');
+      }
+      
+      if (password.length < 6) {
+        throw Exception('Passwort muss mindestens 6 Zeichen haben');
+      }
+      
+      // Check if username already exists
+      final exists = await _db.usernameExists(trimmedUsername);
+      if (exists) {
+        throw Exception('Benutzername bereits vergeben');
+      }
+      
+      // Hash password and create user
+      final passwordHash = _hashPassword(password);
+      final userId = await _db.createUser(trimmedUsername, passwordHash);
+      
+      // Get the created user
+      final user = await _db.getUserByUsername(trimmedUsername);
+      if (user == null) {
+        throw Exception('Fehler beim Erstellen des Benutzers');
+      }
+
+      _currentUser = SimpleUser(
+        id: userId,
+        username: user.username,
+        createdAt: user.createdAt,
+      );
+
+      await _saveAuthState();
+      debugPrint('✅ Account erstellt und eingeloggt');
+      notifyListeners();
       return true;
-    } on FirebaseAuthException catch (e) {
-      debugPrint('❌ Password Reset Fehler: ${e.code} - ${e.message}');
+    } catch (e) {
+      debugPrint('❌ Registrierung Fehler: $e');
+      rethrow;
+    }
+  }
+
+  // Reset password (not implemented in offline mode)
+  Future<bool> resetPassword(String username) async {
+    try {
+      final trimmedUsername = username.trim();
+      
+      final exists = await _db.usernameExists(trimmedUsername);
+      if (!exists) {
+        throw Exception('Kein Benutzer mit diesem Namen gefunden');
+      }
+      
+      debugPrint('ℹ️ Password Reset ist im Offline-Modus nicht verfügbar');
+      throw Exception('Password Reset ist im Offline-Modus nicht verfügbar');
+    } catch (e) {
+      debugPrint('❌ Password Reset Fehler: $e');
       rethrow;
     }
   }
@@ -94,7 +176,8 @@ Future<bool> signup(String name, String email, String password) async {
   // Logout
   Future<void> logout() async {
     try {
-      await _auth.signOut();
+      _currentUser = null;
+      await _clearAuthState();
       debugPrint('✅ Logout erfolgreich');
       notifyListeners();
     } catch (e) {
@@ -102,9 +185,20 @@ Future<bool> signup(String name, String email, String password) async {
     }
   }
 
-  // Restore session (automatisch durch Firebase)
-  void restoreSession(String user) {
-    // Firebase manages session automatically
-    debugPrint('Firebase Session wird automatisch verwaltet');
+  // Helper methods for persistence
+  Future<void> _saveAuthState() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (_currentUser != null) {
+      await prefs.setInt('user_id', _currentUser!.id);
+      await prefs.setString('username', _currentUser!.username);
+      await prefs.setString('created_at', _currentUser!.createdAt.toIso8601String());
+    }
+  }
+
+  Future<void> _clearAuthState() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('user_id');
+    await prefs.remove('username');
+    await prefs.remove('created_at');
   }
 }

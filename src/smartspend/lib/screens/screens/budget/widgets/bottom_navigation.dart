@@ -43,7 +43,7 @@ class BudgetBottomNavigation extends StatelessWidget {
               borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Colors.black.withValues(alpha: 0.3),
                   blurRadius: 10,
                   offset: const Offset(0, -3),
                 ),
@@ -106,7 +106,7 @@ class BudgetBottomNavigation extends StatelessWidget {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFFF6B9D).withOpacity(0.4),
+                      color: const Color(0xFFFF6B9D).withValues(alpha: 0.4),
                       blurRadius: 15,
                       offset: const Offset(0, 6),
                     ),
@@ -141,7 +141,7 @@ class BudgetBottomNavigation extends StatelessWidget {
           boxShadow: isActive
               ? [
                   BoxShadow(
-                    color: gradient.colors.first.withOpacity(0.4),
+                    color: gradient.colors.first.withValues(alpha: 0.4),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),

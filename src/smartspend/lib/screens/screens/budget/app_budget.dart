@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../models/budget_models.dart';
 import '../../../services/simple_auth_manager.dart';
+import '../../../services/budget_data_service.dart';
 import '../../../widgets/components/ui/input.dart';
 import '../../../widgets/add_transaction_dialog.dart';
 import 'widgets/budget_header.dart';
@@ -89,6 +90,36 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
       duration: const Duration(seconds: 20),
       vsync: this,
     )..repeat();
+    _loadUserBudgetData();
+  }
+
+  // Load user-specific budget data
+  Future<void> _loadUserBudgetData() async {
+    final currentUser = SimpleAuthManager.instance.currentUser;
+    if (currentUser != null) {
+      final data = await BudgetDataService.loadBudgetData(currentUser.id);
+      if (data != null) {
+        setState(() {
+          totalBudget = data['totalBudget'];
+          transactions = data['transactions'];
+          categoryBudgets = data['categoryBudgets'];
+        });
+      }
+    }
+  }
+
+  // Save user-specific budget data
+  Future<void> _saveUserBudgetData() async {
+    final currentUser = SimpleAuthManager.instance.currentUser;
+    if (currentUser != null) {
+      await BudgetDataService.saveBudgetData(
+        userId: currentUser.id,
+        totalBudget: totalBudget,
+        transactions: transactions,
+        categories: categories,
+        categoryBudgets: categoryBudgets,
+      );
+    }
   }
 
   @override
@@ -110,31 +141,6 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
 
   double get budgetLeft => totalBudget - totalSpent;
   double get budgetPercentage => (totalSpent / totalBudget) * 100;
-
-  void _handleLogout() async {
-    final shouldLogout = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Logout'),
-          ),
-        ],
-      ),
-    );
-
-    if (shouldLogout == true) {
-      SimpleAuthManager.instance.logout();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -239,6 +245,8 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                       }
                     }
                     
+                    _saveUserBudgetData(); // Save after transaction
+                    
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Transaction saved: ${transaction.merchant}'),
@@ -281,7 +289,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(
@@ -306,7 +314,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                   Text(
                     dateStr,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 11,
                     ),
                   ),
@@ -706,6 +714,8 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
 
     tempBudgetValues.clear();
     setState(() => isEditingBudgets = false);
+
+    _saveUserBudgetData(); // Save after budget edit
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
