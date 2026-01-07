@@ -1,6 +1,6 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../models/budget_models.dart';
 
 class FloatingConnectCard extends StatefulWidget {
@@ -22,26 +22,44 @@ class FloatingConnectCard extends StatefulWidget {
 }
 
 class _FloatingConnectCardState extends State<FloatingConnectCard> {
-  String _cardNumber = 'NO CARD';
+  final TextEditingController _cardNumberController = TextEditingController();
+  final FocusNode _cardNumberFocus = FocusNode();
+  String _formattedCardNumber = '';
+  bool _isCardNumberValid = false;
 
   @override
-  void initState() {
-    super.initState();
-    _loadCardNumber();
+  void dispose() {
+    _cardNumberController.dispose();
+    _cardNumberFocus.dispose();
+    super.dispose();
   }
 
-  Future<void> _loadCardNumber() async {
-    final prefs = await SharedPreferences.getInstance();
+  void _formatCardNumber(String value) {
+    String formatted = '';
+    int count = 0;
+    
+    // Remove all non-digits
+    String digits = value.replaceAll(RegExp(r'\D'), '');
+    
+    // Take only first 16 digits
+    digits = digits.substring(0, math.min(16, digits.length));
+    
+    // Add space every 4 digits
+    for (int i = 0; i < digits.length; i++) {
+      if (count > 0 && count % 4 == 0) {
+        formatted += ' ';
+      }
+      formatted += digits[i];
+      count++;
+    }
+    
     setState(() {
-      _cardNumber = prefs.getString('bank_card_number') ?? 'NO CARD';
-    });
-  }
-
-  Future<void> _saveCardNumber(String cardNumber) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('bank_card_number', cardNumber);
-    setState(() {
-      _cardNumber = cardNumber;
+      _formattedCardNumber = formatted;
+      _cardNumberController.value = TextEditingValue(
+        text: formatted,
+        selection: TextSelection.collapsed(offset: formatted.length),
+      );
+      _isCardNumberValid = digits.length == 16;
     });
   }
 
@@ -182,43 +200,57 @@ class _FloatingConnectCardState extends State<FloatingConnectCard> {
                                   ),
                                 ),
                                 const SizedBox(height: 8),
-                                TextField(
-                                  controller: cardController,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 14,
-                                    letterSpacing: 2,
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF1A2A3F).withValues(alpha: 0.8),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: _isCardNumberValid 
+                                          ? const Color(0xFFD8A5FF) 
+                                          : Colors.white.withValues(alpha: 0.1),
+                                    ),
                                   ),
-                                  decoration: InputDecoration(
-                                    hintText: _cardNumber,
-                                    hintStyle: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.5),
+                                  child: TextField(
+                                    controller: _cardNumberController,
+                                    focusNode: _cardNumberFocus,
+                                    style: const TextStyle(
+                                      color: Colors.white,
                                       fontSize: 14,
                                       letterSpacing: 2,
                                     ),
-                                    filled: true,
-                                    fillColor: const Color(0xFF1A2A3F).withValues(alpha: 0.8),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                                    keyboardType: TextInputType.number,
+                                    maxLength: 19, // 16 digits + 3 spaces
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                    ],
+                                    decoration: InputDecoration(
+                                      counterText: '',
+                                      border: InputBorder.none,
+                                      contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                      hintText: '1234 5678 9012 3456',
+                                      hintStyle: TextStyle(
+                                        color: Colors.white.withValues(alpha: 0.3),
+                                        fontSize: 14,
+                                        letterSpacing: 2,
+                                      ),
                                     ),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(color: Color(0xFFD8A5FF), width: 1.5),
-                                    ),
-                                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    onChanged: _formatCardNumber,
                                   ),
-                                  keyboardType: TextInputType.number,
-                                  inputFormatters: [
-                                    FilteringTextInputFormatter.digitsOnly,
-                                    LengthLimitingTextInputFormatter(16),
-                                    _CardNumberInputFormatter(),
-                                  ],
                                 ),
+                                if (!_isCardNumberValid && _cardNumberController.text.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8),
+                                    child: Text(
+                                      'Please enter a valid 16-digit card number',
+                                      style: TextStyle(
+                                        color: Colors.red.withValues(alpha: 0.7),
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ),
                               ],
                             ),
                           ),
@@ -236,15 +268,18 @@ class _FloatingConnectCardState extends State<FloatingConnectCard> {
                                   ),
                                   elevation: 4,
                                 ),
-                                onPressed: () async {
-                                  final cardNum = cardController.text.trim();
-                                  if (cardNum.isNotEmpty) {
-                                    await _saveCardNumber(cardNum);
-                                  }
-                                  widget.onCardConnected();
-                                  if (context.mounted) {
+                                onPressed: () {
+                                  if (_isCardNumberValid) {
+                                    widget.onCardConnected();
                                     Navigator.pop(context);
                                     _showTransactionSwiper(context);
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Please enter a valid 16-digit card number'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
                                   }
                                 },
                                 child: const Row(
@@ -337,9 +372,9 @@ class _FloatingConnectCardState extends State<FloatingConnectCard> {
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               child: _SwipeDeck(
-                                transactions: transactions,
-                                onAction: onAction,
-                                onEdit: onEdit,
+                                transactions: widget.transactions,
+                                onAction: widget.onTransactionAction,
+                                onEdit: widget.onTransactionEdit,
                                 parentContext: context, // Pass the parent context
                               ),
                             ),
