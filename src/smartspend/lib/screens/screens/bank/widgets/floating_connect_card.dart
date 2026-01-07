@@ -24,7 +24,6 @@ class FloatingConnectCard extends StatefulWidget {
 class _FloatingConnectCardState extends State<FloatingConnectCard> {
   final TextEditingController _cardNumberController = TextEditingController();
   final FocusNode _cardNumberFocus = FocusNode();
-  String _formattedCardNumber = '';
   bool _isCardNumberValid = false;
 
   @override
@@ -54,7 +53,6 @@ class _FloatingConnectCardState extends State<FloatingConnectCard> {
     }
     
     setState(() {
-      _formattedCardNumber = formatted;
       _cardNumberController.value = TextEditingValue(
         text: formatted,
         selection: TextSelection.collapsed(offset: formatted.length),
@@ -95,8 +93,6 @@ class _FloatingConnectCardState extends State<FloatingConnectCard> {
   }
 
   void _showConnectCardDialog(BuildContext context) {
-    final cardController = TextEditingController(text: _cardNumber == 'NO CARD' ? '' : _cardNumber);
-    
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -315,10 +311,6 @@ class _FloatingConnectCardState extends State<FloatingConnectCard> {
   }
 
   void _showTransactionSwiper(BuildContext context) {
-    final transactions = widget.transactions;
-    final onAction = widget.onTransactionAction;
-    final onEdit = widget.onTransactionEdit;
-    
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -636,28 +628,6 @@ class _TransactionCard extends StatelessWidget {
         const SizedBox(height: 4),
         Text(value, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)),
       ],
-    );
-  }
-}
-
-// Card number formatter to add spaces every 4 digits
-class _CardNumberInputFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
-    final text = newValue.text.replaceAll(' ', '');
-    final buffer = StringBuffer();
-    
-    for (int i = 0; i < text.length; i++) {
-      if (i > 0 && i % 4 == 0) {
-        buffer.write(' ');
-      }
-      buffer.write(text[i]);
-    }
-    
-    final formatted = buffer.toString();
-    return TextEditingValue(
-      text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
     );
   }
 }
