@@ -112,6 +112,7 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
       builder: (context) => _TransactionsByMonthSheet(
         transactions: allTransactions,
         categories: categories,
+        onTransactionEdit: widget.onTransactionEdit,
       ),
     );
   }
@@ -208,14 +209,6 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
             color: const Color(0xFF2A3B5C).withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF00F5FF).withValues(alpha: 0.1),
-                blurRadius: 20,
-                spreadRadius: 0,
-                offset: const Offset(0, 10),
-              ),
-            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -363,14 +356,6 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
               ],
             ),
             borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF8E44AD).withValues(alpha: 0.3),
-                blurRadius: 20,
-                spreadRadius: 0,
-                offset: const Offset(0, 10),
-              ),
-            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -747,24 +732,6 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
     );
   }
 
-  Widget _buildListContent() {
-    final double bottomNavReserve = MediaQuery.of(context).padding.bottom + 140.0;
-    
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          // Back button moved to AppBar; keep list content here
-          // Reuse only the month selector + list parts from OverviewListScreen
-          _buildMonthSelectorLite(),
-          const SizedBox(height: 24),
-          _buildTransactionsListLite(),
-          SizedBox(height: bottomNavReserve),
-        ],
-      ),
-    );
-  }
-
   // Exposed helper to programmatically show overview
   void showOverview() {
     if (selectedTab != 0) {
@@ -861,13 +828,32 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Recent Transactions',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.9),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Recent Transactions',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.9),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(Icons.swipe_left, size: 12, color: Colors.white.withValues(alpha: 0.5)),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Swipe left to edit',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.5),
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
                 Text(
                   '${transactions.length} transactions',
@@ -886,7 +872,10 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
   }
 
   void _showTransactionDetails(Transaction transaction, Map<String, CategoryData> categories) {
-    final categoryData = categories[transaction.categoryKey];
+    // Get category data from appropriate source
+    final categoryData = transaction.type == TransactionType.income
+        ? incomeCategories[transaction.categoryKey]
+        : categories[transaction.categoryKey];
     final isExpense = transaction.type == TransactionType.expense;
     
     showModalBottomSheet(
@@ -1043,85 +1032,128 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
   }
 
   Widget _buildTransactionItem(Transaction transaction, Map<String, CategoryData> categories) {
-    final categoryData = categories[transaction.categoryKey];
+    // Get category data from appropriate source
+    final categoryData = transaction.type == TransactionType.income
+        ? incomeCategories[transaction.categoryKey]
+        : categories[transaction.categoryKey];
     final isExpense = transaction.type == TransactionType.expense;
     
-    return GestureDetector(
-      onTap: () => _showTransactionDetails(transaction, categories),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    return Dismissible(
+      key: Key(transaction.id),
+      direction: DismissDirection.endToStart,
+      confirmDismiss: (direction) async {
+        // Open edit dialog instead of dismissing
+        widget.onTransactionEdit?.call(transaction);
+        return false; // Don't actually dismiss
+      },
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
         decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Colors.transparent,
+              const Color(0xFF00F5FF).withValues(alpha: 0.3),
+            ],
+          ),
           border: Border(
             top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
           ),
         ),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
           children: [
-          // Category Icon
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: categoryData?.solidColor.withValues(alpha: 0.2) ?? Colors.grey.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                categoryData?.icon ?? '💰',
-                style: const TextStyle(fontSize: 18),
+            const Icon(Icons.edit, color: Color(0xFF00F5FF), size: 24),
+            const SizedBox(width: 8),
+            const Text(
+              'EDIT',
+              style: TextStyle(
+                color: Color(0xFF00F5FF),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
               ),
             ),
+          ],
+        ),
+      ),
+      child: GestureDetector(
+        onTap: () => _showTransactionDetails(transaction, categories),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1A1F33),
+            border: Border(
+              top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+            ),
           ),
-          const SizedBox(width: 12),
-          
-          // Transaction Details
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
+            children: [
+            // Category Icon
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: categoryData?.solidColor.withValues(alpha: 0.2) ?? Colors.grey.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  categoryData?.icon ?? '💰',
+                  style: const TextStyle(fontSize: 18),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            
+            // Transaction Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    transaction.category,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    transaction.note,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.6),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
+            // Amount and Date
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  transaction.category,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  '${isExpense ? '-' : '+'}€${transaction.amount.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    color: isExpense ? const Color(0xFFFF6B9D) : const Color(0xFF4CAF50),
                     fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  transaction.note,
+                  _formatDate(transaction.date),
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.6),
-                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.5),
+                    fontSize: 10,
                   ),
                 ),
               ],
             ),
-          ),
-          
-          // Amount and Date
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '${isExpense ? '-' : '+'}€${transaction.amount.toStringAsFixed(2)}',
-                style: TextStyle(
-                  color: isExpense ? const Color(0xFFFF6B9D) : const Color(0xFF4CAF50),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                _formatDate(transaction.date),
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.5),
-                  fontSize: 10,
-                ),
-              ),
             ],
           ),
-          ],
         ),
       ),
     );
@@ -1154,10 +1186,12 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
 class _TransactionsByMonthSheet extends StatefulWidget {
   final List<Transaction> transactions;
   final Map<String, CategoryData> categories;
+  final Function(Transaction)? onTransactionEdit;
 
   const _TransactionsByMonthSheet({
     required this.transactions,
     required this.categories,
+    this.onTransactionEdit,
   });
 
   @override
@@ -1387,91 +1421,134 @@ class _TransactionsByMonthSheetState extends State<_TransactionsByMonthSheet> {
     Transaction transaction,
     Map<String, CategoryData> categories,
   ) {
-    final categoryData = categories[transaction.categoryKey];
+    // Get category data from appropriate source
+    final categoryData = transaction.type == TransactionType.income
+        ? incomeCategories[transaction.categoryKey]
+        : categories[transaction.categoryKey];
     final isExpense = transaction.type == TransactionType.expense;
 
-    return GestureDetector(
-      onTap: () {
-        // Show transaction details
-        _showTransactionDetails(context, transaction, categories);
+    return Dismissible(
+      key: Key(transaction.id),
+      direction: DismissDirection.endToStart,
+      confirmDismiss: (direction) async {
+        // Open edit dialog instead of dismissing
+        widget.onTransactionEdit?.call(transaction);
+        return false; // Don't actually dismiss
       },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
         decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Colors.transparent,
+              const Color(0xFF00F5FF).withValues(alpha: 0.3),
+            ],
+          ),
           border: Border(
             top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
           ),
         ),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            // Category Icon
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: categoryData?.solidColor.withValues(alpha: 0.2) ??
-                    Colors.grey.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  categoryData?.icon ?? '💰',
-                  style: const TextStyle(fontSize: 18),
-                ),
+            const Icon(Icons.edit, color: Color(0xFF00F5FF), size: 24),
+            const SizedBox(width: 8),
+            const Text(
+              'EDIT',
+              style: TextStyle(
+                color: Color(0xFF00F5FF),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(width: 12),
+          ],
+        ),
+      ),
+      child: GestureDetector(
+        onTap: () {
+          // Show transaction details
+          _showTransactionDetails(context, transaction, categories, widget.onTransactionEdit);
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1A1F33),
+            border: Border(
+              top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+            ),
+          ),
+          child: Row(
+            children: [
+              // Category Icon
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: categoryData?.solidColor.withValues(alpha: 0.2) ??
+                      Colors.grey.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    categoryData?.icon ?? '💰',
+                    style: const TextStyle(fontSize: 18),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
 
-            // Transaction Details
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              // Transaction Details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      transaction.category,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      transaction.note,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.6),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Amount and Date
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    transaction.category,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    '${isExpense ? '-' : '+'}€${transaction.amount.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      color: isExpense
+                          ? const Color(0xFFFF6B9D)
+                          : const Color(0xFF4CAF50),
                       fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    transaction.note,
+                    _formatDate(transaction.date),
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.6),
-                      fontSize: 12,
+                      color: Colors.white.withValues(alpha: 0.5),
+                      fontSize: 10,
                     ),
                   ),
                 ],
               ),
-            ),
-
-            // Amount and Date
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '${isExpense ? '-' : '+'}€${transaction.amount.toStringAsFixed(2)}',
-                  style: TextStyle(
-                    color: isExpense
-                        ? const Color(0xFFFF6B9D)
-                        : const Color(0xFF4CAF50),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  _formatDate(transaction.date),
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5),
-                    fontSize: 10,
-                  ),
-                ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1481,8 +1558,12 @@ class _TransactionsByMonthSheetState extends State<_TransactionsByMonthSheet> {
     BuildContext context,
     Transaction transaction,
     Map<String, CategoryData> categories,
+    Function(Transaction)? onTransactionEdit,
   ) {
-    final categoryData = categories[transaction.categoryKey];
+    // Get category data from appropriate source
+    final categoryData = transaction.type == TransactionType.income
+        ? incomeCategories[transaction.categoryKey]
+        : categories[transaction.categoryKey];
     final isExpense = transaction.type == TransactionType.expense;
 
     showModalBottomSheet(
@@ -1616,6 +1697,27 @@ class _TransactionsByMonthSheetState extends State<_TransactionsByMonthSheet> {
             ],
 
             const SizedBox(height: 24),
+            
+            // Edit Button
+            if (onTransactionEdit != null)
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  onTransactionEdit(transaction);
+                },
+                icon: const Icon(Icons.edit),
+                label: const Text('Edit Transaction'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00F5FF),
+                  foregroundColor: const Color(0xFF1A1F3A),
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            
+            const SizedBox(height: 16),
           ],
         ),
       ),

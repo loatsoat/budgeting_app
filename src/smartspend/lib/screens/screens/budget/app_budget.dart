@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../models/budget_models.dart';
 import '../../../services/simple_auth_manager.dart';
 import '../../../services/budget_data_service.dart';
@@ -30,11 +31,12 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
   Map<String, String> tempBudgetValues = {};
   final ValueNotifier<int> _walletTabNotifier = ValueNotifier<int>(0);
   bool _walletShowingList = false;
+  bool _isCardConnected = false;
   
   // Savings Goals
   List<SavingsGoal> savingsGoals = [];
   
-  // Sample bank transactions
+  // Mock bank transactions for demonstration
   List<Transaction> bankTransactions = [
     Transaction(
       id: '1',
@@ -91,6 +93,22 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
       vsync: this,
     )..repeat();
     _loadUserBudgetData();
+    _loadCardConnectionStatus();
+  }
+
+  Future<void> _loadCardConnectionStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isCardConnected = prefs.getBool('bank_card_connected') ?? false;
+    });
+  }
+
+  Future<void> _saveCardConnectionStatus(bool connected) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('bank_card_connected', connected);
+    setState(() {
+      _isCardConnected = connected;
+    });
   }
 
   // Load user-specific budget data
@@ -143,8 +161,19 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
     return spent;
   }
 
-  double get budgetLeft => totalBudget - totalSpent;
-  double get budgetPercentage => totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+  double get totalIncome {
+    double income = 0;
+    for (var transaction in transactions) {
+      if (transaction.type == TransactionType.income) {
+        income += transaction.amount;
+      }
+    }
+    return income;
+  }
+
+  double get availableBudget => totalBudget + totalIncome;
+  double get budgetLeft => availableBudget - totalSpent;
+  double get budgetPercentage => availableBudget > 0 ? (totalSpent / availableBudget) * 100 : 0;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -172,6 +201,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                     activeTab: activeTab,
                     isEditingBudgets: isEditingBudgets,
                     budgetAmount: totalBudget,
+                    totalIncome: totalIncome,
                     onEditToggle: () {
                       setState(() {
                         if (isEditingBudgets) {
@@ -181,6 +211,10 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                         }
                       });
                     },
+                    onReturnFromSettings: () {
+                      // Reload card connection status when returning from settings
+                      _loadCardConnectionStatus();
+                    },
                   ),
                   Expanded(
                     child: activeTab == 'budget'
@@ -189,7 +223,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                             key: const ValueKey('wallet_overview'),
                             transactions: transactions,
                             categories: categories,
-                            totalBudget: totalBudget,
+                            totalBudget: availableBudget,
                             totalSpent: totalSpent,
                             onTransactionEdit: _editTransaction,
                             tabNotifier: _walletTabNotifier,
@@ -225,48 +259,52 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
               ),
             ),
 
-            // Floating Connect Card Button
-            FloatingConnectCard(
-              transactions: bankTransactions,
-              onCardConnected: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Bank card connected successfully!'),
-                    backgroundColor: Color(0xFF4CAF50),
-                  ),
-                );
-              },
-              onTransactionAction: (transaction, isAccepted) {
-                setState(() {
-                  if (isAccepted) {
-                    transactions.add(transaction);
-                    
-                    final categoryKey = transaction.categoryKey;
-                    if (categoryBudgets.containsKey(categoryKey)) {
-                      final subcategory = transaction.category;
-                      if (categoryBudgets[categoryKey]!.containsKey(subcategory)) {
-                        categoryBudgets[categoryKey]![subcategory]!.spent += transaction.amount;
-                      } else {
-                        categoryBudgets[categoryKey]![subcategory] = SubcategoryBudget(
-                          budgeted: 0,
-                          spent: transaction.amount,
-                        );
-                      }
-                    }
-                    
-                    _saveUserBudgetData(); // Save after transaction
-                    
+            // Floating Connect Card Button (only show if not connected)
+            if (!_isCardConnected)
+              FloatingConnectCard(
+                transactions: bankTransactions,
+                onCardConnected: () async {
+                  await _saveCardConnectionStatus(true);
+                  if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Transaction saved: ${transaction.merchant}'),
-                        backgroundColor: const Color(0xFF4CAF50),
+                      const SnackBar(
+                        content: Text('Bank card connected successfully!'),
+                        backgroundColor: Color(0xFF4CAF50),
                       ),
                     );
                   }
-                });
-              },
-              onTransactionEdit: _editBankTransaction,
-            ),
+                },
+                onTransactionAction: (transaction, isAccepted) {
+                  setState(() {
+                    if (isAccepted) {
+                      transactions.add(transaction);
+                      
+                      final categoryKey = transaction.categoryKey;
+                      if (categoryBudgets.containsKey(categoryKey)) {
+                        final subcategory = transaction.category;
+                        if (categoryBudgets[categoryKey]!.containsKey(subcategory)) {
+                          categoryBudgets[categoryKey]![subcategory]!.spent += transaction.amount;
+                        } else {
+                          categoryBudgets[categoryKey]![subcategory] = SubcategoryBudget(
+                            budgeted: 0,
+                            spent: transaction.amount,
+                          );
+                        }
+                      }
+                      
+                      _saveUserBudgetData();
+                      
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Transaction saved: ${transaction.merchant}'),
+                          backgroundColor: const Color(0xFF4CAF50),
+                        ),
+                      );
+                    }
+                  });
+                },
+                onTransactionEdit: _editBankTransaction,
+              ),
           ],
         ),
       ),
@@ -897,7 +935,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
             final index = savingsGoals.indexWhere((g) => g.id == goal.id);
             if (index != -1) savingsGoals[index] = goal;
           });
-          _saveUserBudgetData(); // Save after goal update
+          _saveUserBudgetData();
         },
       ),
     );

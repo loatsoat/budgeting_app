@@ -269,7 +269,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                     ),
                     child: DropdownButtonFormField<String>(
-                      value: _selectedSecurityQuestion,
+                      initialValue: _selectedSecurityQuestion,
                       decoration: InputDecoration(
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,

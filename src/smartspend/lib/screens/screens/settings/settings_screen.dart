@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../services/simple_auth_manager.dart';
 import '../../../utils/db_admin.dart';
 import '../../../widgets/widgets/glassmorphic_card.dart';
@@ -22,6 +23,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _obscureNewPassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
+  bool _isCardConnected = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCardConnectionStatus();
+  }
+
+  Future<void> _loadCardConnectionStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isCardConnected = prefs.getBool('bank_card_connected') ?? false;
+    });
+  }
 
   @override
   void dispose() {
@@ -284,14 +299,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   Color(0xFF00B8FF),
                                 ],
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF00F5FF)
-                                      .withValues(alpha: 0.3),
-                                  blurRadius: 20,
-                                  spreadRadius: 2,
-                                ),
-                              ],
                             ),
                             child: Center(
                               child: Text(
@@ -455,6 +462,80 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
 
                     const SizedBox(height: 24),
+
+                    // Bank Card Section
+                    if (_isCardConnected) ... [
+                      const Text(
+                        'Bank Card',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      GlassmorphicCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFD8A5FF).withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.credit_card,
+                                  color: Color(0xFFD8A5FF),
+                                  size: 20,
+                                ),
+                              ),
+                              title: const Text(
+                                'Disconnect Bank Card',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              subtitle: Text(
+                                'Remove card connection',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.6),
+                                  fontSize: 14,
+                                ),
+                              ),
+                              trailing: const Icon(
+                                Icons.logout,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                              onTap: () async {
+                                final prefs = await SharedPreferences.getInstance();
+                                await prefs.setBool('bank_card_connected', false);
+                                setState(() {
+                                  _isCardConnected = false;
+                                });
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Bank card disconnected. Button will appear on budget screen.'),
+                                      backgroundColor: Color(0xFF4CAF50),
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+                    ],
 
                     // Database Management Section
                     const Text(

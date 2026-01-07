@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../models/budget_models.dart';
 
-class FloatingConnectCard extends StatelessWidget {
+class FloatingConnectCard extends StatefulWidget {
   final List<Transaction> transactions;
   final VoidCallback onCardConnected;
   final Function(Transaction, bool) onTransactionAction;
@@ -14,6 +16,34 @@ class FloatingConnectCard extends StatelessWidget {
     required this.onTransactionAction,
     this.onTransactionEdit,
   });
+
+  @override
+  State<FloatingConnectCard> createState() => _FloatingConnectCardState();
+}
+
+class _FloatingConnectCardState extends State<FloatingConnectCard> {
+  String _cardNumber = 'NO CARD';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCardNumber();
+  }
+
+  Future<void> _loadCardNumber() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _cardNumber = prefs.getString('bank_card_number') ?? 'NO CARD';
+    });
+  }
+
+  Future<void> _saveCardNumber(String cardNumber) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('bank_card_number', cardNumber);
+    setState(() {
+      _cardNumber = cardNumber;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +77,8 @@ class FloatingConnectCard extends StatelessWidget {
   }
 
   void _showConnectCardDialog(BuildContext context) {
+    final cardController = TextEditingController(text: _cardNumber == 'NO CARD' ? '' : _cardNumber);
+    
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -134,7 +166,7 @@ class FloatingConnectCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                          // masked card number (static)
+                          // card number input field
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                             child: Column(
@@ -150,21 +182,42 @@ class FloatingConnectCard extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF1A2A3F).withValues(alpha: 0.8),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                                TextField(
+                                  controller: cardController,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    letterSpacing: 2,
                                   ),
-                                  child: Text(
-                                    '•••• •••• •••• ••••',
-                                    style: TextStyle(
+                                  decoration: InputDecoration(
+                                    hintText: _cardNumber,
+                                    hintStyle: TextStyle(
                                       color: Colors.white.withValues(alpha: 0.5),
                                       fontSize: 14,
                                       letterSpacing: 2,
                                     ),
+                                    filled: true,
+                                    fillColor: const Color(0xFF1A2A3F).withValues(alpha: 0.8),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: Color(0xFFD8A5FF), width: 1.5),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                   ),
+                                  keyboardType: TextInputType.number,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                    LengthLimitingTextInputFormatter(16),
+                                    _CardNumberInputFormatter(),
+                                  ],
                                 ),
                               ],
                             ),
@@ -183,10 +236,16 @@ class FloatingConnectCard extends StatelessWidget {
                                   ),
                                   elevation: 4,
                                 ),
-                                onPressed: () {
-                                  onCardConnected();
-                                  Navigator.pop(context);
-                                  _showTransactionSwiper(context);
+                                onPressed: () async {
+                                  final cardNum = cardController.text.trim();
+                                  if (cardNum.isNotEmpty) {
+                                    await _saveCardNumber(cardNum);
+                                  }
+                                  widget.onCardConnected();
+                                  if (context.mounted) {
+                                    Navigator.pop(context);
+                                    _showTransactionSwiper(context);
+                                  }
                                 },
                                 child: const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -221,6 +280,10 @@ class FloatingConnectCard extends StatelessWidget {
   }
 
   void _showTransactionSwiper(BuildContext context) {
+    final transactions = widget.transactions;
+    final onAction = widget.onTransactionAction;
+    final onEdit = widget.onTransactionEdit;
+    
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -275,8 +338,8 @@ class FloatingConnectCard extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               child: _SwipeDeck(
                                 transactions: transactions,
-                                onAction: onTransactionAction,
-                                onEdit: onTransactionEdit,
+                                onAction: onAction,
+                                onEdit: onEdit,
                                 parentContext: context, // Pass the parent context
                               ),
                             ),
@@ -538,6 +601,28 @@ class _TransactionCard extends StatelessWidget {
         const SizedBox(height: 4),
         Text(value, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)),
       ],
+    );
+  }
+}
+
+// Card number formatter to add spaces every 4 digits
+class _CardNumberInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    final text = newValue.text.replaceAll(' ', '');
+    final buffer = StringBuffer();
+    
+    for (int i = 0; i < text.length; i++) {
+      if (i > 0 && i % 4 == 0) {
+        buffer.write(' ');
+      }
+      buffer.write(text[i]);
+    }
+    
+    final formatted = buffer.toString();
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
     );
   }
 }

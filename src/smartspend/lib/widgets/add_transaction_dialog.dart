@@ -70,15 +70,26 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
     // Keep income values positive even if the user typed a leading minus.
     final normalizedAmount = amount.abs();
 
-    final categoryData = widget.categories[_selectedCategoryKey];
-    if (categoryData == null) return;
+    // For income transactions, use a generic 'Income' category
+    final String categoryName;
+    final String categoryKeyValue;
+    
+    if (_selectedType == TransactionType.income) {
+      categoryName = 'Income';
+      categoryKeyValue = 'income';
+    } else {
+      final categoryData = widget.categories[_selectedCategoryKey];
+      if (categoryData == null) return;
+      categoryName = categoryData.name;
+      categoryKeyValue = _selectedCategoryKey;
+    }
 
     final transaction = Transaction(
       id: _isEditing ? widget.existingTransaction!.id : DateTime.now().millisecondsSinceEpoch.toString(),
       type: _selectedType,
       amount: normalizedAmount,
-      category: categoryData.name,
-      categoryKey: _selectedCategoryKey,
+      category: categoryName,
+      categoryKey: categoryKeyValue,
       note: _noteController.text.trim().isEmpty ? 'No note' : _noteController.text.trim(),
       date: _selectedDate,
       excludeFromBudget: _excludeFromBudget,
@@ -230,17 +241,18 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                           children: [
                             _buildTypeButton('EXPENSE', TransactionType.expense),
                             _buildTypeButton('INCOME', TransactionType.income),
-                            _buildTypeButton('TRANSFER', TransactionType.transfer),
                           ],
                         ),
                       ),
                       
                       const SizedBox(height: 24),
                       
-                      // Category Selector
-                      _buildCategorySelector(),
+                      // Category Selector (hidden for income)
+                      if (_selectedType != TransactionType.income)
+                        _buildCategorySelector(),
                       
-                      const SizedBox(height: 20),
+                      if (_selectedType != TransactionType.income)
+                        const SizedBox(height: 20),
                       
                       // Goal Selector (only for savings category)
                       if (_selectedCategoryKey == 'savings' && widget.savingsGoals != null && widget.savingsGoals!.isNotEmpty)
@@ -303,7 +315,19 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
     final isSelected = _selectedType == type;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _selectedType = type),
+        onTap: () {
+          setState(() {
+            _selectedType = type;
+            // Reset category when switching transaction type
+            if (type == TransactionType.income) {
+              _selectedCategoryKey = 'salary';
+            } else if (type == TransactionType.expense) {
+              _selectedCategoryKey = 'food';
+            } else {
+              _selectedCategoryKey = 'food';
+            }
+          });
+        },
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(

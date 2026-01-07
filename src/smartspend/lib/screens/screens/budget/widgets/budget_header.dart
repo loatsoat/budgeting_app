@@ -77,6 +77,8 @@ class BudgetHeader extends StatelessWidget {
   final bool isEditingBudgets;
   final VoidCallback onEditToggle;
   final double? budgetAmount;
+  final double? totalIncome;
+  final VoidCallback? onReturnFromSettings;
 
   const BudgetHeader({
     super.key,
@@ -84,6 +86,8 @@ class BudgetHeader extends StatelessWidget {
     required this.isEditingBudgets,
     required this.onEditToggle,
     this.budgetAmount,
+    this.totalIncome,
+    this.onReturnFromSettings,
   });
 
   String _getInitial(BuildContext context) {
@@ -222,14 +226,18 @@ class BudgetHeader extends StatelessWidget {
                 color: Colors.white,
                 size: 16,
               ),
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
-                Navigator.push(
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => const SettingsScreen(),
                   ),
                 );
+                // Trigger refresh when returning from settings
+                if (onReturnFromSettings != null) {
+                  onReturnFromSettings!();
+                }
               },
             ),
             
