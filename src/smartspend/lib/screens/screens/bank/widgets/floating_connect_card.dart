@@ -1,7 +1,9 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../models/budget_models.dart';
 
-class FloatingConnectCard extends StatelessWidget {
+class FloatingConnectCard extends StatefulWidget {
   final List<Transaction> transactions;
   final VoidCallback onCardConnected;
   final Function(Transaction, bool) onTransactionAction;
@@ -14,6 +16,52 @@ class FloatingConnectCard extends StatelessWidget {
     required this.onTransactionAction,
     this.onTransactionEdit,
   });
+
+  @override
+  State<FloatingConnectCard> createState() => _FloatingConnectCardState();
+}
+
+class _FloatingConnectCardState extends State<FloatingConnectCard> {
+  final TextEditingController _cardNumberController = TextEditingController();
+  final FocusNode _cardNumberFocus = FocusNode();
+  String _formattedCardNumber = '';
+  bool _isCardNumberValid = false;
+
+  @override
+  void dispose() {
+    _cardNumberController.dispose();
+    _cardNumberFocus.dispose();
+    super.dispose();
+  }
+
+  void _formatCardNumber(String value) {
+    String formatted = '';
+    int count = 0;
+    
+    // Remove all non-digits
+    String digits = value.replaceAll(RegExp(r'\D'), '');
+    
+    // Take only first 16 digits
+    digits = digits.substring(0, math.min(16, digits.length));
+    
+    // Add space every 4 digits
+    for (int i = 0; i < digits.length; i++) {
+      if (count > 0 && count % 4 == 0) {
+        formatted += ' ';
+      }
+      formatted += digits[i];
+      count++;
+    }
+    
+    setState(() {
+      _formattedCardNumber = formatted;
+      _cardNumberController.value = TextEditingValue(
+        text: formatted,
+        selection: TextSelection.collapsed(offset: formatted.length),
+      );
+      _isCardNumberValid = digits.length == 16;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -134,7 +182,7 @@ class FloatingConnectCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                          // masked card number (static)
+                          // card number input field
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                             child: Column(
@@ -151,21 +199,56 @@ class FloatingConnectCard extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 8),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                   decoration: BoxDecoration(
                                     color: const Color(0xFF1A2A3F).withValues(alpha: 0.8),
                                     borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                                    border: Border.all(
+                                      color: _isCardNumberValid 
+                                          ? const Color(0xFFD8A5FF) 
+                                          : Colors.white.withValues(alpha: 0.1),
+                                    ),
                                   ),
-                                  child: Text(
-                                    '•••• •••• •••• ••••',
-                                    style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.5),
+                                  child: TextField(
+                                    controller: _cardNumberController,
+                                    focusNode: _cardNumberFocus,
+                                    style: const TextStyle(
+                                      color: Colors.white,
                                       fontSize: 14,
                                       letterSpacing: 2,
                                     ),
+                                    keyboardType: TextInputType.number,
+                                    maxLength: 19, // 16 digits + 3 spaces
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                    ],
+                                    decoration: InputDecoration(
+                                      counterText: '',
+                                      border: InputBorder.none,
+                                      contentPadding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                      hintText: '1234 5678 9012 3456',
+                                      hintStyle: TextStyle(
+                                        color: Colors.white.withValues(alpha: 0.3),
+                                        fontSize: 14,
+                                        letterSpacing: 2,
+                                      ),
+                                    ),
+                                    onChanged: _formatCardNumber,
                                   ),
                                 ),
+                                if (!_isCardNumberValid && _cardNumberController.text.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8),
+                                    child: Text(
+                                      'Please enter a valid 16-digit card number',
+                                      style: TextStyle(
+                                        color: Colors.red.withValues(alpha: 0.7),
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ),
                               ],
                             ),
                           ),
@@ -184,9 +267,18 @@ class FloatingConnectCard extends StatelessWidget {
                                   elevation: 4,
                                 ),
                                 onPressed: () {
-                                  onCardConnected();
-                                  Navigator.pop(context);
-                                  _showTransactionSwiper(context);
+                                  if (_isCardNumberValid) {
+                                    widget.onCardConnected();
+                                    Navigator.pop(context);
+                                    _showTransactionSwiper(context);
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Please enter a valid 16-digit card number'),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
                                 },
                                 child: const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -274,9 +366,9 @@ class FloatingConnectCard extends StatelessWidget {
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               child: _SwipeDeck(
-                                transactions: transactions,
-                                onAction: onTransactionAction,
-                                onEdit: onTransactionEdit,
+                                transactions: widget.transactions,
+                                onAction: widget.onTransactionAction,
+                                onEdit: widget.onTransactionEdit,
                                 parentContext: context, // Pass the parent context
                               ),
                             ),
