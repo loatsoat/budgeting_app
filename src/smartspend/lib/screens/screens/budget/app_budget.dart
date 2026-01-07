@@ -240,6 +240,20 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                               });
                               _saveUserBudgetData(); // Save after goal update
                             },
+                            onGoalDeleted: (goal) {
+                              setState(() {
+                                savingsGoals.removeWhere((g) => g.id == goal.id);
+                              });
+                              _saveUserBudgetData();
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Deleted goal: ${goal.name}'),
+                                    backgroundColor: const Color(0xFFFF4D67),
+                                  ),
+                                );
+                              }
+                            },
                             onTransactionAdded: _addTransaction,
                           ),
                   ),
@@ -371,13 +385,17 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
           ),
           
           // Center - App Name
-          const Text(
-            'SmartSpend',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
+          Flexible(
+            child: Text(
+              'SmartSpend',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ),
           
@@ -497,6 +515,15 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
           final categoryBudgeted =
               subcategories.values.fold<double>(0, (s, b) => s + b.budgeted);
 
+          // Calculate display values - use savings goals for savings category
+          double displaySpent = categorySpent;
+          double displayBudgeted = categoryBudgeted;
+          
+          if (categoryKey == 'savings') {
+            displaySpent = savingsGoals.fold(0, (sum, goal) => sum + goal.currentAmount);
+            displayBudgeted = savingsGoals.fold(0, (sum, goal) => sum + goal.targetAmount);
+          }
+
           return Container(
             margin: const EdgeInsets.only(bottom: 16),
             decoration: BoxDecoration(
@@ -551,16 +578,20 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
                                 ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                '€${categorySpent.toStringAsFixed(0)} / €${categoryBudgeted.toStringAsFixed(0)}',
+                                '€${displaySpent.toStringAsFixed(0)} / €${displayBudgeted.toStringAsFixed(0)}',
                                 style: TextStyle(
-                                  color: categorySpent > categoryBudgeted
+                                  color: displaySpent > displayBudgeted
                                       ? Colors.red
                                       : categoryData.solidColor,
                                   fontSize: 13,
                                 ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
                               ),
                             ],
                           ),
@@ -575,19 +606,99 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                 ),
                 if (isExpanded)
                   Column(
-                    children: subcategories.entries
-                        .map((e) => _buildSubcategoryItem(
-                              e.key,
-                              e.value,
-                              categoryData.solidColor,
-                            ))
-                        .toList(),
+                    children: categoryKey == 'savings'
+                        ? savingsGoals.map((goal) => _buildSavingsGoalItem(goal, categoryData.solidColor)).toList()
+                        : subcategories.entries
+                            .map((e) => _buildSubcategoryItem(
+                                  e.key,
+                                  e.value,
+                                  categoryData.solidColor,
+                                ))
+                            .toList(),
                   ),
               ],
             ),
           );
         }),
       ],
+    );
+  }
+
+  Widget _buildSavingsGoalItem(SavingsGoal goal, Color categoryColor) {
+    final percentage = goal.targetAmount > 0
+        ? (goal.currentAmount / goal.targetAmount) * 100
+        : 0.0;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: goal.color.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                goal.emoji,
+                style: const TextStyle(fontSize: 16),
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  goal.name,
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  height: 4,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(2),
+                    color: Colors.white.withValues(alpha: 0.1),
+                  ),
+                  child: FractionallySizedBox(
+                    alignment: Alignment.centerLeft,
+                    widthFactor: (percentage / 100).clamp(0.0, 1.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(2),
+                        color: percentage >= 100 ? Colors.green : goal.color,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              '€${goal.currentAmount.toStringAsFixed(0)} / €${goal.targetAmount.toStringAsFixed(0)}',
+              style: TextStyle(
+                color: goal.color,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -617,6 +728,8 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                 Text(
                   subcategoryName,
                   style: const TextStyle(color: Colors.white70, fontSize: 14),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
                 const SizedBox(height: 4),
                 Container(
@@ -639,13 +752,17 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
               ],
             ),
           ),
-          const SizedBox(width: 16),
-          Text(
-            '€${budget.spent.toStringAsFixed(0)} / €${budget.budgeted.toStringAsFixed(0)}',
-            style: TextStyle(
-              color: categoryColor,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              '€${budget.spent.toStringAsFixed(0)} / €${budget.budgeted.toStringAsFixed(0)}',
+              style: TextStyle(
+                color: categoryColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ),
         ],
@@ -798,6 +915,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
       context: context,
       builder: (context) => AddTransactionDialog(
         categories: categories,
+        categoryBudgets: categoryBudgets,
         onTransactionAdded: _addTransaction,
         savingsGoals: savingsGoals,
         onGoalUpdated: (goal) {

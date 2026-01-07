@@ -15,6 +15,7 @@ class WalletOverviewContent extends StatefulWidget {
   final List<SavingsGoal>? savingsGoals;
   final Function(SavingsGoal)? onGoalCreated;
   final Function(SavingsGoal)? onGoalUpdated;
+  final Function(SavingsGoal)? onGoalDeleted;
   final Function(Transaction)? onTransactionAdded;
 
   const WalletOverviewContent({
@@ -29,6 +30,7 @@ class WalletOverviewContent extends StatefulWidget {
     this.savingsGoals,
     this.onGoalCreated,
     this.onGoalUpdated,
+    this.onGoalDeleted,
     this.onTransactionAdded,
   });
 
@@ -296,7 +298,6 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
       children: [
         _buildSummaryItem('INCOME', '${totalIncome.toStringAsFixed(0)}€', const Color(0xFF4CAF50)),
         _buildSummaryItem('EXPENSES', '${totalExpenses.toStringAsFixed(0)}€', const Color(0xFFFF6B9D)),
-        _buildSummaryItem('LEFT', '${leftToSpend.toStringAsFixed(0)}€', const Color(0xFF00F5FF)),
       ],
     );
   }
@@ -673,49 +674,136 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
             ),
           )
         else
-          ...goals.map((goal) => SavingsGoalCard(
-                goal: goal,
-                onTap: () {
-                  // Could add edit dialog here
-                },
-                onAddMoney: () {
-                  showAddMoneyDialog(context, goal, (amount) {
-                    // Update the goal
-                    final updatedGoal = goal;
-                    updatedGoal.currentAmount += amount;
-                    widget.onGoalUpdated?.call(updatedGoal);
-                    
-                    // Create a transaction for the savings
-                    if (widget.onTransactionAdded != null) {
-                      final transaction = Transaction(
-                        id: DateTime.now().millisecondsSinceEpoch.toString(),
-                        type: TransactionType.expense,
-                        amount: amount,
-                        category: 'Savings',
-                        categoryKey: 'savings',
-                        note: 'Saved for ${goal.name}',
-                        date: DateTime.now(),
-                        excludeFromBudget: true, // Don't count towards budget
-                        description: 'Added to savings goal: ${goal.name}',
+          SizedBox(
+            height: 300,
+            child: PageView.builder(
+              itemCount: goals.length,
+              padEnds: false,
+              controller: PageController(viewportFraction: 0.9),
+              itemBuilder: (context, index) {
+                final goal = goals[index];
+                return Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: SavingsGoalCard(
+                    goal: goal,
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        backgroundColor: Colors.transparent,
+                        builder: (ctx) {
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1A1F33),
+                              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                            ),
+                            child: SafeArea(
+                              top: false,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ListTile(
+                                    leading: const Icon(Icons.add_circle_outline, color: Colors.white),
+                                    title: const Text('Add Money', style: TextStyle(color: Colors.white)),
+                                    onTap: () {
+                                      Navigator.pop(ctx);
+                                      showAddMoneyDialog(context, goal, (amount) {
+                                        final updatedGoal = goal;
+                                        updatedGoal.currentAmount += amount;
+                                        widget.onGoalUpdated?.call(updatedGoal);
+                                        if (widget.onTransactionAdded != null) {
+                                          final transaction = Transaction(
+                                            id: DateTime.now().millisecondsSinceEpoch.toString(),
+                                            type: TransactionType.expense,
+                                            amount: amount,
+                                            category: 'Savings',
+                                            categoryKey: 'savings',
+                                            note: 'Saved for ${goal.name}',
+                                            date: DateTime.now(),
+                                            excludeFromBudget: true,
+                                            description: 'Added to savings goal: ${goal.name}',
+                                          );
+                                          widget.onTransactionAdded?.call(transaction);
+                                        }
+                                      });
+                                    },
+                                  ),
+                                  ListTile(
+                                    leading: const Icon(Icons.edit, color: Colors.white),
+                                    title: const Text('Edit Goal', style: TextStyle(color: Colors.white)),
+                                    onTap: () {
+                                      Navigator.pop(ctx);
+                                      showEditGoalDialog(
+                                        context,
+                                        goal,
+                                        onGoalUpdated: (g) => widget.onGoalUpdated?.call(g),
+                                        onGoalDeleted: () => widget.onGoalDeleted?.call(goal),
+                                      );
+                                    },
+                                  ),
+                                  ListTile(
+                                    leading: const Icon(Icons.delete, color: Color(0xFFFF4D67)),
+                                    title: const Text('Delete Goal', style: TextStyle(color: Color(0xFFFF4D67))),
+                                    onTap: () {
+                                      Navigator.pop(ctx);
+                                      showEditGoalDialog(
+                                        context,
+                                        goal,
+                                        onGoalUpdated: (g) => widget.onGoalUpdated?.call(g),
+                                        onGoalDeleted: () => widget.onGoalDeleted?.call(goal),
+                                      );
+                                    },
+                                  ),
+                                  const SizedBox(height: 8),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
                       );
-                      widget.onTransactionAdded?.call(transaction);
-                    }
-                    
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Added €${amount.toStringAsFixed(0)} to ${goal.name}'),
-                        backgroundColor: const Color(0xFF4CAF50),
-                      ),
-                    );
-                  });
-                },
-              )),
+                    },
+                    onAddMoney: () {
+                      showAddMoneyDialog(context, goal, (amount) {
+                        // Update the goal
+                        final updatedGoal = goal;
+                        updatedGoal.currentAmount += amount;
+                        widget.onGoalUpdated?.call(updatedGoal);
+                        
+                        // Create a transaction for the savings
+                        if (widget.onTransactionAdded != null) {
+                          final transaction = Transaction(
+                            id: DateTime.now().millisecondsSinceEpoch.toString(),
+                            type: TransactionType.expense,
+                            amount: amount,
+                            category: 'Savings',
+                            categoryKey: 'savings',
+                            note: 'Saved for ${goal.name}',
+                            date: DateTime.now(),
+                            excludeFromBudget: true, // Don't count towards budget
+                            description: 'Added to savings goal: ${goal.name}',
+                          );
+                          widget.onTransactionAdded?.call(transaction);
+                        }
+                        
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Added €${amount.toStringAsFixed(0)} to ${goal.name}'),
+                            backgroundColor: const Color(0xFF4CAF50),
+                          ),
+                        );
+                      });
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
       ],
     );
   }
 
   Widget _buildOverviewContent() {
-    final double bottomNavReserve = MediaQuery.of(context).padding.bottom + 140.0;
+    final double bottomNavReserve = MediaQuery.of(context).padding.bottom + 180.0;
     
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
