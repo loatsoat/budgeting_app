@@ -19,7 +19,7 @@ class BudgetBottomNavigation extends StatelessWidget {
     final bottomInset = MediaQuery.of(context).padding.bottom;
 
     // Dynamic navigation bar height
-    final navHeight = (screenHeight * 0.09).clamp(56.0, 80.0);
+    final navHeight = (screenHeight * 0.09).clamp(60.0, 80.0);
     final fabSize = (screenWidth * 0.14).clamp(56.0, 68.0);
 
     return SizedBox(
@@ -134,7 +134,7 @@ class BudgetBottomNavigation extends StatelessWidget {
       onTap: () => onTabChanged(tabKey),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
           gradient: isActive ? gradient : null,
           borderRadius: BorderRadius.circular(16),
@@ -148,22 +148,26 @@ class BudgetBottomNavigation extends StatelessWidget {
                 ]
               : [],
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: Colors.white, size: 24),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.5,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.center,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: Colors.white, size: 22),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 9,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

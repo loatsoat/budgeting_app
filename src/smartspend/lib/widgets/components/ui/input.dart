@@ -67,48 +67,56 @@ class CustomInput extends StatelessWidget {
           focusNode: focusNode,
           maxLines: maxLines,
           minLines: minLines,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w600,
+          ),
+          cursorColor: Color(0xFF00F5FF),
           decoration: InputDecoration(
             hintText: placeholder,
+            hintStyle: TextStyle(
+              color: Colors.white.withValues(alpha: 0.55),
+            ),
             prefixIcon: prefixIcon,
             suffixIcon: suffixIcon,
             errorText: errorText,
             filled: true,
-            fillColor: const Color(0xFFF3F3F5),
+            fillColor: const Color(0xFF1A2B3F),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: theme.dividerColor.withValues(alpha: 0.1),
+                color: Colors.white.withValues(alpha: 0.15),
               ),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: theme.dividerColor.withValues(alpha: 0.1),
+                color: Colors.white.withValues(alpha: 0.15),
               ),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: BorderSide(
-                color: theme.primaryColor,
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xFF00F5FF),
                 width: 1.5,
               ),
             ),
             errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(
                 color: Colors.red,
               ),
             ),
             focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(
                 color: Colors.red,
                 width: 1.5,
               ),
             ),
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 8,
+              horizontal: 14,
+              vertical: 12,
             ),
           ),
         ),

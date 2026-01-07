@@ -5,6 +5,7 @@ class AddTransactionDialog extends StatefulWidget {
   final Function(Transaction) onTransactionAdded;
   final Function(Transaction)? onTransactionUpdated;
   final Map<String, CategoryData> categories;
+  final Map<String, Map<String, SubcategoryBudget>>? categoryBudgets;
   final Transaction? existingTransaction;
   final List<SavingsGoal>? savingsGoals;
   final Function(SavingsGoal)? onGoalUpdated;
@@ -13,6 +14,7 @@ class AddTransactionDialog extends StatefulWidget {
     super.key,
     required this.onTransactionAdded,
     required this.categories,
+    this.categoryBudgets,
     this.existingTransaction,
     this.onTransactionUpdated,
     this.savingsGoals,
@@ -29,6 +31,7 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
   
   TransactionType _selectedType = TransactionType.expense;
   String _selectedCategoryKey = 'food';
+  String? _selectedSubcategoryName;
   DateTime _selectedDate = DateTime.now();
   bool _excludeFromBudget = false;
   String? _selectedGoalId;
@@ -80,7 +83,9 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
     } else {
       final categoryData = widget.categories[_selectedCategoryKey];
       if (categoryData == null) return;
-      categoryName = categoryData.name;
+      
+      // Use subcategory name if selected, otherwise use category name
+      categoryName = _selectedSubcategoryName ?? categoryData.name;
       categoryKeyValue = _selectedCategoryKey;
     }
 
@@ -350,60 +355,133 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
 
   Widget _buildCategorySelector() {
     final categoryData = widget.categories[_selectedCategoryKey];
-    return GestureDetector(
-      onTap: _showCategoryPicker,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(12),
+    final hasSubcategories = (widget.categoryBudgets?[_selectedCategoryKey]?.isNotEmpty ?? false);
+    
+    return Column(
+      children: [
+        GestureDetector(
+          onTap: _showCategoryPicker,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: categoryData?.solidColor.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      categoryData?.icon ?? '🍽️',
+                      style: const TextStyle(fontSize: 20),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Category:',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.6),
+                          fontSize: 12,
+                        ),
+                      ),
+                      Text(
+                        categoryData?.name ?? 'Food',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: Colors.white.withValues(alpha: 0.4),
+                ),
+              ],
+            ),
+          ),
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: categoryData?.solidColor.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  categoryData?.icon ?? '🍽️',
-                  style: const TextStyle(fontSize: 20),
+        // Show subcategory selector if available
+        if (hasSubcategories)
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: GestureDetector(
+              onTap: _showSubcategoryPicker,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _selectedSubcategoryName != null 
+                        ? Colors.cyan.withValues(alpha: 0.3)
+                        : Colors.white.withValues(alpha: 0.1),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: categoryData?.solidColor.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          categoryData?.icon ?? '🍽️',
+                          style: const TextStyle(fontSize: 20),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Subcategory:',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.6),
+                              fontSize: 12,
+                            ),
+                          ),
+                          Text(
+                            _selectedSubcategoryName ?? 'Select a subcategory',
+                            style: TextStyle(
+                              color: _selectedSubcategoryName != null 
+                                  ? Colors.white 
+                                  : Colors.white.withValues(alpha: 0.5),
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.chevron_right,
+                      color: Colors.white.withValues(alpha: 0.4),
+                    ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Category:',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.6),
-                      fontSize: 12,
-                    ),
-                  ),
-                  Text(
-                    categoryData?.name ?? 'Food',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.chevron_right,
-              color: Colors.white.withValues(alpha: 0.4),
-            ),
-          ],
-        ),
-      ),
+          ),
+      ],
     );
   }
 
@@ -658,6 +736,180 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
   }
 
   void _showCategoryPicker() {
+    String? expandedCategoryKey;
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (context, scrollController) => Container(
+            decoration: const BoxDecoration(
+              color: Color(0xFF1A2B3F),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: SafeArea(
+              top: false,
+              child: Column(
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Text(
+                      'Select Category',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: ListView.builder(
+                      controller: scrollController,
+                      itemCount: widget.categories.length,
+                      itemBuilder: (context, index) {
+                        final entry = widget.categories.entries.elementAt(index);
+                        final key = entry.key;
+                        final category = entry.value;
+                        
+                        // For savings category, use savings goals as subcategories
+                        final isSavingsCategory = key == 'savings';
+                        final subcategories = isSavingsCategory 
+                            ? null 
+                            : widget.categoryBudgets?[key];
+                        
+                        final hasSubcategories = isSavingsCategory 
+                            ? (widget.savingsGoals?.isNotEmpty ?? false)
+                            : (subcategories?.isNotEmpty ?? false);
+                        
+                        final isExpanded = expandedCategoryKey == key;
+                        
+                        return Column(
+                          children: [
+                            ListTile(
+                              leading: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: category.solidColor.withValues(alpha: 0.2),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Text(category.icon, style: const TextStyle(fontSize: 20)),
+                                ),
+                              ),
+                              title: Text(
+                                category.name,
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                              trailing: hasSubcategories
+                                  ? Icon(
+                                      isExpanded ? Icons.expand_less : Icons.expand_more,
+                                      color: Colors.white70,
+                                    )
+                                  : null,
+                              onTap: () {
+                                if (hasSubcategories) {
+                                  // Toggle expansion
+                                  setModalState(() {
+                                    expandedCategoryKey = isExpanded ? null : key;
+                                  });
+                                } else {
+                                  // Select category directly
+                                  setState(() {
+                                    _selectedCategoryKey = key;
+                                    _selectedSubcategoryName = null;
+                                    _selectedGoalId = null;
+                                  });
+                                  Navigator.pop(context);
+                                }
+                              },
+                            ),
+                            // Show savings goals as subcategories for savings category
+                            if (isExpanded && isSavingsCategory && widget.savingsGoals != null)
+                              ...widget.savingsGoals!.map((goal) => ListTile(
+                                    contentPadding: const EdgeInsets.only(left: 72, right: 16),
+                                    leading: Container(
+                                      width: 32,
+                                      height: 32,
+                                      decoration: BoxDecoration(
+                                        color: goal.color.withValues(alpha: 0.2),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Center(
+                                        child: Text(goal.emoji, style: const TextStyle(fontSize: 16)),
+                                      ),
+                                    ),
+                                    title: Text(
+                                      goal.name,
+                                      style: TextStyle(
+                                        color: Colors.white.withValues(alpha: 0.9),
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    subtitle: Text(
+                                      '€${goal.currentAmount.toStringAsFixed(0)} / €${goal.targetAmount.toStringAsFixed(0)}',
+                                      style: TextStyle(
+                                        color: goal.color.withValues(alpha: 0.7),
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                    onTap: () {
+                                      setState(() {
+                                        _selectedCategoryKey = key;
+                                        _selectedSubcategoryName = goal.name;
+                                        _selectedGoalId = goal.id;
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                  )),
+                            // Show regular subcategories for other categories
+                            if (isExpanded && !isSavingsCategory && hasSubcategories)
+                              ...subcategories!.keys.map((subName) => ListTile(
+                                    contentPadding: const EdgeInsets.only(left: 72, right: 16),
+                                    title: Text(
+                                      subName,
+                                      style: TextStyle(
+                                        color: Colors.white.withValues(alpha: 0.9),
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    onTap: () {
+                                      setState(() {
+                                        _selectedCategoryKey = key;
+                                        _selectedSubcategoryName = subName;
+                                        _selectedGoalId = null;
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                  )),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showSubcategoryPicker() {
+    final subcategories = widget.categoryBudgets?[_selectedCategoryKey];
+    if (subcategories == null || subcategories.isEmpty) return;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -682,7 +934,7 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                 const Padding(
                   padding: EdgeInsets.all(16),
                   child: Text(
-                    'Select Category',
+                    'Select Subcategory',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 18,
@@ -693,29 +945,16 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                 Expanded(
                   child: ListView.builder(
                     controller: scrollController,
-                    itemCount: widget.categories.length,
+                    itemCount: subcategories.length,
                     itemBuilder: (context, index) {
-                      final entry = widget.categories.entries.elementAt(index);
-                      final key = entry.key;
-                      final category = entry.value;
+                      final subName = subcategories.keys.elementAt(index);
                       return ListTile(
-                        leading: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: category.solidColor.withValues(alpha: 0.2),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Text(category.icon, style: const TextStyle(fontSize: 20)),
-                          ),
-                        ),
                         title: Text(
-                          category.name,
+                          subName,
                           style: const TextStyle(color: Colors.white),
                         ),
                         onTap: () {
-                          setState(() => _selectedCategoryKey = key);
+                          setState(() => _selectedSubcategoryName = subName);
                           Navigator.pop(context);
                         },
                       );

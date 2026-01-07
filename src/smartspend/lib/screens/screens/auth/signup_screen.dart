@@ -262,8 +262,8 @@ class _SignupScreenState extends State<SignupScreen> {
                   const SizedBox(height: 12),
                   Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2A2F4A),
-                      borderRadius: BorderRadius.circular(12),
+                      color: Colors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: Colors.white.withValues(alpha: 0.1),
                       ),
@@ -275,13 +275,28 @@ class _SignupScreenState extends State<SignupScreen> {
                           horizontal: 16,
                           vertical: 16,
                         ),
-                        border: InputBorder.none,
+                        filled: true,
+                        fillColor: const Color(0xFF1A2B3F),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(
+                            color: const Color(0xFF395587).withValues(alpha: 0.5),
+                          ),
+                        ),
                         hintText: 'Select a security question',
                         hintStyle: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.4),
+                          color: Colors.white.withValues(alpha: 0.3),
                         ),
                       ),
-                      dropdownColor: const Color(0xFF2A2F4A),
+                      dropdownColor: const Color(0xFF1A2B3F),
                       style: const TextStyle(color: Colors.white, fontSize: 14),
                       icon: Icon(
                         Icons.arrow_drop_down,
@@ -292,7 +307,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           value: question,
                           child: Text(
                             question,
-                            style: const TextStyle(fontSize: 13),
+                            style: const TextStyle(color: Colors.white, fontSize: 13),
                           ),
                         );
                       }).toList(),
