@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'themes/app_theme.dart';
@@ -8,10 +9,13 @@ void main() {
   
   // Set system UI overlay style for status bar
   SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
+    SystemUiOverlayStyle(
       statusBarColor: Colors.transparent, // Transparent status bar
       statusBarIconBrightness: Brightness.light, // Light icons (white)
       statusBarBrightness: Brightness.dark, // For iOS
+      // Android-only properties
+      systemNavigationBarColor: Platform.isAndroid ? const Color(0xFF0A0E1A) : Colors.transparent,
+      systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
   
@@ -24,11 +28,12 @@ class HCIApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: const SystemUiOverlayStyle(
+      value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light, // White icons for dark background
         statusBarBrightness: Brightness.dark, // For iOS
-        systemNavigationBarColor: Color(0xFF0A0E1A), // Match app background
+        // Android-only properties
+        systemNavigationBarColor: Platform.isAndroid ? const Color(0xFF0A0E1A) : Colors.transparent,
         systemNavigationBarIconBrightness: Brightness.light,
       ),
       child: MaterialApp(
