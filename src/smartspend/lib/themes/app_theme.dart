@@ -1,7 +1,35 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Color constants from the CSS
+  // ==========================================
+  // SMARTSPEND DESIGN SYSTEM
+  // ==========================================
+  
+  // PRIMARY ACCENT COLOR (single color for consistency)
+  // Use for: main actions, key highlights, important UI elements
+  static const Color primaryAccent = Color(0xFF00A8E8); // Calm, trustworthy blue
+  
+  // BACKGROUND COLORS (dark theme for finance apps)
+  static const Color backgroundDark = Color(0xFF0A0E1A); // Deep navy
+  static const Color surfaceDark = Color(0xFF1A1F3A); // Card background
+  static const Color surfaceMedium = Color(0xFF2A3B5C); // Elevated cards
+  
+  // TEXT COLORS
+  static const Color textPrimary = Color(0xFFFFFFFF);
+  static const Color textSecondary = Color(0xB3FFFFFF); // 70% white
+  static const Color textTertiary = Color(0x99FFFFFF); // 60% white
+  static const Color textMuted = Color(0x66FFFFFF); // 40% white
+  
+  // STATUS COLORS (semantic colors for financial status)
+  static const Color statusSuccess = Color(0xFF4CAF50); // Green - positive, under budget
+  static const Color statusWarning = Color(0xFFFF9800); // Orange - warning, close to limit
+  static const Color statusDanger = Color(0xFFE57373); // Red - negative, over budget
+  
+  // NEUTRAL COLORS
+  static const Color borderColor = Color(0x1AFFFFFF); // 10% white
+  static const Color dividerColor = Color(0x0DFFFFFF); // 5% white
+  
+  // LEGACY COLORS (for backwards compatibility - gradually replace)
   static const Color primaryColor = Color(0xFF030213);
   static const Color backgroundColor = Color(0xFFFFFFFF);
   static const Color cardColor = Color(0xFFFFFFFF);
@@ -10,7 +38,6 @@ class AppTheme {
   static const Color mutedForegroundColor = Color(0xFF717182);
   static const Color accentColor = Color(0xFFE9EBEF);
   static const Color destructiveColor = Color(0xFFD4183D);
-  static const Color borderColor = Color(0x1A000000);
   static const Color inputBackgroundColor = Color(0xFFF3F3F5);
   static const Color switchBackgroundColor = Color(0xFFCBCED4);
 
@@ -23,6 +50,25 @@ class AppTheme {
   static const Color darkMutedForegroundColor = Color(0xFFB5B5B5);
   static const Color darkAccentColor = Color(0xFF454545);
   static const Color darkBorderColor = Color(0xFF454545);
+  
+  // ==========================================
+  // HELPER METHODS
+  // ==========================================
+  
+  /// Returns the appropriate status color based on budget percentage
+  /// percentage: 0-100+ (where 100 = at budget limit)
+  static Color getStatusColor(double percentage) {
+    if (percentage > 100) return statusDanger; // Over budget
+    if (percentage > 80) return statusWarning; // Close to limit
+    return statusSuccess; // Under budget
+  }
+  
+  /// Returns color for text based on financial value (positive/negative)
+  static Color getAmountColor(double amount) {
+    if (amount < 0) return statusDanger;
+    if (amount > 0) return statusSuccess;
+    return textSecondary;
+  }
 
   static ThemeData get lightTheme {
     return ThemeData(

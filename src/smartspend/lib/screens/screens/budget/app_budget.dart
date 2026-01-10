@@ -32,6 +32,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
   final ValueNotifier<int> _walletTabNotifier = ValueNotifier<int>(0);
   bool _walletShowingList = false;
   bool _isCardConnected = false;
+  bool budgetEqualsIncome = false;
   
   // Savings Goals
   List<SavingsGoal> savingsGoals = [];
@@ -171,7 +172,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
     return income;
   }
 
-  double get availableBudget => totalBudget + totalIncome;
+  double get availableBudget => budgetEqualsIncome ? totalIncome : (totalBudget > 0 ? totalBudget : totalIncome);
   double get budgetLeft => availableBudget - totalSpent;
   double get budgetPercentage => availableBudget > 0 ? (totalSpent / availableBudget) * 100 : 0;
   @override
@@ -194,9 +195,6 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
             SafeArea(
               child: Column(
                 children: [
-                  // Custom Status Bar with App Name
-                  _buildCustomStatusBar(),
-                  
                   BudgetHeader(
                     activeTab: activeTab,
                     isEditingBudgets: isEditingBudgets,
@@ -325,104 +323,6 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildCustomStatusBar() {
-    final now = DateTime.now();
-    final timeStr = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-    final dateStr = _formatDate(now);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Left side - Back button (conditionally) and Time/Date
-          Row(
-            children: [
-              if (_walletShowingList)
-                Padding(
-                  padding: const EdgeInsets.only(right: 12),
-                  child: GestureDetector(
-                    onTap: () {
-                      _walletTabNotifier.value = 0;
-                      setState(() => _walletShowingList = false);
-                    },
-                    child: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.arrow_back,
-                        color: Colors.white,
-                        size: 18,
-                      ),
-                    ),
-                  ),
-                ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    timeStr,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  Text(
-                    dateStr,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.6),
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          
-          // Center - App Name
-          Flexible(
-            child: Text(
-              'SmartSpend',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0.5,
-              ),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-            ),
-          ),
-          
-          // Right side - Battery
-          Row(
-            children: [
-              const Text(
-                '100%',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(width: 4),
-              Icon(
-                Icons.battery_full,
-                color: Colors.green[400],
-                size: 20,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   String _formatDate(DateTime date) {
     const months = [
       'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -491,14 +391,37 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                 ),
               ],
             ),
-            if (isEditingBudgets)
-              IconButton(
-                icon: const Icon(
-                  Icons.add_circle_outline,
-                  color: Color(0xFF00F5FF),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Edit Button
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      if (isEditingBudgets) {
+                        _saveAllBudgets();
+                      } else {
+                        _enterEditMode();
+                      }
+                    });
+                  },
+                  icon: Icon(
+                    isEditingBudgets ? Icons.check : Icons.edit,
+                    color: Colors.white70,
+                    size: 24,
+                  ),
                 ),
-                onPressed: _showManageCategoriesDialog,
-              ),
+                // Add Category Button (only in edit mode)
+                if (isEditingBudgets)
+                  IconButton(
+                    icon: const Icon(
+                      Icons.add_circle_outline,
+                      color: Color(0xFF00F5FF),
+                    ),
+                    onPressed: _showManageCategoriesDialog,
+                  ),
+              ],
+            ),
           ],
         ),
         const SizedBox(height: 16),
@@ -773,91 +696,186 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
   // Keep all the remaining methods unchanged
   void _showEditBudgetDialog() {
     final controller = TextEditingController(text: totalBudget.toStringAsFixed(0));
+    bool localBudgetEqualsIncome = budgetEqualsIncome;
     
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF1A1F3A),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(
-              color: const Color(0xFF00F5FF).withValues(alpha: 0.3),
-            ),
-          ),
-          title: const Row(
-            children: [
-              Icon(Icons.account_balance_wallet, color: Color(0xFF00F5FF), size: 24),
-              SizedBox(width: 12),
-              Text(
-                'Edit Total Budget',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: const Color(0xFF1A1F3A),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+                side: BorderSide(
+                  color: const Color(0xFF00F5FF).withValues(alpha: 0.3),
                 ),
               ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Set your monthly budget amount',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.7),
-                  fontSize: 14,
+              title: const Row(
+                children: [
+                  Icon(Icons.account_balance_wallet, color: Color(0xFF00F5FF), size: 24),
+                  SizedBox(width: 12),
+                  Text(
+                    'Edit Total Budget',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Set your monthly budget amount',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.7),
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Toggle switch
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2A3B5C).withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFF00F5FF).withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Budget = Income',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Budget matches your income',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.6),
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Switch(
+                          value: localBudgetEqualsIncome,
+                          onChanged: (value) {
+                            setDialogState(() {
+                              localBudgetEqualsIncome = value;
+                            });
+                          },
+                          activeThumbColor: const Color(0xFF00F5FF),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  if (!localBudgetEqualsIncome)
+                    CustomInput(
+                      controller: controller,
+                      label: 'Budget Amount',
+                      labelColor: Colors.white,
+                      placeholder: 'Enter amount',
+                      keyboardType: TextInputType.number,
+                    )
+                  else
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF00F5FF).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.info_outline,
+                            color: Color(0xFF00F5FF),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Your budget will automatically match your total income (€${totalIncome.toStringAsFixed(0)})',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.white70),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              CustomInput(
-                controller: controller,
-                label: 'Budget Amount',
-                labelColor: Colors.white,
-                placeholder: 'Enter amount',
-                keyboardType: TextInputType.number,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: Colors.white70),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final newBudget = double.tryParse(controller.text);
-                if (newBudget != null && newBudget > 0) {
-                  setState(() {
-                    totalBudget = newBudget;
-                  });
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Budget updated to €${newBudget.toStringAsFixed(0)}'),
-                      backgroundColor: const Color(0xFF00F5FF),
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please enter a valid amount'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF00F5FF),
-                foregroundColor: const Color(0xFF1A1F3A),
-              ),
-              child: const Text('Save'),
-            ),
-          ],
+                ElevatedButton(
+                  onPressed: () {
+                    if (localBudgetEqualsIncome) {
+                      setState(() {
+                        budgetEqualsIncome = true;
+                      });
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Budget set to income: €${totalIncome.toStringAsFixed(0)}'),
+                          backgroundColor: const Color(0xFF00F5FF),
+                        ),
+                      );
+                    } else {
+                      final newBudget = double.tryParse(controller.text);
+                      if (newBudget != null && newBudget > 0) {
+                        setState(() {
+                          totalBudget = newBudget;
+                          budgetEqualsIncome = false;
+                        });
+                        Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Budget updated to €${newBudget.toStringAsFixed(0)}'),
+                            backgroundColor: const Color(0xFF00F5FF),
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please enter a valid amount'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF00F5FF),
+                    foregroundColor: const Color(0xFF1A1F3A),
+                  ),
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
