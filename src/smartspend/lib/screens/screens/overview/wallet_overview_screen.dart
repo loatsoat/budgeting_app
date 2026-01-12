@@ -456,7 +456,7 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
               ),
               const SizedBox(height: 20),
               _buildWeeklyChart(),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               // View Weekly Wrap Button
               SizedBox(
                 width: double.infinity,
@@ -465,7 +465,7 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: const Color(0xFF1A1F3A),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -941,9 +941,10 @@ class _TransactionsByMonthSheetState extends State<_TransactionsByMonthSheet> {
   }
 
   bool _canGoNext() {
+    // Allow navigation up to 2 years in the future to see recurring transactions
     final now = DateTime.now();
-    final currentMonth = DateTime(now.year, now.month);
-    return selectedMonth.isBefore(currentMonth);
+    final maxMonth = DateTime(now.year + 2, now.month);
+    return selectedMonth.isBefore(maxMonth);
   }
 
   @override

@@ -12,6 +12,8 @@ class Transaction {
   final bool excludeFromBudget;
   final String? merchant;
   final String? description;
+  final RecurrenceType recurrence;
+  final DateTime? recurrenceEndDate;
 
   Transaction({
     required this.id,
@@ -24,10 +26,40 @@ class Transaction {
     this.excludeFromBudget = false,
     this.merchant,
     this.description,
+    this.recurrence = RecurrenceType.never,
+    this.recurrenceEndDate,
   });
 }
 
 enum TransactionType { expense, income, transfer }
+
+enum RecurrenceType {
+  never,
+  weekly,
+  biweekly,
+  monthly,
+  quarterly,
+  yearly,
+}
+
+extension RecurrenceTypeExtension on RecurrenceType {
+  String get displayName {
+    switch (this) {
+      case RecurrenceType.never:
+        return 'Never Repeat';
+      case RecurrenceType.weekly:
+        return 'Every Week';
+      case RecurrenceType.biweekly:
+        return 'Every 2 Weeks';
+      case RecurrenceType.monthly:
+        return 'Every Month';
+      case RecurrenceType.quarterly:
+        return 'Every 3 Months';
+      case RecurrenceType.yearly:
+        return 'Every Year';
+    }
+  }
+}
 
 // Category Model
 class CategoryData {

@@ -198,12 +198,12 @@ class _FloatingConnectCardState extends State<FloatingConnectCard> {
                                 const SizedBox(height: 8),
                                 Container(
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF1A2A3F).withValues(alpha: 0.8),
+                                    color: const Color(0xFF2A3B5C).withValues(alpha: 0.5),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
                                       color: _isCardNumberValid 
                                           ? const Color(0xFFD8A5FF) 
-                                          : Colors.white.withValues(alpha: 0.1),
+                                          : Colors.white.withValues(alpha: 0.15),
                                     ),
                                   ),
                                   child: TextField(
@@ -222,6 +222,7 @@ class _FloatingConnectCardState extends State<FloatingConnectCard> {
                                     decoration: InputDecoration(
                                       counterText: '',
                                       border: InputBorder.none,
+                                      filled: false,
                                       contentPadding: const EdgeInsets.symmetric(
                                         horizontal: 16,
                                         vertical: 12,

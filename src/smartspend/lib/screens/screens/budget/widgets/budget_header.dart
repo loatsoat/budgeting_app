@@ -270,7 +270,7 @@ class BudgetHeader extends StatelessWidget {
               },
             ),
             
-            const SizedBox(height: 24),
+            SizedBox(height: MediaQuery.of(context).padding.bottom + 24),
           ],
         ),
       ),

@@ -30,7 +30,6 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
   bool isEditingBudgets = false;
   Map<String, String> tempBudgetValues = {};
   final ValueNotifier<int> _walletTabNotifier = ValueNotifier<int>(0);
-  bool _walletShowingList = false;
   bool _isCardConnected = false;
   bool budgetEqualsIncome = false;
   
@@ -122,10 +121,44 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
           totalBudget = data['totalBudget'];
           transactions = data['transactions'];
           categoryBudgets = data['categoryBudgets'];
+          budgetEqualsIncome = data['budgetEqualsIncome'] ?? false;
           if (data['savingsGoals'] != null) {
             savingsGoals = data['savingsGoals'];
           }
+          // Recalculate spent amounts from actual transactions
+          _recalculateSpentAmounts();
         });
+      }
+    }
+  }
+
+  // Recalculate all spent amounts from transactions
+  void _recalculateSpentAmounts() {
+    // Reset all spent amounts to 0
+    categoryBudgets.forEach((categoryKey, subcategories) {
+      subcategories.forEach((subcategoryName, budget) {
+        budget.spent = 0;
+      });
+    });
+
+    // Recalculate from transactions
+    for (var transaction in transactions) {
+      if (transaction.type == TransactionType.expense && !transaction.excludeFromBudget) {
+        final categoryKey = transaction.categoryKey;
+        final subcategoryName = transaction.category;
+
+        if (!categoryBudgets.containsKey(categoryKey)) {
+          categoryBudgets[categoryKey] = {};
+        }
+
+        if (!categoryBudgets[categoryKey]!.containsKey(subcategoryName)) {
+          categoryBudgets[categoryKey]![subcategoryName] = SubcategoryBudget(
+            budgeted: 0,
+            spent: 0,
+          );
+        }
+
+        categoryBudgets[categoryKey]![subcategoryName]!.spent += transaction.amount;
       }
     }
   }
@@ -141,6 +174,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
         categories: categories,
         categoryBudgets: categoryBudgets,
         savingsGoals: savingsGoals,
+        budgetEqualsIncome: budgetEqualsIncome,
       );
     }
   }
@@ -225,10 +259,21 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                             totalSpent: totalSpent,
                             onTransactionEdit: _editTransaction,
                             tabNotifier: _walletTabNotifier,
-                            onListStateChanged: (isList) => setState(() => _walletShowingList = isList),
+                            onListStateChanged: (isList) => setState(() {}),
                             savingsGoals: savingsGoals,
                             onGoalCreated: (goal) {
-                              setState(() => savingsGoals.add(goal));
+                              setState(() {
+                                savingsGoals.add(goal);
+                                // Automatically add goal to savings category budget
+                                if (!categoryBudgets.containsKey('savings')) {
+                                  categoryBudgets['savings'] = {};
+                                }
+                                // Add the goal as a subcategory with target amount as budgeted
+                                categoryBudgets['savings']![goal.name] = SubcategoryBudget(
+                                  budgeted: goal.targetAmount,
+                                  spent: goal.currentAmount,
+                                );
+                              });
                               _saveUserBudgetData(); // Save after goal creation
                             },
                             onGoalUpdated: (goal) {
@@ -321,20 +366,6 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
         ),
       ),
     );
-  }
-
-  String _formatDate(DateTime date) {
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    
-    final dayName = days[date.weekday - 1];
-    final day = date.day;
-    final month = months[date.month - 1];
-    
-    return '$dayName $day $month';
   }
 
   Widget _buildBudgetTab() {
@@ -914,7 +945,10 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
       categoryKey,
       categoryData,
       categoryBudgets,
-      () => setState(() {}),
+      () {
+        setState(() {});
+        _saveUserBudgetData(); // Save after budget changes
+      },
     );
   }
 
@@ -969,6 +1003,9 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
         if (!transaction.excludeFromBudget) {
           categoryBudgets[categoryKey]![transaction.category]!.spent += transaction.amount;
         }
+      } else if (transaction.type == TransactionType.income) {
+        // When income is added, automatically set budget to equal income
+        budgetEqualsIncome = true;
       }
     });
 
@@ -990,6 +1027,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
         existingTransaction: transaction,
         onTransactionAdded: _addTransaction,
         onTransactionUpdated: _updateTransaction,
+        onTransactionDeleted: _deleteTransaction,
         savingsGoals: savingsGoals,
         onGoalUpdated: (goal) {
           setState(() {
@@ -1043,6 +1081,41 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
       SnackBar(
         content: Text('Transaction updated: €${updatedTransaction.amount.toStringAsFixed(2)}'),
         backgroundColor: const Color(0xFF2196F3),
+      ),
+    );
+  }
+
+  void _deleteTransaction(Transaction transaction) {
+    setState(() {
+      // Remove from budget calculations if it's an expense
+      if (!transaction.excludeFromBudget && transaction.type == TransactionType.expense) {
+        final categoryKey = transaction.categoryKey;
+        if (categoryBudgets.containsKey(categoryKey) &&
+            categoryBudgets[categoryKey]!.containsKey(transaction.category)) {
+          categoryBudgets[categoryKey]![transaction.category]!.spent -= transaction.amount;
+        }
+      }
+      
+      // Remove from savings goal if applicable
+      if (transaction.categoryKey == 'savings') {
+        for (var goal in savingsGoals) {
+          if (goal.currentAmount >= transaction.amount) {
+            goal.currentAmount -= transaction.amount;
+            break;
+          }
+        }
+      }
+      
+      // Remove the transaction
+      transactions.removeWhere((t) => t.id == transaction.id);
+    });
+
+    _saveUserBudgetData(); // Save after deleting transaction
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Transaction deleted: €${transaction.amount.toStringAsFixed(2)}'),
+        backgroundColor: const Color(0xFFFF4D67),
       ),
     );
   }
