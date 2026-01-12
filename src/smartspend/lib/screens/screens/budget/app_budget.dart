@@ -128,6 +128,9 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
           // Recalculate spent amounts from actual transactions
           _recalculateSpentAmounts();
         });
+        // Generate missing recurring transactions after loading
+        _generateRecurringTransactions();
+        await _saveUserBudgetData();
       }
     }
   }
@@ -197,10 +200,19 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
   }
 
   double get totalIncome {
+    // Sum income for the current calendar month to avoid inflated totals
+    final now = DateTime.now();
+    final thisMonthStart = DateTime(now.year, now.month, 1);
+    final nextMonthStart = DateTime(now.year, now.month + 1, 1);
+
     double income = 0;
     for (var transaction in transactions) {
       if (transaction.type == TransactionType.income) {
-        income += transaction.amount;
+        final d = transaction.date;
+        final inThisMonth = !d.isBefore(thisMonthStart) && d.isBefore(nextMonthStart);
+        if (inThisMonth) {
+          income += transaction.amount;
+        }
       }
     }
     return income;
@@ -268,9 +280,9 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                                 if (!categoryBudgets.containsKey('savings')) {
                                   categoryBudgets['savings'] = {};
                                 }
-                                // Add the goal as a subcategory with target amount as budgeted
+                                // Add the goal as a subcategory with monthly amount as budgeted
                                 categoryBudgets['savings']![goal.name] = SubcategoryBudget(
-                                  budgeted: goal.targetAmount,
+                                  budgeted: goal.monthlyAmount,
                                   spent: goal.currentAmount,
                                 );
                               });
@@ -280,12 +292,22 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                               setState(() {
                                 final index = savingsGoals.indexWhere((g) => g.id == goal.id);
                                 if (index != -1) savingsGoals[index] = goal;
+                                if (!categoryBudgets.containsKey('savings')) {
+                                  categoryBudgets['savings'] = {};
+                                }
+                                categoryBudgets['savings']![goal.name] = SubcategoryBudget(
+                                  budgeted: goal.monthlyAmount,
+                                  spent: goal.currentAmount,
+                                );
                               });
                               _saveUserBudgetData(); // Save after goal update
                             },
                             onGoalDeleted: (goal) {
                               setState(() {
                                 savingsGoals.removeWhere((g) => g.id == goal.id);
+                                if (categoryBudgets.containsKey('savings')) {
+                                  categoryBudgets['savings']!.remove(goal.name);
+                                }
                               });
                               _saveUserBudgetData();
                               if (mounted) {
@@ -475,7 +497,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
           
           if (categoryKey == 'savings') {
             displaySpent = savingsGoals.fold(0, (sum, goal) => sum + goal.currentAmount);
-            displayBudgeted = savingsGoals.fold(0, (sum, goal) => sum + goal.targetAmount);
+            displayBudgeted = savingsGoals.fold(0, (sum, goal) => sum + goal.monthlyAmount);
           }
 
           return Container(
@@ -583,6 +605,17 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
         ? (goal.currentAmount / goal.targetAmount) * 100
         : 0.0;
 
+    // Calculate this month's contribution to the goal from transactions
+    final now = DateTime.now();
+    final monthStart = DateTime(now.year, now.month, 1);
+    final nextMonthStart = DateTime(now.year, now.month + 1, 1);
+    final monthlyContribution = transactions.where((t) {
+      final inMonth = !t.date.isBefore(monthStart) && t.date.isBefore(nextMonthStart);
+      final isSavings = t.categoryKey == 'savings';
+      final mentionsGoal = (t.note?.contains(goal.name) ?? false) || (t.description?.contains(goal.name) ?? false);
+      return inMonth && isSavings && mentionsGoal && t.type == TransactionType.expense;
+    }).fold<double>(0.0, (sum, t) => sum + t.amount);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
@@ -641,7 +674,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
           const SizedBox(width: 8),
           Flexible(
             child: Text(
-              '€${goal.currentAmount.toStringAsFixed(0)} / €${goal.targetAmount.toStringAsFixed(0)}',
+              '€${monthlyContribution.toStringAsFixed(0)} / €${goal.monthlyAmount.toStringAsFixed(0)}',
               style: TextStyle(
                 color: goal.color,
                 fontSize: 12,
@@ -974,6 +1007,13 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
           setState(() {
             final index = savingsGoals.indexWhere((g) => g.id == goal.id);
             if (index != -1) savingsGoals[index] = goal;
+            if (!categoryBudgets.containsKey('savings')) {
+              categoryBudgets['savings'] = {};
+            }
+            categoryBudgets['savings']![goal.name] = SubcategoryBudget(
+              budgeted: goal.monthlyAmount,
+              spent: goal.currentAmount,
+            );
           });
           _saveUserBudgetData(); // Save after goal update
         },
@@ -1009,6 +1049,9 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
       }
     });
 
+    // If this is a recurring template, generate future/past occurrences
+    _generateRecurringTransactions(base: transaction);
+
     _saveUserBudgetData(); // Save after adding transaction
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -1033,6 +1076,13 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
           setState(() {
             final index = savingsGoals.indexWhere((g) => g.id == goal.id);
             if (index != -1) savingsGoals[index] = goal;
+            if (!categoryBudgets.containsKey('savings')) {
+              categoryBudgets['savings'] = {};
+            }
+            categoryBudgets['savings']![goal.name] = SubcategoryBudget(
+              budgeted: goal.monthlyAmount,
+              spent: goal.currentAmount,
+            );
           });
           _saveUserBudgetData(); // Save after goal update
         },
@@ -1075,6 +1125,9 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
       }
     });
 
+    // Regenerate recurrences if this transaction has a recurrence
+    _generateRecurringTransactions(base: updatedTransaction);
+
     _saveUserBudgetData(); // Save after updating transaction
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -1083,6 +1136,97 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
         backgroundColor: const Color(0xFF2196F3),
       ),
     );
+  }
+
+  // Generate recurring transaction instances based on recurrence rules.
+  // - Avoid duplicates by checking existing (amount+category+date+note+merchant).
+  // - For future dates, mark excludeFromBudget=true to keep monthly budget sane.
+  // - Generated copies set recurrence=RecurrenceType.never to prevent cascades.
+  void _generateRecurringTransactions({Transaction? base}) {
+    // Build a set of existing keys to avoid duplicates
+    final existingKeys = <String>{};
+    for (final t in transactions) {
+      final key = _transactionKey(t);
+      existingKeys.add(key);
+    }
+
+    // Determine which transactions to process
+    final source = base != null
+        ? [base]
+        : transactions.where((t) => t.recurrence != RecurrenceType.never).toList();
+
+    DateTime now = DateTime.now();
+    for (final tmpl in source) {
+      if (tmpl.recurrence == RecurrenceType.never) continue;
+
+      // Start from the original date
+      DateTime next = _nextOccurrenceDate(tmpl.date, tmpl.recurrence);
+      // End at provided end date or 12 months horizon from start
+      final end = tmpl.recurrenceEndDate ?? DateTime(tmpl.date.year, tmpl.date.month + 12, tmpl.date.day);
+
+      while (!next.isAfter(end)) {
+        final synthetic = Transaction(
+          id: '${tmpl.id}_${next.toIso8601String()}',
+          type: tmpl.type,
+          amount: tmpl.amount,
+          category: tmpl.category,
+          categoryKey: tmpl.categoryKey,
+          note: tmpl.note,
+          date: next,
+          merchant: tmpl.merchant,
+          description: tmpl.description,
+          excludeFromBudget: next.isAfter(now), // future occurrences won't affect current budgets
+          recurrence: RecurrenceType.never,
+          recurrenceEndDate: null,
+        );
+
+        final key = _transactionKey(synthetic);
+        if (!existingKeys.contains(key)) {
+          // Add to list and update budgets if needed
+          setState(() {
+            transactions.add(synthetic);
+            if (!synthetic.excludeFromBudget && synthetic.type == TransactionType.expense) {
+              final categoryKey = synthetic.categoryKey;
+              if (!categoryBudgets.containsKey(categoryKey)) {
+                categoryBudgets[categoryKey] = {};
+              }
+              if (!categoryBudgets[categoryKey]!.containsKey(synthetic.category)) {
+                categoryBudgets[categoryKey]![synthetic.category] = SubcategoryBudget(
+                  budgeted: 0,
+                  spent: 0,
+                );
+              }
+              categoryBudgets[categoryKey]![synthetic.category]!.spent += synthetic.amount;
+            }
+          });
+
+          existingKeys.add(key);
+        }
+
+        next = _nextOccurrenceDate(next, tmpl.recurrence);
+      }
+    }
+  }
+
+  String _transactionKey(Transaction t) {
+    return '${t.categoryKey}|${t.category}|${t.amount.toStringAsFixed(2)}|${t.note}|${t.merchant}|${DateTime(t.date.year, t.date.month, t.date.day).toIso8601String()}';
+  }
+
+  DateTime _nextOccurrenceDate(DateTime from, RecurrenceType type) {
+    switch (type) {
+      case RecurrenceType.weekly:
+        return from.add(const Duration(days: 7));
+      case RecurrenceType.biweekly:
+        return from.add(const Duration(days: 14));
+      case RecurrenceType.monthly:
+        return DateTime(from.year, from.month + 1, from.day);
+      case RecurrenceType.quarterly:
+        return DateTime(from.year, from.month + 3, from.day);
+      case RecurrenceType.yearly:
+        return DateTime(from.year + 1, from.month, from.day);
+      case RecurrenceType.never:
+        return from;
+    }
   }
 
   void _deleteTransaction(Transaction transaction) {
@@ -1143,6 +1287,13 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
           setState(() {
             final index = savingsGoals.indexWhere((g) => g.id == goal.id);
             if (index != -1) savingsGoals[index] = goal;
+            if (!categoryBudgets.containsKey('savings')) {
+              categoryBudgets['savings'] = {};
+            }
+            categoryBudgets['savings']![goal.name] = SubcategoryBudget(
+              budgeted: goal.monthlyAmount,
+              spent: goal.currentAmount,
+            );
           });
           _saveUserBudgetData();
         },

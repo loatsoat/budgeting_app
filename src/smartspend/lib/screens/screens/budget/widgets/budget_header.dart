@@ -117,9 +117,13 @@ class BudgetHeader extends StatelessWidget {
             color: const Color(0xFF00F5FF).withValues(alpha: 0.3),
           ),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+        child: SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
             const SizedBox(height: 12),
             // Drag indicator
             Container(
@@ -270,8 +274,10 @@ class BudgetHeader extends StatelessWidget {
               },
             ),
             
-            SizedBox(height: MediaQuery.of(context).padding.bottom + 24),
-          ],
+                SizedBox(height: 12),
+              ],
+            ),
+          ),
         ),
       ),
     );

@@ -1316,18 +1316,23 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
               size: 20,
             ),
             const SizedBox(width: 8),
-            const Text(
-              'Recurrence',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+            const Expanded(
+              child: Text(
+                'Recurrence',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             Flexible(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                constraints: const BoxConstraints(maxWidth: 120),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: _selectedRecurrence != RecurrenceType.never
                       ? const Color(0xFF00A8E8)
@@ -1340,21 +1345,22 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                     color: _selectedRecurrence != RecurrenceType.never
                         ? Colors.white
                         : Colors.white.withValues(alpha: 0.6),
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: _selectedRecurrence != RecurrenceType.never
                         ? FontWeight.w600
                         : FontWeight.w400,
                   ),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
+                  textAlign: TextAlign.center,
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             Icon(
               Icons.arrow_forward_ios,
               color: Colors.white.withValues(alpha: 0.5),
-              size: 14,
+              size: 12,
             ),
           ],
         ),

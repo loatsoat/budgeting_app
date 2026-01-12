@@ -217,16 +217,27 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
     double totalExpenses;
     double totalIncome = 0;
 
+    // Compute values for the current calendar month to avoid inflated totals
+    final now = DateTime.now();
+    final thisMonthStart = DateTime(now.year, now.month, 1);
+    final nextMonthStart = DateTime(now.year, now.month + 1, 1);
+
     if (widget.totalSpent != null) {
       totalExpenses = widget.totalSpent!;
-      // derive income from transactions only if needed
       for (final transaction in transactions) {
-        if (transaction.type == TransactionType.income) totalIncome += transaction.amount;
+        if (transaction.type == TransactionType.income) {
+          final d = transaction.date;
+          final inThisMonth = !d.isBefore(thisMonthStart) && d.isBefore(nextMonthStart);
+          if (inThisMonth) totalIncome += transaction.amount;
+        }
       }
     } else {
-      // Fallback: compute from transactions
       totalExpenses = 0;
       for (final transaction in transactions) {
+        final d = transaction.date;
+        final inThisMonth = !d.isBefore(thisMonthStart) && d.isBefore(nextMonthStart);
+        if (!inThisMonth) continue;
+
         if (transaction.type == TransactionType.income) {
           totalIncome += transaction.amount;
         } else if (transaction.type == TransactionType.expense) {

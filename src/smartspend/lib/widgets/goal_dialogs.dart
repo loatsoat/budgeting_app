@@ -45,6 +45,7 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
   final _nameController = TextEditingController();
   final _targetAmountController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _durationMonthsController = TextEditingController(text: '12');
   
   String selectedEmoji = '🎯';
   Color selectedColor = const Color(0xFF00F5FF);
@@ -64,11 +65,14 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
     _nameController.dispose();
     _targetAmountController.dispose();
     _descriptionController.dispose();
+    _durationMonthsController.dispose();
     super.dispose();
   }
 
   void _createGoal() {
     if (_formKey.currentState!.validate()) {
+      final parsedDuration = int.tryParse(_durationMonthsController.text.trim());
+      final duration = (parsedDuration != null && parsedDuration > 0) ? parsedDuration : 12;
       final goal = SavingsGoal(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         name: _nameController.text.trim(),
@@ -76,6 +80,7 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
         description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
         emoji: selectedEmoji,
         color: selectedColor,
+        durationMonths: duration,
       );
       
       widget.onGoalCreated(goal);
@@ -284,6 +289,43 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
                   },
                 ),
                 const SizedBox(height: 16),
+                // Duration in Months
+                TextFormField(
+                  controller: _durationMonthsController,
+                  style: const TextStyle(color: Colors.white),
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Duration (months)',
+                    labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                    hintText: 'e.g., 12',
+                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+                    filled: true,
+                    fillColor: const Color(0xFF1A2B3F),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: selectedColor, width: 2),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter duration in months';
+                    }
+                    final parsed = int.tryParse(value);
+                    if (parsed == null || parsed <= 0) {
+                      return 'Enter a valid positive number';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
                 // Description
                 TextFormField(
                   controller: _descriptionController,
@@ -378,6 +420,7 @@ class _EditGoalDialogState extends State<EditGoalDialog> {
   late TextEditingController _nameController;
   late TextEditingController _targetAmountController;
   late TextEditingController _descriptionController;
+  late TextEditingController _durationMonthsController;
 
   late String selectedEmoji;
   late Color selectedColor;
@@ -398,6 +441,7 @@ class _EditGoalDialogState extends State<EditGoalDialog> {
     _nameController = TextEditingController(text: widget.goal.name);
     _targetAmountController = TextEditingController(text: widget.goal.targetAmount.toStringAsFixed(0));
     _descriptionController = TextEditingController(text: widget.goal.description ?? '');
+    _durationMonthsController = TextEditingController(text: widget.goal.durationMonths.toString());
     selectedEmoji = widget.goal.emoji;
     selectedColor = widget.goal.color;
   }
@@ -407,6 +451,7 @@ class _EditGoalDialogState extends State<EditGoalDialog> {
     _nameController.dispose();
     _targetAmountController.dispose();
     _descriptionController.dispose();
+    _durationMonthsController.dispose();
     super.dispose();
   }
 
@@ -416,6 +461,10 @@ class _EditGoalDialogState extends State<EditGoalDialog> {
       final parsed = double.tryParse(_targetAmountController.text);
       if (parsed != null && parsed > 0) {
         widget.goal.targetAmount = parsed;
+      }
+      final parsedDuration = int.tryParse(_durationMonthsController.text.trim());
+      if (parsedDuration != null && parsedDuration > 0) {
+        widget.goal.durationMonths = parsedDuration;
       }
       widget.goal.description = _descriptionController.text.trim().isEmpty
           ? null
@@ -488,12 +537,16 @@ class _EditGoalDialogState extends State<EditGoalDialog> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Edit Savings Goal',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                    Expanded(
+                      child: Text(
+                        'Edit Savings Goal',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     GestureDetector(
@@ -613,6 +666,41 @@ class _EditGoalDialogState extends State<EditGoalDialog> {
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter a goal name';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                // Duration in Months
+                TextFormField(
+                  controller: _durationMonthsController,
+                  style: const TextStyle(color: Colors.white),
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Duration (months)',
+                    labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                    filled: true,
+                    fillColor: Colors.white.withValues(alpha: 0.05),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: selectedColor, width: 2),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter duration in months';
+                    }
+                    final parsed = int.tryParse(value);
+                    if (parsed == null || parsed <= 0) {
+                      return 'Enter a valid positive number';
                     }
                     return null;
                   },

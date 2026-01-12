@@ -98,6 +98,7 @@ class SavingsGoal {
   DateTime? targetDate;
   Color color;
   String emoji;
+  int durationMonths;
 
   SavingsGoal({
     required this.id,
@@ -108,11 +109,13 @@ class SavingsGoal {
     this.targetDate,
     this.color = const Color(0xFF00F5FF),
     this.emoji = '🎯',
+    this.durationMonths = 12,
   });
 
   double get progressPercentage => targetAmount > 0 ? (currentAmount / targetAmount).clamp(0.0, 1.0) : 0.0;
   double get remainingAmount => (targetAmount - currentAmount).clamp(0.0, double.infinity);
   bool get isCompleted => currentAmount >= targetAmount;
+  double get monthlyAmount => durationMonths > 0 ? (targetAmount / durationMonths) : targetAmount;
 }
 
 // Default Categories Configuration

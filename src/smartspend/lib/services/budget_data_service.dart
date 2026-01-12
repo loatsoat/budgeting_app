@@ -67,6 +67,7 @@ class BudgetDataService {
           'targetDate': g.targetDate?.toIso8601String(),
           'color': g.color.value,
           'emoji': g.emoji,
+          'durationMonths': g.durationMonths,
         }).toList();
         await prefs.setString('${userKey}savingsGoals', jsonEncode(savingsGoalsJson));
       }
@@ -147,6 +148,11 @@ class BudgetDataService {
           targetDate: g['targetDate'] != null ? DateTime.parse(g['targetDate']) : null,
           color: Color(g['color']),
           emoji: g['emoji'] ?? '🎯',
+          durationMonths: (g['durationMonths'] is int)
+              ? g['durationMonths']
+              : (g['durationMonths'] is double)
+                  ? (g['durationMonths'] as double).toInt()
+                  : 12,
         )).toList();
       }
 
