@@ -270,6 +270,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                     child: DropdownButtonFormField<String>(
                       initialValue: _selectedSecurityQuestion,
+                      isExpanded: true,
                       decoration: InputDecoration(
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
@@ -307,6 +308,8 @@ class _SignupScreenState extends State<SignupScreen> {
                           value: question,
                           child: Text(
                             question,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(color: Colors.white, fontSize: 13),
                           ),
                         );

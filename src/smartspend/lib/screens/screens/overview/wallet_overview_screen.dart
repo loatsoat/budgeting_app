@@ -927,10 +927,15 @@ class _TransactionsByMonthSheetState extends State<_TransactionsByMonthSheet> {
   }
 
   List<Transaction> _getFilteredTransactions() {
-    return widget.transactions.where((transaction) {
+    final filtered = widget.transactions.where((transaction) {
       return transaction.date.year == selectedMonth.year &&
              transaction.date.month == selectedMonth.month;
     }).toList();
+    
+    // Sort by date (most recent first)
+    filtered.sort((a, b) => b.date.compareTo(a.date));
+    
+    return filtered;
   }
 
   void _previousMonth() {
