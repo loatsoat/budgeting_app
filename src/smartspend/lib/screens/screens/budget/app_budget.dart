@@ -3,8 +3,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../models/budget_models.dart';
 import '../../../services/simple_auth_manager.dart';
 import '../../../services/budget_data_service.dart';
+import '../../../services/spending_recommendations_service.dart';
 import '../../../widgets/components/ui/input.dart';
 import '../../../widgets/add_transaction_dialog.dart';
+import '../../../widgets/spending_recommendations_widget.dart';
 import 'widgets/budget_header.dart';
 import 'widgets/circular_budget_chart.dart';
 import 'widgets/bottom_navigation.dart';
@@ -32,10 +34,13 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
   final ValueNotifier<int> _walletTabNotifier = ValueNotifier<int>(0);
   bool _isCardConnected = false;
   bool budgetEqualsIncome = false;
-  
+
   // Savings Goals
   List<SavingsGoal> savingsGoals = [];
-  
+
+  // AI Recommendations
+  List<SpendingRecommendation> spendingRecommendations = [];
+
   // Mock bank transactions for demonstration
   List<Transaction> bankTransactions = [
     Transaction(
@@ -77,9 +82,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
       'Gym': SubcategoryBudget(budgeted: 10, spent: 10),
     },
     'food': {'Groceries': SubcategoryBudget(budgeted: 30, spent: 30)},
-    'savings': {
-      'Savings': SubcategoryBudget(budgeted: 0, spent: 0),
-    },
+    'savings': {'Savings': SubcategoryBudget(budgeted: 0, spent: 0)},
   };
 
   // Animation controller
@@ -127,12 +130,25 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
           }
           // Recalculate spent amounts from actual transactions
           _recalculateSpentAmounts();
+          // Generate AI recommendations
+          _generateRecommendations();
         });
         // Generate missing recurring transactions after loading
         _generateRecurringTransactions();
         await _saveUserBudgetData();
       }
     }
+  }
+
+  // Generate smart spending recommendations
+  void _generateRecommendations() {
+    spendingRecommendations =
+        SpendingRecommendationsService.generateRecommendations(
+          transactions: transactions,
+          categoryBudgets: categoryBudgets,
+          totalBudget: totalBudget,
+          totalIncome: totalIncome,
+        );
   }
 
   // Recalculate all spent amounts from transactions
@@ -146,7 +162,8 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
 
     // Recalculate from transactions
     for (var transaction in transactions) {
-      if (transaction.type == TransactionType.expense && !transaction.excludeFromBudget) {
+      if (transaction.type == TransactionType.expense &&
+          !transaction.excludeFromBudget) {
         final categoryKey = transaction.categoryKey;
         final subcategoryName = transaction.category;
 
@@ -161,7 +178,8 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
           );
         }
 
-        categoryBudgets[categoryKey]![subcategoryName]!.spent += transaction.amount;
+        categoryBudgets[categoryKey]![subcategoryName]!.spent +=
+            transaction.amount;
       }
     }
   }
@@ -209,7 +227,8 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
     for (var transaction in transactions) {
       if (transaction.type == TransactionType.income) {
         final d = transaction.date;
-        final inThisMonth = !d.isBefore(thisMonthStart) && d.isBefore(nextMonthStart);
+        final inThisMonth =
+            !d.isBefore(thisMonthStart) && d.isBefore(nextMonthStart);
         if (inThisMonth) {
           income += transaction.amount;
         }
@@ -218,9 +237,12 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
     return income;
   }
 
-  double get availableBudget => budgetEqualsIncome ? totalIncome : (totalBudget > 0 ? totalBudget : totalIncome);
+  double get availableBudget => budgetEqualsIncome
+      ? totalIncome
+      : (totalBudget > 0 ? totalBudget : totalIncome);
   double get budgetLeft => availableBudget - totalSpent;
-  double get budgetPercentage => availableBudget > 0 ? (totalSpent / availableBudget) * 100 : 0;
+  double get budgetPercentage =>
+      availableBudget > 0 ? (totalSpent / availableBudget) * 100 : 0;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -281,30 +303,36 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                                   categoryBudgets['savings'] = {};
                                 }
                                 // Add the goal as a subcategory with monthly amount as budgeted
-                                categoryBudgets['savings']![goal.name] = SubcategoryBudget(
-                                  budgeted: goal.monthlyAmount,
-                                  spent: goal.currentAmount,
-                                );
+                                categoryBudgets['savings']![goal.name] =
+                                    SubcategoryBudget(
+                                      budgeted: goal.monthlyAmount,
+                                      spent: goal.currentAmount,
+                                    );
                               });
                               _saveUserBudgetData(); // Save after goal creation
                             },
                             onGoalUpdated: (goal) {
                               setState(() {
-                                final index = savingsGoals.indexWhere((g) => g.id == goal.id);
+                                final index = savingsGoals.indexWhere(
+                                  (g) => g.id == goal.id,
+                                );
                                 if (index != -1) savingsGoals[index] = goal;
                                 if (!categoryBudgets.containsKey('savings')) {
                                   categoryBudgets['savings'] = {};
                                 }
-                                categoryBudgets['savings']![goal.name] = SubcategoryBudget(
-                                  budgeted: goal.monthlyAmount,
-                                  spent: goal.currentAmount,
-                                );
+                                categoryBudgets['savings']![goal.name] =
+                                    SubcategoryBudget(
+                                      budgeted: goal.monthlyAmount,
+                                      spent: goal.currentAmount,
+                                    );
                               });
                               _saveUserBudgetData(); // Save after goal update
                             },
                             onGoalDeleted: (goal) {
                               setState(() {
-                                savingsGoals.removeWhere((g) => g.id == goal.id);
+                                savingsGoals.removeWhere(
+                                  (g) => g.id == goal.id,
+                                );
                                 if (categoryBudgets.containsKey('savings')) {
                                   categoryBudgets['savings']!.remove(goal.name);
                                 }
@@ -357,25 +385,31 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                   setState(() {
                     if (isAccepted) {
                       transactions.add(transaction);
-                      
+
                       final categoryKey = transaction.categoryKey;
                       if (categoryBudgets.containsKey(categoryKey)) {
                         final subcategory = transaction.category;
-                        if (categoryBudgets[categoryKey]!.containsKey(subcategory)) {
-                          categoryBudgets[categoryKey]![subcategory]!.spent += transaction.amount;
+                        if (categoryBudgets[categoryKey]!.containsKey(
+                          subcategory,
+                        )) {
+                          categoryBudgets[categoryKey]![subcategory]!.spent +=
+                              transaction.amount;
                         } else {
-                          categoryBudgets[categoryKey]![subcategory] = SubcategoryBudget(
-                            budgeted: 0,
-                            spent: transaction.amount,
-                          );
+                          categoryBudgets[categoryKey]![subcategory] =
+                              SubcategoryBudget(
+                                budgeted: 0,
+                                spent: transaction.amount,
+                              );
                         }
                       }
-                      
+
                       _saveUserBudgetData();
-                      
+
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Transaction saved: ${transaction.merchant}'),
+                          content: Text(
+                            'Transaction saved: ${transaction.merchant}',
+                          ),
                           backgroundColor: const Color(0xFF4CAF50),
                         ),
                       );
@@ -391,13 +425,19 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
   }
 
   Widget _buildBudgetTab() {
-    final double bottomNavReserve = MediaQuery.of(context).padding.bottom + 140.0;
+    final double bottomNavReserve =
+        MediaQuery.of(context).padding.bottom + 140.0;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // AI Recommendations
+          SpendingRecommendationsWidget(
+            recommendations: spendingRecommendations,
+          ),
+          const SizedBox(height: 24),
           CircularBudgetChart(
             totalBudget: totalBudget,
             totalSpent: totalSpent,
@@ -486,18 +526,28 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
           if (categoryData == null) return const SizedBox.shrink();
 
           final isExpanded = expandedCategories.contains(categoryKey);
-          final categorySpent =
-              subcategories.values.fold<double>(0, (s, b) => s + b.spent);
-          final categoryBudgeted =
-              subcategories.values.fold<double>(0, (s, b) => s + b.budgeted);
+          final categorySpent = subcategories.values.fold<double>(
+            0,
+            (s, b) => s + b.spent,
+          );
+          final categoryBudgeted = subcategories.values.fold<double>(
+            0,
+            (s, b) => s + b.budgeted,
+          );
 
           // Calculate display values - use savings goals for savings category
           double displaySpent = categorySpent;
           double displayBudgeted = categoryBudgeted;
-          
+
           if (categoryKey == 'savings') {
-            displaySpent = savingsGoals.fold(0, (sum, goal) => sum + goal.currentAmount);
-            displayBudgeted = savingsGoals.fold(0, (sum, goal) => sum + goal.monthlyAmount);
+            displaySpent = savingsGoals.fold(
+              0,
+              (sum, goal) => sum + goal.currentAmount,
+            );
+            displayBudgeted = savingsGoals.fold(
+              0,
+              (sum, goal) => sum + goal.monthlyAmount,
+            );
           }
 
           return Container(
@@ -533,7 +583,9 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                           height: 48,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: categoryData.solidColor.withValues(alpha: 0.18),
+                            color: categoryData.solidColor.withValues(
+                              alpha: 0.18,
+                            ),
                           ),
                           child: Center(
                             child: Text(
@@ -583,14 +635,23 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                 if (isExpanded)
                   Column(
                     children: categoryKey == 'savings'
-                        ? savingsGoals.map((goal) => _buildSavingsGoalItem(goal, categoryData.solidColor)).toList()
+                        ? savingsGoals
+                              .map(
+                                (goal) => _buildSavingsGoalItem(
+                                  goal,
+                                  categoryData.solidColor,
+                                ),
+                              )
+                              .toList()
                         : subcategories.entries
-                            .map((e) => _buildSubcategoryItem(
+                              .map(
+                                (e) => _buildSubcategoryItem(
                                   e.key,
                                   e.value,
                                   categoryData.solidColor,
-                                ))
-                            .toList(),
+                                ),
+                              )
+                              .toList(),
                   ),
               ],
             ),
@@ -609,12 +670,20 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
     final now = DateTime.now();
     final monthStart = DateTime(now.year, now.month, 1);
     final nextMonthStart = DateTime(now.year, now.month + 1, 1);
-    final monthlyContribution = transactions.where((t) {
-      final inMonth = !t.date.isBefore(monthStart) && t.date.isBefore(nextMonthStart);
-      final isSavings = t.categoryKey == 'savings';
-      final mentionsGoal = (t.note?.contains(goal.name) ?? false) || (t.description?.contains(goal.name) ?? false);
-      return inMonth && isSavings && mentionsGoal && t.type == TransactionType.expense;
-    }).fold<double>(0.0, (sum, t) => sum + t.amount);
+    final monthlyContribution = transactions
+        .where((t) {
+          final inMonth =
+              !t.date.isBefore(monthStart) && t.date.isBefore(nextMonthStart);
+          final isSavings = t.categoryKey == 'savings';
+          final mentionsGoal =
+              (t.note.contains(goal.name) ?? false) ||
+              (t.description?.contains(goal.name) ?? false);
+          return inMonth &&
+              isSavings &&
+              mentionsGoal &&
+              t.type == TransactionType.expense;
+        })
+        .fold<double>(0.0, (sum, t) => sum + t.amount);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -633,10 +702,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
               shape: BoxShape.circle,
             ),
             child: Center(
-              child: Text(
-                goal.emoji,
-                style: const TextStyle(fontSize: 16),
-              ),
+              child: Text(goal.emoji, style: const TextStyle(fontSize: 16)),
             ),
           ),
           const SizedBox(width: 16),
@@ -759,9 +825,11 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
 
   // Keep all the remaining methods unchanged
   void _showEditBudgetDialog() {
-    final controller = TextEditingController(text: totalBudget.toStringAsFixed(0));
+    final controller = TextEditingController(
+      text: totalBudget.toStringAsFixed(0),
+    );
     bool localBudgetEqualsIncome = budgetEqualsIncome;
-    
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -777,7 +845,11 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
               ),
               title: const Row(
                 children: [
-                  Icon(Icons.account_balance_wallet, color: Color(0xFF00F5FF), size: 24),
+                  Icon(
+                    Icons.account_balance_wallet,
+                    color: Color(0xFF00F5FF),
+                    size: 24,
+                  ),
                   SizedBox(width: 12),
                   Text(
                     'Edit Total Budget',
@@ -903,7 +975,9 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                       Navigator.of(context).pop();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Budget set to income: €${totalIncome.toStringAsFixed(0)}'),
+                          content: Text(
+                            'Budget set to income: €${totalIncome.toStringAsFixed(0)}',
+                          ),
                           backgroundColor: const Color(0xFF00F5FF),
                         ),
                       );
@@ -917,7 +991,9 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                         Navigator.of(context).pop();
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Budget updated to €${newBudget.toStringAsFixed(0)}'),
+                            content: Text(
+                              'Budget updated to €${newBudget.toStringAsFixed(0)}',
+                            ),
                             backgroundColor: const Color(0xFF00F5FF),
                           ),
                         );
@@ -959,7 +1035,11 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
     });
 
     tempBudgetValues.clear();
-    setState(() => isEditingBudgets = false);
+    setState(() {
+      isEditingBudgets = false;
+      // Regenerate recommendations after budget changes
+      _generateRecommendations();
+    });
 
     _saveUserBudgetData(); // Save after budget edit
 
@@ -1024,29 +1104,31 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
   void _addTransaction(Transaction transaction) {
     setState(() {
       transactions.add(transaction);
-      
+
       if (transaction.type == TransactionType.expense) {
         final categoryKey = transaction.categoryKey;
-        
+
         if (!categoryBudgets.containsKey(categoryKey)) {
           categoryBudgets[categoryKey] = {};
         }
-        
+
         if (!categoryBudgets[categoryKey]!.containsKey(transaction.category)) {
-          categoryBudgets[categoryKey]![transaction.category] = SubcategoryBudget(
-            budgeted: 0,
-            spent: 0,
-          );
+          categoryBudgets[categoryKey]![transaction.category] =
+              SubcategoryBudget(budgeted: 0, spent: 0);
         }
-        
+
         // Only count towards budget if not excluded
         if (!transaction.excludeFromBudget) {
-          categoryBudgets[categoryKey]![transaction.category]!.spent += transaction.amount;
+          categoryBudgets[categoryKey]![transaction.category]!.spent +=
+              transaction.amount;
         }
       } else if (transaction.type == TransactionType.income) {
         // When income is added, automatically set budget to equal income
         budgetEqualsIncome = true;
       }
+
+      // Regenerate recommendations after adding transaction
+      _generateRecommendations();
     });
 
     // If this is a recurring template, generate future/past occurrences
@@ -1056,7 +1138,9 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Transaction added: €${transaction.amount.toStringAsFixed(2)}'),
+        content: Text(
+          'Transaction added: €${transaction.amount.toStringAsFixed(2)}',
+        ),
         backgroundColor: const Color(0xFF4CAF50),
       ),
     );
@@ -1092,24 +1176,34 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
 
   void _updateTransaction(Transaction updatedTransaction) {
     setState(() {
-      final index = transactions.indexWhere((t) => t.id == updatedTransaction.id);
+      final index = transactions.indexWhere(
+        (t) => t.id == updatedTransaction.id,
+      );
       if (index != -1) {
         final oldTransaction = transactions[index];
-        
-        if (!oldTransaction.excludeFromBudget && oldTransaction.type == TransactionType.expense) {
+
+        if (!oldTransaction.excludeFromBudget &&
+            oldTransaction.type == TransactionType.expense) {
           final oldCategoryKey = oldTransaction.categoryKey;
           if (categoryBudgets.containsKey(oldCategoryKey) &&
-              categoryBudgets[oldCategoryKey]!.containsKey(oldTransaction.category)) {
-            categoryBudgets[oldCategoryKey]![oldTransaction.category]!.spent -= oldTransaction.amount;
+              categoryBudgets[oldCategoryKey]!.containsKey(
+                oldTransaction.category,
+              )) {
+            categoryBudgets[oldCategoryKey]![oldTransaction.category]!.spent -=
+                oldTransaction.amount;
           }
         }
-        
+
         // If this is a recurring transaction, remove all its old occurrences first
         if (oldTransaction.recurrence != RecurrenceType.never) {
-          transactions.removeWhere((t) => t.id.startsWith('${oldTransaction.id}_'));
-          
+          transactions.removeWhere(
+            (t) => t.id.startsWith('${oldTransaction.id}_'),
+          );
+
           // Also subtract the old occurrences from budgets
-          for (final t in transactions.where((t) => t.id.startsWith('${oldTransaction.id}_'))) {
+          for (final t in transactions.where(
+            (t) => t.id.startsWith('${oldTransaction.id}_'),
+          )) {
             if (!t.excludeFromBudget && t.type == TransactionType.expense) {
               final categoryKey = t.categoryKey;
               if (categoryBudgets.containsKey(categoryKey) &&
@@ -1119,26 +1213,31 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
             }
           }
         }
-        
+
         transactions[index] = updatedTransaction;
-        
-        if (!updatedTransaction.excludeFromBudget && updatedTransaction.type == TransactionType.expense) {
+
+        if (!updatedTransaction.excludeFromBudget &&
+            updatedTransaction.type == TransactionType.expense) {
           final categoryKey = updatedTransaction.categoryKey;
-          
+
           if (!categoryBudgets.containsKey(categoryKey)) {
             categoryBudgets[categoryKey] = {};
           }
-          
-          if (!categoryBudgets[categoryKey]!.containsKey(updatedTransaction.category)) {
-            categoryBudgets[categoryKey]![updatedTransaction.category] = SubcategoryBudget(
-              budgeted: 0,
-              spent: 0,
-            );
+
+          if (!categoryBudgets[categoryKey]!.containsKey(
+            updatedTransaction.category,
+          )) {
+            categoryBudgets[categoryKey]![updatedTransaction.category] =
+                SubcategoryBudget(budgeted: 0, spent: 0);
           }
-          
-          categoryBudgets[categoryKey]![updatedTransaction.category]!.spent += updatedTransaction.amount;
+
+          categoryBudgets[categoryKey]![updatedTransaction.category]!.spent +=
+              updatedTransaction.amount;
         }
       }
+
+      // Regenerate recommendations after update
+      _generateRecommendations();
     });
 
     // Regenerate recurrences if this transaction has a recurrence
@@ -1148,7 +1247,9 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Transaction updated: €${updatedTransaction.amount.toStringAsFixed(2)}'),
+        content: Text(
+          'Transaction updated: €${updatedTransaction.amount.toStringAsFixed(2)}',
+        ),
         backgroundColor: const Color(0xFF2196F3),
       ),
     );
@@ -1169,7 +1270,9 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
     // Determine which transactions to process
     final source = base != null
         ? [base]
-        : transactions.where((t) => t.recurrence != RecurrenceType.never).toList();
+        : transactions
+              .where((t) => t.recurrence != RecurrenceType.never)
+              .toList();
 
     DateTime now = DateTime.now();
     for (final tmpl in source) {
@@ -1178,7 +1281,9 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
       // Start from the original date
       DateTime next = _nextOccurrenceDate(tmpl.date, tmpl.recurrence);
       // End at provided end date or 12 months horizon from start
-      final end = tmpl.recurrenceEndDate ?? DateTime(tmpl.date.year, tmpl.date.month + 12, tmpl.date.day);
+      final end =
+          tmpl.recurrenceEndDate ??
+          DateTime(tmpl.date.year, tmpl.date.month + 12, tmpl.date.day);
 
       while (!next.isAfter(end)) {
         final synthetic = Transaction(
@@ -1191,7 +1296,9 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
           date: next,
           merchant: tmpl.merchant,
           description: tmpl.description,
-          excludeFromBudget: next.isAfter(now), // future occurrences won't affect current budgets
+          excludeFromBudget: next.isAfter(
+            now,
+          ), // future occurrences won't affect current budgets
           recurrence: RecurrenceType.never,
           recurrenceEndDate: null,
         );
@@ -1201,18 +1308,20 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
           // Add to list and update budgets if needed
           setState(() {
             transactions.add(synthetic);
-            if (!synthetic.excludeFromBudget && synthetic.type == TransactionType.expense) {
+            if (!synthetic.excludeFromBudget &&
+                synthetic.type == TransactionType.expense) {
               final categoryKey = synthetic.categoryKey;
               if (!categoryBudgets.containsKey(categoryKey)) {
                 categoryBudgets[categoryKey] = {};
               }
-              if (!categoryBudgets[categoryKey]!.containsKey(synthetic.category)) {
-                categoryBudgets[categoryKey]![synthetic.category] = SubcategoryBudget(
-                  budgeted: 0,
-                  spent: 0,
-                );
+              if (!categoryBudgets[categoryKey]!.containsKey(
+                synthetic.category,
+              )) {
+                categoryBudgets[categoryKey]![synthetic.category] =
+                    SubcategoryBudget(budgeted: 0, spent: 0);
               }
-              categoryBudgets[categoryKey]![synthetic.category]!.spent += synthetic.amount;
+              categoryBudgets[categoryKey]![synthetic.category]!.spent +=
+                  synthetic.amount;
             }
           });
 
@@ -1248,14 +1357,16 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
   void _deleteTransaction(Transaction transaction) {
     setState(() {
       // Remove from budget calculations if it's an expense
-      if (!transaction.excludeFromBudget && transaction.type == TransactionType.expense) {
+      if (!transaction.excludeFromBudget &&
+          transaction.type == TransactionType.expense) {
         final categoryKey = transaction.categoryKey;
         if (categoryBudgets.containsKey(categoryKey) &&
             categoryBudgets[categoryKey]!.containsKey(transaction.category)) {
-          categoryBudgets[categoryKey]![transaction.category]!.spent -= transaction.amount;
+          categoryBudgets[categoryKey]![transaction.category]!.spent -=
+              transaction.amount;
         }
       }
-      
+
       // Remove from savings goal if applicable
       if (transaction.categoryKey == 'savings') {
         for (var goal in savingsGoals) {
@@ -1265,16 +1376,21 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
           }
         }
       }
-      
+
       // Remove the transaction
       transactions.removeWhere((t) => t.id == transaction.id);
+
+      // Regenerate recommendations after deletion
+      _generateRecommendations();
     });
 
     _saveUserBudgetData(); // Save after deleting transaction
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Transaction deleted: €${transaction.amount.toStringAsFixed(2)}'),
+        content: Text(
+          'Transaction deleted: €${transaction.amount.toStringAsFixed(2)}',
+        ),
         backgroundColor: const Color(0xFFFF4D67),
       ),
     );
@@ -1290,10 +1406,12 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
         onTransactionAdded: _addTransaction,
         onTransactionUpdated: (updatedTransaction) {
           _addTransaction(updatedTransaction);
-          
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Bank transaction added: €${updatedTransaction.amount.toStringAsFixed(2)}'),
+              content: Text(
+                'Bank transaction added: €${updatedTransaction.amount.toStringAsFixed(2)}',
+              ),
               backgroundColor: const Color(0xFF4CAF50),
             ),
           );
