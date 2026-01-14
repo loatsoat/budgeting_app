@@ -1104,6 +1104,22 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
           }
         }
         
+        // If this is a recurring transaction, remove all its old occurrences first
+        if (oldTransaction.recurrence != RecurrenceType.never) {
+          transactions.removeWhere((t) => t.id.startsWith('${oldTransaction.id}_'));
+          
+          // Also subtract the old occurrences from budgets
+          for (final t in transactions.where((t) => t.id.startsWith('${oldTransaction.id}_'))) {
+            if (!t.excludeFromBudget && t.type == TransactionType.expense) {
+              final categoryKey = t.categoryKey;
+              if (categoryBudgets.containsKey(categoryKey) &&
+                  categoryBudgets[categoryKey]!.containsKey(t.category)) {
+                categoryBudgets[categoryKey]![t.category]!.spent -= t.amount;
+              }
+            }
+          }
+        }
+        
         transactions[index] = updatedTransaction;
         
         if (!updatedTransaction.excludeFromBudget && updatedTransaction.type == TransactionType.expense) {
