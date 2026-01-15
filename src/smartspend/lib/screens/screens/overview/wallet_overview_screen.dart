@@ -49,6 +49,7 @@ class WalletOverviewContent extends StatefulWidget {
   final Function(Transaction)? onTransactionEdit;
   final ValueChanged<bool>? onListStateChanged;
   final ValueNotifier<int>? tabNotifier;
+  final bool? budgetEqualsIncome;
   final List<SavingsGoal>? savingsGoals;
   final Function(SavingsGoal)? onGoalCreated;
   final Function(SavingsGoal)? onGoalUpdated;
@@ -64,6 +65,7 @@ class WalletOverviewContent extends StatefulWidget {
     this.totalSpent,
     this.onListStateChanged,
     this.tabNotifier,
+    this.budgetEqualsIncome,
     this.savingsGoals,
     this.onGoalCreated,
     this.onGoalUpdated,
@@ -175,27 +177,27 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF00A8E8),
+                  color: const Color(0xFF00D4E6),
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: const [
                     BoxShadow(
-                      color: _PerformanceColors.accent15, // PERFORMANCE: Pre-computed
+                      color: Color(0x2600D4E6),
                       blurRadius: 6,
                       offset: Offset(0, 2),
                     ),
                   ],
                 ),
-                child: Row(
+                  child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   const SizedBox(width: 16),
-                  const Icon(Icons.receipt_long, color: Color(0xFF1A1F3A), size: 20),
+                  const Icon(Icons.receipt_long, color: Colors.white, size: 20),
                   const SizedBox(width: 8),
                   const Text(
                     'VIEW ALL TRANSACTIONS',
                     textAlign: TextAlign.left,
                     style: TextStyle(
-                      color: Color(0xFF1A1F3A),
+                      color: Colors.white,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
@@ -366,10 +368,15 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
   }
 
   Widget _buildFinancialSummary(double totalIncome, double totalExpenses, double leftToSpend) {
+    // Show INCOME when the "Budget = Income" switch is ON; otherwise show BUDGET.
+    final showIncome = (widget.budgetEqualsIncome ?? false);
+    final incomeLabel = showIncome ? 'INCOME' : 'BUDGET';
+    final incomeAmountValue = showIncome ? totalIncome : (widget.totalBudget ?? totalIncome);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _buildSummaryItem('INCOME', '${totalIncome.toStringAsFixed(0)}€', const Color(0xFF4CAF50)),
+        _buildSummaryItem(incomeLabel, '${incomeAmountValue.toStringAsFixed(0)}€', const Color(0xFF4CAF50)),
         _buildSummaryItem('EXPENSES', '${totalExpenses.toStringAsFixed(0)}€', const Color(0xFFE57373)),
       ],
     );
@@ -474,8 +481,8 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
                 child: ElevatedButton(
                   onPressed: () => _showWeeklyWrap(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFF1A1F3A),
+                    backgroundColor: const Color(0xFF6C4AAE),
+                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -677,9 +684,7 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF00F5FF), Color(0xFF00D4E6)],
-                  ),
+                  color: const Color(0xFF6C4AAE),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Row(
