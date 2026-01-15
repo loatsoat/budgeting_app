@@ -670,7 +670,7 @@ class _EditGoalDialogState extends State<EditGoalDialog> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 // Duration in Months
                 TextFormField(
                   controller: _durationMonthsController,
@@ -705,7 +705,7 @@ class _EditGoalDialogState extends State<EditGoalDialog> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 // Target Amount
                 TextFormField(
                   controller: _targetAmountController,
@@ -739,7 +739,7 @@ class _EditGoalDialogState extends State<EditGoalDialog> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 // Description
                 TextFormField(
                   controller: _descriptionController,
@@ -764,33 +764,58 @@ class _EditGoalDialogState extends State<EditGoalDialog> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
-                Row(
+                const SizedBox(height: 32),
+                // Action Buttons
+                Column(
                   children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: _confirmDelete,
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Color(0xFFFF4D67)),
-                          foregroundColor: const Color(0xFFFF4D67),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: const Text('Delete Goal'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
                       child: ElevatedButton(
                         onPressed: _saveChanges,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: selectedColor,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          elevation: 4,
+                          shadowColor: selectedColor.withValues(alpha: 0.4),
                         ),
-                        child: const Text('Save Changes'),
+                        child: const Text(
+                          'Save Changes',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: OutlinedButton(
+                        onPressed: _confirmDelete,
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(
+                            color: Color(0xFFFF4D67),
+                            width: 2,
+                          ),
+                          foregroundColor: const Color(0xFFFF4D67),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: const Text(
+                          'Delete Goal',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
                       ),
                     ),
                   ],
