@@ -71,9 +71,11 @@ class CircularBudgetChart extends StatelessWidget {
                     strokeWidth: 8,
                     backgroundColor: Colors.white.withValues(alpha: 0.1),
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      budgetPercentage > 90
+                      budgetPercentage > 100
                           ? Colors.red
-                          : const Color(0xFF00F5FF),
+                          : budgetPercentage > 80
+                          ? const Color(0xFFFFAA00)
+                          : const Color(0xFF00FF88),
                     ),
                   ),
                 ),
@@ -82,24 +84,29 @@ class CircularBudgetChart extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      '€${budgetLeft.toStringAsFixed(0)}',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      '€${budgetLeft.abs().toStringAsFixed(0)}',
+                      style: TextStyle(
+                        color: budgetLeft < 0 ? Colors.red : const Color(0xFF00FF88),
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const Text(
-                      'left to spend',
-                      style: TextStyle(color: Colors.white70, fontSize: 14),
+                    Text(
+                      budgetLeft < 0 ? 'budget exceeded' : 'left to spend',
+                      style: TextStyle(
+                        color: budgetLeft < 0 ? Colors.red.withValues(alpha: 0.7) : Colors.white70,
+                        fontSize: 14,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       '${budgetPercentage.toStringAsFixed(1)}% used',
                       style: TextStyle(
-                        color: budgetPercentage > 90
+                        color: budgetPercentage > 100
                             ? Colors.red
-                            : const Color(0xFF00F5FF),
+                            : budgetPercentage > 80
+                            ? const Color(0xFFFFAA00)
+                            : const Color(0xFF00FF88),
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),

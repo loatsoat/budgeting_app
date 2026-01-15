@@ -14,6 +14,7 @@ class BudgetDataService {
     required Map<String, CategoryData> categories,
     required Map<String, Map<String, SubcategoryBudget>> categoryBudgets,
     List<SavingsGoal>? savingsGoals,
+    bool budgetEqualsIncome = false,
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -21,6 +22,9 @@ class BudgetDataService {
 
       // Save total budget
       await prefs.setDouble('${userKey}totalBudget', totalBudget);
+      
+      // Save budgetEqualsIncome flag
+      await prefs.setBool('${userKey}budgetEqualsIncome', budgetEqualsIncome);
 
       // Save transactions
       final transactionsJson = transactions.map((t) => {
@@ -34,6 +38,8 @@ class BudgetDataService {
         'merchant': t.merchant,
         'description': t.description,
         'excludeFromBudget': t.excludeFromBudget,
+        'recurrence': t.recurrence.toString(),
+        'recurrenceEndDate': t.recurrenceEndDate?.toIso8601String(),
       }).toList();
       await prefs.setString('${userKey}transactions', jsonEncode(transactionsJson));
 
@@ -61,6 +67,7 @@ class BudgetDataService {
           'targetDate': g.targetDate?.toIso8601String(),
           'color': g.color.value,
           'emoji': g.emoji,
+          'durationMonths': g.durationMonths,
         }).toList();
         await prefs.setString('${userKey}savingsGoals', jsonEncode(savingsGoalsJson));
       }
@@ -99,6 +106,15 @@ class BudgetDataService {
           merchant: t['merchant'],
           description: t['description'],
           excludeFromBudget: t['excludeFromBudget'] ?? false,
+          recurrence: t['recurrence'] != null
+              ? RecurrenceType.values.firstWhere(
+                  (e) => e.toString() == t['recurrence'],
+                  orElse: () => RecurrenceType.never,
+                )
+              : RecurrenceType.never,
+          recurrenceEndDate: t['recurrenceEndDate'] != null
+              ? DateTime.parse(t['recurrenceEndDate'])
+              : null,
         )).toList();
       }
 
@@ -132,16 +148,25 @@ class BudgetDataService {
           targetDate: g['targetDate'] != null ? DateTime.parse(g['targetDate']) : null,
           color: Color(g['color']),
           emoji: g['emoji'] ?? '🎯',
+          durationMonths: (g['durationMonths'] is int)
+              ? g['durationMonths']
+              : (g['durationMonths'] is double)
+                  ? (g['durationMonths'] as double).toInt()
+                  : 12,
         )).toList();
       }
 
       debugPrint('✅ Budget data loaded for user $userId');
+
+      // Load budgetEqualsIncome flag
+      final budgetEqualsIncome = prefs.getBool('${userKey}budgetEqualsIncome') ?? false;
 
       return {
         'totalBudget': totalBudget,
         'transactions': transactions,
         'categoryBudgets': categoryBudgets,
         'savingsGoals': savingsGoals,
+        'budgetEqualsIncome': budgetEqualsIncome,
       };
     } catch (e) {
       debugPrint('❌ Error loading budget data: $e');
@@ -159,6 +184,7 @@ class BudgetDataService {
       await prefs.remove('${userKey}transactions');
       await prefs.remove('${userKey}categoryBudgets');
       await prefs.remove('${userKey}savingsGoals');
+      await prefs.remove('${userKey}budgetEqualsIncome');
 
       debugPrint('✅ Budget data cleared for user $userId');
     } catch (e) {

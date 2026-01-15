@@ -4,6 +4,43 @@ import '../../weekly_wrap_screen.dart';
 import '../../../widgets/savings_goal_card.dart';
 import '../../../widgets/goal_dialogs.dart';
 
+// PERFORMANCE: Pre-define transparent colors to avoid runtime alpha calculations
+class _PerformanceColors {
+  // Replace: Colors.white.withValues(alpha: 0.05)
+  static const white05 = Color(0x0DFFFFFF);
+  // Replace: Colors.white.withValues(alpha: 0.1)
+  static const white10 = Color(0x1AFFFFFF);
+  // Replace: Colors.white.withValues(alpha: 0.2)
+  static const white20 = Color(0x33FFFFFF);
+  // Replace: Colors.white.withValues(alpha: 0.3)
+  static const white30 = Color(0x4DFFFFFF);
+  // Replace: Colors.white.withValues(alpha: 0.5)
+  static const white50 = Color(0x80FFFFFF);
+  // Replace: Colors.white.withValues(alpha: 0.6)
+  static const white60 = Color(0x99FFFFFF);
+  // Replace: Colors.white.withValues(alpha: 0.8)
+  static const white80 = Color(0xCCFFFFFF);
+  // Replace: Colors.white.withValues(alpha: 0.9)
+  static const white90 = Color(0xE6FFFFFF);
+  
+  // Replace: Colors.black.withValues(alpha: 0.3)
+  static const black30 = Color(0x4D000000);
+  
+  // Replace: Color(0xFF2A3B5C).withValues(alpha: 0.8)
+  static const surfaceDark80 = Color(0xCC2A3B5C);
+  // Replace: Color(0xFF1A1F3A).withValues(alpha: 0.8)
+  static const background80 = Color(0xCC1A1F3A);
+  // Replace: Color(0xFF1A1F3A).withValues(alpha: 0.5)
+  static const background50 = Color(0x801A1F3A);
+  // Replace: Color(0xFF00A8E8).withValues(alpha: 0.15)
+  static const accent15 = Color(0x2600A8E8);
+  
+  // Replace: Color(0xFF00F5FF).withValues(alpha: 0.2)
+  static const cyan20 = Color(0x3300F5FF);
+  // Replace: Color(0xFF00F5FF).withValues(alpha: 0.3)
+  static const cyan30 = Color(0x4D00F5FF);
+}
+
 class WalletOverviewContent extends StatefulWidget {
   final List<Transaction>? transactions;
   final Map<String, CategoryData>? categories;
@@ -120,42 +157,43 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
   }
 
   Widget _buildTabSelector() {
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(25),
-        ),
-        child: Center(
-          child: GestureDetector(
-            onTap: () => _showAllTransactionsSheet(),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF00F5FF), Color(0xFF00B8FF)],
+    // PERFORMANCE: Wrap static button in RepaintBoundary
+    return RepaintBoundary(
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: _PerformanceColors.white10, // PERFORMANCE: Pre-computed color
+            borderRadius: BorderRadius.circular(25),
+          ),
+          child: Center(
+            child: GestureDetector(
+              onTap: () => _showAllTransactionsSheet(),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF00A8E8),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: _PerformanceColors.accent15, // PERFORMANCE: Pre-computed
+                      blurRadius: 6,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
                 ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF00F5FF).withValues(alpha: 0.3),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
+                  const SizedBox(width: 16),
                   const Icon(Icons.receipt_long, color: Color(0xFF1A1F3A), size: 20),
                   const SizedBox(width: 8),
                   const Text(
                     'VIEW ALL TRANSACTIONS',
-                    textAlign: TextAlign.center,
+                    textAlign: TextAlign.left,
                     style: TextStyle(
                       color: Color(0xFF1A1F3A),
                       fontSize: 14,
@@ -163,6 +201,7 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
                     ),
                   ),
                 ],
+              ),
               ),
             ),
           ),
@@ -178,16 +217,27 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
     double totalExpenses;
     double totalIncome = 0;
 
+    // Compute values for the current calendar month to avoid inflated totals
+    final now = DateTime.now();
+    final thisMonthStart = DateTime(now.year, now.month, 1);
+    final nextMonthStart = DateTime(now.year, now.month + 1, 1);
+
     if (widget.totalSpent != null) {
       totalExpenses = widget.totalSpent!;
-      // derive income from transactions only if needed
       for (final transaction in transactions) {
-        if (transaction.type == TransactionType.income) totalIncome += transaction.amount;
+        if (transaction.type == TransactionType.income) {
+          final d = transaction.date;
+          final inThisMonth = !d.isBefore(thisMonthStart) && d.isBefore(nextMonthStart);
+          if (inThisMonth) totalIncome += transaction.amount;
+        }
       }
     } else {
-      // Fallback: compute from transactions
       totalExpenses = 0;
       for (final transaction in transactions) {
+        final d = transaction.date;
+        final inThisMonth = !d.isBefore(thisMonthStart) && d.isBefore(nextMonthStart);
+        if (!inThisMonth) continue;
+
         if (transaction.type == TransactionType.income) {
           totalIncome += transaction.amount;
         } else if (transaction.type == TransactionType.expense) {
@@ -197,40 +247,58 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
     }
 
     final totalBudget = widget.totalBudget ?? 1000.0;
+    // Note: totalBudget from parent (app_budget.dart) already includes income (availableBudget)
+    // So we don't add income again here
     final leftToSpend = totalBudget - totalExpenses;
     final spentPercentage = totalBudget > 0 ? (totalExpenses / totalBudget) : 0.0;
     
-    return Transform.translate(
-      offset: Offset(0, _slideAnimation.value),
-      child: FadeTransition(
-        opacity: _fadeAnimation,
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: const Color(0xFF2A3B5C).withValues(alpha: 0.8),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'PERSONAL WALLET',
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.6),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 1.2,
+    // PERFORMANCE: Wrap card in RepaintBoundary to isolate repaints
+    return RepaintBoundary(
+      child: Transform.translate(
+        offset: Offset(0, _slideAnimation.value),
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: _PerformanceColors.surfaceDark80, // PERFORMANCE: Pre-computed
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: _PerformanceColors.white10), // PERFORMANCE: Pre-computed
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text( // PERFORMANCE: Use const
+                  'PERSONAL WALLET',
+                  style: TextStyle(
+                    color: _PerformanceColors.white60, // PERFORMANCE: Pre-computed
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.2,
+                  ),
                 ),
-              ),
               const SizedBox(height: 16),
-              Text(
-                '${leftToSpend.toStringAsFixed(0)} € left to spend',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
+              RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '${leftToSpend.abs().toStringAsFixed(0)} € ',
+                      style: TextStyle(
+                        color: leftToSpend < 0 ? const Color(0xFFE57373) : const Color(0xFF4CAF50),
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    TextSpan(
+                      text: leftToSpend < 0 ? 'budget exceeded' : 'left to spend',
+                      style: TextStyle(
+                        color: leftToSpend < 0 ? const Color(0xFFE57373) : Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 20),
@@ -241,53 +309,58 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
           ),
         ),
       ),
+    ),
     );
   }
 
   Widget _buildProgressBar(double spentPercentage) {
-    final percentage = (spentPercentage * 100).clamp(0.0, 100.0);
+    final percentage = spentPercentage * 100;
+    final displayPercentage = percentage.clamp(0.0, 100.0);
     
-    return Container(
-      height: 60,
-      decoration: BoxDecoration(
-        color: const Color(0xFF1A1F3A).withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Stack(
-        children: [
-          Container(
-            width: double.infinity,
-            height: 60,
-            decoration: BoxDecoration(
-              color: const Color(0xFF1A1F3A).withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          FractionallySizedBox(
-            widthFactor: spentPercentage.clamp(0.0, 1.0),
-            child: Container(
+    // PERFORMANCE: Wrap static progress bar in RepaintBoundary
+    return RepaintBoundary(
+      child: Container(
+        height: 60,
+        decoration: const BoxDecoration(
+          color: _PerformanceColors.background80, // PERFORMANCE: Pre-computed
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+        ),
+        child: Stack(
+          children: [
+            Container(
+              width: double.infinity,
               height: 60,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: percentage > 80 
-                    ? [const Color(0xFFFF4444), const Color(0xFFFF6666)]
-                    : [const Color(0xFFFF6B9D), const Color(0xFFFF4081)],
-                ),
-                borderRadius: BorderRadius.circular(12),
+              decoration: const BoxDecoration(
+                color: _PerformanceColors.background50, // PERFORMANCE: Pre-computed
+                borderRadius: BorderRadius.all(Radius.circular(12)),
               ),
-              child: Center(
-                child: Text(
-                  '${percentage.toStringAsFixed(0)}%',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
+            ),
+            FractionallySizedBox(
+              widthFactor: spentPercentage.clamp(0.0, 1.0),
+              child: Container(
+                height: 60,
+                decoration: BoxDecoration(
+                  color: percentage > 100
+                      ? const Color(0xFFE57373) // Red - over budget
+                      : percentage > 80
+                      ? const Color(0xFFFF9800) // Orange - warning
+                      : const Color(0xFF4CAF50), // Green - under budget
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Center(
+                  child: Text(
+                    '${displayPercentage.toStringAsFixed(0)}%',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -297,24 +370,26 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         _buildSummaryItem('INCOME', '${totalIncome.toStringAsFixed(0)}€', const Color(0xFF4CAF50)),
-        _buildSummaryItem('EXPENSES', '${totalExpenses.toStringAsFixed(0)}€', const Color(0xFFFF6B9D)),
+        _buildSummaryItem('EXPENSES', '${totalExpenses.toStringAsFixed(0)}€', const Color(0xFFE57373)),
       ],
     );
   }
 
   Widget _buildSummaryItem(String label, String amount, Color color) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.6),
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 1.0,
+    // PERFORMANCE: Wrap static summary items in RepaintBoundary
+    return RepaintBoundary(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: _PerformanceColors.white60, // PERFORMANCE: Pre-computed
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1.0,
+            ),
           ),
-        ),
         const SizedBox(height: 8),
         Row(
           children: [
@@ -335,50 +410,45 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
           ],
         ),
       ],
+      ),
     );
   }
 
   Widget _buildWeeklyInsightsCard() {
-    return Transform.translate(
-      offset: Offset(0, _slideAnimation.value * 1.5),
-      child: FadeTransition(
-        opacity: _fadeAnimation,
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color(0xFF8E44AD),
-                Color(0xFF9B59B6),
-                Color(0xFFAB47BC)
-              ],
+    // PERFORMANCE: Wrap card in RepaintBoundary
+    return RepaintBoundary(
+      child: Transform.translate(
+        offset: Offset(0, _slideAnimation.value * 1.5),
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: const BoxDecoration(
+              color: Color(0xFF2A3B5C), // Use same surface color as other cards for consistency
+              borderRadius: BorderRadius.all(Radius.circular(20)),
             ),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.insights, color: Colors.white, size: 20),
-                  const SizedBox(width: 8),
-                  Text(
-                    'WEEKLY INSIGHTS',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 1.2,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.insights, color: Colors.white, size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      'WEEKLY INSIGHTS',
+                      style: TextStyle(
+                        color: _PerformanceColors.white90, // PERFORMANCE: Pre-computed
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.2,
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
               const SizedBox(height: 16),
               const Text(
-                'See what your\nmoney was up to\nlast week',
+                'Your spending\nlast week',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 24,
@@ -387,34 +457,30 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
                 ),
               ),
               const SizedBox(height: 16),
-              Text(
+              const Text(
                 'Here\'s your breakdown',
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.8),
+                  color: _PerformanceColors.white80, // PERFORMANCE: Pre-computed
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
               ),
               const SizedBox(height: 20),
               _buildWeeklyChart(),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               // View Weekly Wrap Button
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () => _showWeeklyWrap(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white.withValues(alpha: 0.2),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: Colors.white,
+                    foregroundColor: const Color(0xFF1A1F3A),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.3),
-                        width: 1,
-                      ),
                     ),
-                    elevation: 0,
+                    elevation: 2,
                   ),
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -436,6 +502,7 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
           ),
         ),
       ),
+    ),
     );
   }
 
@@ -497,9 +564,9 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
                 alignment: Alignment.topRight,
                 child: GestureDetector(
                   onTap: () => Navigator.of(context).pop(),
-                  child: Icon(
+                  child: const Icon(
                     Icons.close,
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: _PerformanceColors.white80,
                     size: 24,
                   ),
                 ),
@@ -511,8 +578,8 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
               Container(
                 width: 80,
                 height: 80,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
+                decoration: const BoxDecoration(
+                  color: _PerformanceColors.white20,
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
@@ -537,11 +604,11 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
               const SizedBox(height: 16),
               
               // Subtitle
-              Text(
+              const Text(
                 'Start spending to see your\nweekly insights',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.8),
+                  color: _PerformanceColors.white80,
                   fontSize: 16,
                   height: 1.4,
                 ),
@@ -555,7 +622,7 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
                 child: ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black.withValues(alpha: 0.3),
+                    backgroundColor: _PerformanceColors.black30,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
@@ -639,34 +706,34 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
             width: double.infinity,
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
+              color: _PerformanceColors.white05,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.1),
+                color: _PerformanceColors.white10,
               ),
             ),
             child: Column(
               children: [
-                Icon(
+                const Icon(
                   Icons.track_changes,
                   size: 48,
-                  color: Colors.white.withValues(alpha: 0.3),
+                  color: _PerformanceColors.white30,
                 ),
                 const SizedBox(height: 16),
-                Text(
+                const Text(
                   'No Goals Yet',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.8),
+                    color: _PerformanceColors.white80,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
+                const Text(
                   'Create a savings goal to start tracking',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5),
+                    color: _PerformanceColors.white50,
                     fontSize: 14,
                   ),
                 ),
@@ -692,10 +759,10 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
                         backgroundColor: Colors.transparent,
                         builder: (ctx) {
                           return Container(
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF1A1F33),
-                              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF1A1F33),
+                              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                              border: Border.fromBorderSide(BorderSide(color: _PerformanceColors.white10)),
                             ),
                             child: SafeArea(
                               top: false,
@@ -860,10 +927,15 @@ class _TransactionsByMonthSheetState extends State<_TransactionsByMonthSheet> {
   }
 
   List<Transaction> _getFilteredTransactions() {
-    return widget.transactions.where((transaction) {
+    final filtered = widget.transactions.where((transaction) {
       return transaction.date.year == selectedMonth.year &&
              transaction.date.month == selectedMonth.month;
     }).toList();
+    
+    // Sort by date (most recent first)
+    filtered.sort((a, b) => b.date.compareTo(a.date));
+    
+    return filtered;
   }
 
   void _previousMonth() {
@@ -885,9 +957,10 @@ class _TransactionsByMonthSheetState extends State<_TransactionsByMonthSheet> {
   }
 
   bool _canGoNext() {
+    // Allow navigation up to 2 years in the future to see recurring transactions
     final now = DateTime.now();
-    final currentMonth = DateTime(now.year, now.month);
-    return selectedMonth.isBefore(currentMonth);
+    final maxMonth = DateTime(now.year + 2, now.month);
+    return selectedMonth.isBefore(maxMonth);
   }
 
   @override
@@ -910,7 +983,7 @@ class _TransactionsByMonthSheetState extends State<_TransactionsByMonthSheet> {
           ),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           border: Border.all(
-            color: const Color(0xFF00F5FF).withValues(alpha: 0.3),
+            color: _PerformanceColors.cyan30,
           ),
         ),
         child: Column(
@@ -921,7 +994,7 @@ class _TransactionsByMonthSheetState extends State<_TransactionsByMonthSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.3),
+                color: _PerformanceColors.white30,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -935,7 +1008,7 @@ class _TransactionsByMonthSheetState extends State<_TransactionsByMonthSheet> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF00F5FF).withValues(alpha: 0.2),
+                      color: _PerformanceColors.cyan20,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
@@ -960,7 +1033,7 @@ class _TransactionsByMonthSheetState extends State<_TransactionsByMonthSheet> {
                         Text(
                           '${filteredTransactions.length} in ${_getMonthYearText()}',
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.6),
+                            color: _PerformanceColors.white60,
                             fontSize: 14,
                           ),
                         ),
@@ -983,10 +1056,10 @@ class _TransactionsByMonthSheetState extends State<_TransactionsByMonthSheet> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
+                  color: _PerformanceColors.white10,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: const Color(0xFF00F5FF).withValues(alpha: 0.2),
+                    color: _PerformanceColors.cyan20,
                   ),
                 ),
                 child: Row(
@@ -1010,7 +1083,7 @@ class _TransactionsByMonthSheetState extends State<_TransactionsByMonthSheet> {
                       onPressed: _canGoNext() ? _nextMonth : null,
                       icon: Icon(
                         Icons.chevron_right,
-                        color: _canGoNext() ? Colors.white : Colors.white.withValues(alpha: 0.3),
+                        color: _canGoNext() ? Colors.white : _PerformanceColors.white30,
                       ),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -1021,7 +1094,7 @@ class _TransactionsByMonthSheetState extends State<_TransactionsByMonthSheet> {
             ),
             
             const SizedBox(height: 16),
-            Divider(color: Colors.white.withValues(alpha: 0.1), height: 1),
+            Divider(color: _PerformanceColors.white10, height: 1),
             
             // Transactions List
             Expanded(
@@ -1033,13 +1106,13 @@ class _TransactionsByMonthSheetState extends State<_TransactionsByMonthSheet> {
                           Icon(
                             Icons.inbox_outlined,
                             size: 64,
-                            color: Colors.white.withValues(alpha: 0.3),
+                            color: _PerformanceColors.white30,
                           ),
                           const SizedBox(height: 16),
                           Text(
                             'No transactions in ${_getMonthYearText()}',
                             style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.6),
+                              color: _PerformanceColors.white60,
                               fontSize: 16,
                             ),
                           ),
@@ -1092,11 +1165,11 @@ class _TransactionsByMonthSheetState extends State<_TransactionsByMonthSheet> {
           gradient: LinearGradient(
             colors: [
               Colors.transparent,
-              const Color(0xFF00F5FF).withValues(alpha: 0.3),
+              _PerformanceColors.cyan30,
             ],
           ),
           border: Border(
-            top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+            top: BorderSide(color: _PerformanceColors.white10),
           ),
         ),
         child: Row(
@@ -1125,7 +1198,7 @@ class _TransactionsByMonthSheetState extends State<_TransactionsByMonthSheet> {
           decoration: BoxDecoration(
             color: const Color(0xFF1A1F33),
             border: Border(
-              top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+              top: BorderSide(color: _PerformanceColors.white10),
             ),
           ),
           child: Row(
@@ -1136,7 +1209,7 @@ class _TransactionsByMonthSheetState extends State<_TransactionsByMonthSheet> {
                 height: 40,
                 decoration: BoxDecoration(
                   color: categoryData?.solidColor.withValues(alpha: 0.2) ??
-                      Colors.grey.withValues(alpha: 0.2),
+                      const Color(0x33808080),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
@@ -1165,7 +1238,7 @@ class _TransactionsByMonthSheetState extends State<_TransactionsByMonthSheet> {
                     Text(
                       transaction.note,
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.6),
+                        color: _PerformanceColors.white60,
                         fontSize: 12,
                       ),
                     ),
@@ -1191,7 +1264,7 @@ class _TransactionsByMonthSheetState extends State<_TransactionsByMonthSheet> {
                   Text(
                     _formatDate(transaction.date),
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.5),
+                      color: _PerformanceColors.white50,
                       fontSize: 10,
                     ),
                   ),
@@ -1233,7 +1306,7 @@ class _TransactionsByMonthSheetState extends State<_TransactionsByMonthSheet> {
           ),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           border: Border.all(
-            color: const Color(0xFF00F5FF).withValues(alpha: 0.3),
+            color: _PerformanceColors.cyan30,
           ),
         ),
         child: Column(
@@ -1268,7 +1341,7 @@ class _TransactionsByMonthSheetState extends State<_TransactionsByMonthSheet> {
                   height: 60,
                   decoration: BoxDecoration(
                     color: categoryData?.solidColor.withValues(alpha: 0.2) ??
-                        Colors.grey.withValues(alpha: 0.2),
+                        const Color(0x33808080),
                     shape: BoxShape.circle,
                   ),
                   child: Center(
@@ -1294,7 +1367,7 @@ class _TransactionsByMonthSheetState extends State<_TransactionsByMonthSheet> {
                       Text(
                         transaction.note,
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.6),
+                          color: _PerformanceColors.white60,
                           fontSize: 14,
                         ),
                       ),
@@ -1305,7 +1378,7 @@ class _TransactionsByMonthSheetState extends State<_TransactionsByMonthSheet> {
             ),
 
             const SizedBox(height: 24),
-            Divider(color: Colors.white.withValues(alpha: 0.1)),
+            Divider(color: _PerformanceColors.white10),
             const SizedBox(height: 16),
 
             // Amount
@@ -1381,7 +1454,7 @@ class _TransactionsByMonthSheetState extends State<_TransactionsByMonthSheet> {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.6),
+            color: _PerformanceColors.white60,
             fontSize: 14,
           ),
         ),

@@ -117,9 +117,13 @@ class BudgetHeader extends StatelessWidget {
             color: const Color(0xFF00F5FF).withValues(alpha: 0.3),
           ),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+        child: SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
             const SizedBox(height: 12),
             // Drag indicator
             Container(
@@ -270,8 +274,10 @@ class BudgetHeader extends StatelessWidget {
               },
             ),
             
-            const SizedBox(height: 24),
-          ],
+                SizedBox(height: 12),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -469,116 +475,108 @@ class BudgetHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Get current month for subtitle
+    final now = DateTime.now();
+    final monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'];
+    final currentMonth = monthNames[now.month - 1];
+    
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1A1F3A), Color(0xFF2A2F4A), Color(0xFF1A1F3A)],
-        ),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+      decoration: const BoxDecoration(
+        color: Color(0xFF0A0E1A), // Solid dark background
         border: Border(
-          bottom: BorderSide(color: const Color(0xFFA855F7).withValues(alpha: 0.2)),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFA855F7).withValues(alpha: 0.15),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
+          bottom: BorderSide(
+            color: Color(0x1AFFFFFF), // Subtle divider
+            width: 1,
           ),
-        ],
+        ),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Profile Avatar Button
+          // Left: Profile Avatar (minimal, professional)
           GestureDetector(
             onTap: () => _showProfileMenu(context),
             child: Container(
-              width: 42,
-              height: 42,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF00F5FF),
-                    Color(0xFF00B8FF),
-                  ],
-                ),
+                color: const Color(0xFF2A3B5C), // Solid subtle background
                 border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.3),
-                  width: 2,
+                  color: const Color(0xFF00A8E8).withValues(alpha: 0.3),
+                  width: 1.5,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF00F5FF).withValues(alpha: 0.3),
-                    blurRadius: 10,
-                    spreadRadius: 1,
-                  ),
-                ],
               ),
               child: Center(
                 child: Text(
                   _getInitial(context),
                   style: const TextStyle(
+                    color: Color(0xFF00A8E8),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          
+          const SizedBox(width: 16),
+          
+          // Center-Left: Title and Subtitle (clear hierarchy)
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Personal Wallet',
+                  style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.3,
+                    height: 1.2,
                   ),
                 ),
-              ),
-            ),
-          ),
-          const Text(
-            'Personal Wallet',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 16,
-              letterSpacing: 0.5,
-            ),
-          ),
-          Row(
-            children: [
-              // Currency Converter Button - Always visible
-              GestureDetector(
-                onTap: () {
-                  final amount = budgetAmount ?? 0;
-                  showDialog(
-                    context: context,
-                    builder: (context) => CurrencyConverterDialog(
-                      amount: amount,
-                      title: 'Your Budget',
-                    ),
-                  );
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF00F5FF).withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: const Color(0xFF00F5FF).withValues(alpha: 0.3),
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.currency_exchange,
-                    color: Color(0xFF00F5FF),
-                    size: 24,
+                const SizedBox(height: 2),
+                Text(
+                  currentMonth,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.5),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w400,
+                    letterSpacing: 0,
                   ),
                 ),
+              ],
+            ),
+          ),
+          
+          // Right: Currency Converter (minimal, functional)
+          GestureDetector(
+            onTap: () {
+              final amount = budgetAmount ?? 0;
+              showDialog(
+                context: context,
+                builder: (context) => CurrencyConverterDialog(
+                  amount: amount,
+                  title: 'Your Budget',
+                ),
+              );
+            },
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFF1A1F3A),
+                borderRadius: BorderRadius.circular(8),
               ),
-              const SizedBox(width: 8),
-              // Edit Button (for budget tab)
-              if (activeTab == 'budget')
-                IconButton(
-                  onPressed: onEditToggle,
-                  icon: Icon(
-                    isEditingBudgets ? Icons.check : Icons.edit,
-                    color: Colors.white70,
-                    size: 24,
-                  ),
-                )
-              else
-                const SizedBox(width: 48),
-            ],
+              child: const Icon(
+                Icons.currency_exchange,
+                color: Color(0xFF00A8E8),
+                size: 18,
+              ),
+            ),
           ),
         ],
       ),

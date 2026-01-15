@@ -4,6 +4,7 @@ import '../models/budget_models.dart';
 class AddTransactionDialog extends StatefulWidget {
   final Function(Transaction) onTransactionAdded;
   final Function(Transaction)? onTransactionUpdated;
+  final Function(Transaction)? onTransactionDeleted;
   final Map<String, CategoryData> categories;
   final Map<String, Map<String, SubcategoryBudget>>? categoryBudgets;
   final Transaction? existingTransaction;
@@ -17,6 +18,7 @@ class AddTransactionDialog extends StatefulWidget {
     this.categoryBudgets,
     this.existingTransaction,
     this.onTransactionUpdated,
+    this.onTransactionDeleted,
     this.savingsGoals,
     this.onGoalUpdated,
   });
@@ -34,6 +36,8 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
   String? _selectedSubcategoryName;
   DateTime _selectedDate = DateTime.now();
   bool _excludeFromBudget = false;
+  RecurrenceType _selectedRecurrence = RecurrenceType.never;
+  DateTime? _recurrenceEndDate;
   String? _selectedGoalId;
   bool get _isEditing => widget.existingTransaction != null;
 
@@ -48,6 +52,8 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
       _selectedCategoryKey = transaction.categoryKey;
       _selectedDate = transaction.date;
       _excludeFromBudget = transaction.excludeFromBudget;
+      _selectedRecurrence = transaction.recurrence;
+      _recurrenceEndDate = transaction.recurrenceEndDate;
     }
   }
 
@@ -98,6 +104,8 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
       note: _noteController.text.trim().isEmpty ? 'No note' : _noteController.text.trim(),
       date: _selectedDate,
       excludeFromBudget: _excludeFromBudget,
+      recurrence: _selectedRecurrence,
+      recurrenceEndDate: _recurrenceEndDate,
     );
 
     // If savings category and goal selected, update the goal
@@ -113,6 +121,104 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
       widget.onTransactionAdded(transaction);
     }
     Navigator.of(context).pop();
+  }
+
+  void _handleDelete() {
+    if (widget.existingTransaction == null) return;
+    
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1A1F3A),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFFF4D67).withValues(alpha: 0.3)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.delete_outline,
+                color: Color(0xFFFF4D67),
+                size: 40,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Delete Transaction?',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'This action cannot be undone.',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.6),
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Text(
+                          'Cancel',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        widget.onTransactionDeleted?.call(widget.existingTransaction!);
+                        Navigator.pop(context); // Close confirmation dialog
+                        Navigator.pop(context); // Close transaction dialog
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF4D67),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Text(
+                          'Delete',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -279,32 +385,93 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                       // Exclude from Budget Toggle
                       _buildExcludeToggle(),
                       
+                      const SizedBox(height: 20),
+                      
+                      // Recurrence Selector
+                      _buildRecurrenceSelector(),
+                      
                       const SizedBox(height: 32),
                       
-                      // Save Button
-                      GestureDetector(
-                        onTap: _handleSave,
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFB8860B), Color(0xFFDAA520)],
+                      // Buttons Row
+                      if (widget.existingTransaction != null)
+                        Row(
+                          children: [
+                            // Delete Button
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: _handleDelete,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFF4D67),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Text(
+                                    'DELETE',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 1.2,
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Text(
-                            'SAVE',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 1.2,
+                            const SizedBox(width: 12),
+                            // Save Button
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: _handleSave,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [Color(0xFFB8860B), Color(0xFFDAA520)],
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Text(
+                                    'SAVE',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 1.2,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      else
+                        // Save Button (new transaction)
+                        GestureDetector(
+                          onTap: _handleSave,
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFB8860B), Color(0xFFDAA520)],
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Text(
+                              'SAVE',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 1.2,
+                              ),
                             ),
                           ),
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -402,6 +569,8 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                         ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
                       ),
                     ],
                   ),
@@ -468,6 +637,8 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
                             ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
                         ],
                       ),
@@ -854,6 +1025,8 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                                         color: Colors.white.withValues(alpha: 0.9),
                                         fontSize: 15,
                                       ),
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
                                     ),
                                     subtitle: Text(
                                       '€${goal.currentAmount.toStringAsFixed(0)} / €${goal.targetAmount.toStringAsFixed(0)}',
@@ -881,6 +1054,8 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                                         color: Colors.white.withValues(alpha: 0.9),
                                         fontSize: 15,
                                       ),
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
                                     ),
                                     onTap: () {
                                       setState(() {
@@ -980,5 +1155,216 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
     if (date != null) {
       setState(() => _selectedDate = date);
     }
+  }
+
+  void _showRecurrenceDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        RecurrenceType tempRecurrence = _selectedRecurrence;
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.9,
+                  maxHeight: MediaQuery.of(context).size.height * 0.7,
+                ),
+                child: SingleChildScrollView(
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFF2A3F5F), Color(0xFF1A2F4F)],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.repeat,
+                          color: Colors.white.withValues(alpha: 0.9),
+                          size: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Recurrence',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: RecurrenceType.values.map((type) {
+                        final isSelected = tempRecurrence == type;
+                        return GestureDetector(
+                          onTap: () {
+                            setDialogState(() {
+                              tempRecurrence = type;
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: isSelected 
+                                  ? const Color(0xFF00A8E8)
+                                  : Colors.white.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isSelected 
+                                    ? const Color(0xFF00A8E8).withValues(alpha: 0.5)
+                                    : Colors.transparent,
+                                width: 2,
+                              ),
+                            ),
+                            child: Text(
+                              type.displayName,
+                              style: TextStyle(
+                                color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.7),
+                                fontSize: 14,
+                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.7),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _selectedRecurrence = tempRecurrence;
+                              if (tempRecurrence == RecurrenceType.never) {
+                                _recurrenceEndDate = null;
+                              }
+                            });
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF00A8E8),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'Done',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildRecurrenceSelector() {
+    return GestureDetector(
+      onTap: _showRecurrenceDialog,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF2A3B5C).withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.repeat,
+              color: Colors.white.withValues(alpha: 0.7),
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            const Expanded(
+              child: Text(
+                'Recurrence',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 120),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _selectedRecurrence != RecurrenceType.never
+                      ? const Color(0xFF00A8E8)
+                      : Colors.white.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  _selectedRecurrence.displayName,
+                  style: TextStyle(
+                    color: _selectedRecurrence != RecurrenceType.never
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.6),
+                    fontSize: 11,
+                    fontWeight: _selectedRecurrence != RecurrenceType.never
+                        ? FontWeight.w600
+                        : FontWeight.w400,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: Colors.white.withValues(alpha: 0.5),
+              size: 12,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
