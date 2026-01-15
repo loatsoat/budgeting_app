@@ -292,8 +292,9 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                             totalBudget: availableBudget,
                             totalSpent: totalSpent,
                             onTransactionEdit: _editTransaction,
-                            tabNotifier: _walletTabNotifier,
-                            onListStateChanged: (isList) => setState(() {}),
+                          tabNotifier: _walletTabNotifier,
+                          onListStateChanged: (isList) => setState(() {}),
+                          budgetEqualsIncome: budgetEqualsIncome,
                             savingsGoals: savingsGoals,
                             onGoalCreated: (goal) {
                               setState(() {
