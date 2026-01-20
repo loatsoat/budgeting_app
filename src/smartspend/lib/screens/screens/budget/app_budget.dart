@@ -181,7 +181,8 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
     categoryBudgets['savings'] = {
       for (final goal in savingsGoals)
         goal.name: SubcategoryBudget(
-          budgeted: goal.targetAmount,
+          // Use monthly installment, not full target, so totals reflect monthly budget
+          budgeted: goal.monthlyAmount,
           spent: goal.currentAmount,
         ),
     };

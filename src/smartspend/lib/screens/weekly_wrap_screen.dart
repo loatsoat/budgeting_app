@@ -110,13 +110,13 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
                   const Icon(
                     Icons.inbox,
                     size: 80,
-                    color: Color(0xFF64B5F6),
+                    color: Colors.white54,
                   ),
                   const SizedBox(height: 28),
                   const Text(
                     'No Transactions This Week',
                     style: TextStyle(
-                      color: Color(0xFF1565C0),
+                      color: Colors.white,
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                     ),
@@ -126,7 +126,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
                     'Add some transactions to see\nyour weekly wrap',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: Color(0xFF42A5F5),
+                      color: Colors.white.withValues(alpha: 0.75),
                       fontSize: 16,
                     ),
                   ),
@@ -145,7 +145,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
                       child: const Text(
                         'Go Back',
                         style: TextStyle(
-                          color: Color(0xFF1565C0),
+                          color: Colors.white,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
@@ -205,7 +205,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
             child: const Icon(
               Icons.auto_awesome,
               size: 80,
-              color: Color(0xFF1565C0),
+              color: Colors.white,
             ),
           ),
         ),
@@ -221,7 +221,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
               'Your Weekly\nSpending Wrap',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Color(0xFF1565C0),
+                color: Colors.white,
                 fontSize: 34,
                 fontWeight: FontWeight.bold,
                 height: 1.2,
@@ -241,7 +241,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
               'Let\'s see how you spent\nyour money this week',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Color(0xFF1976D2),
+                color: Colors.white.withValues(alpha: 0.85),
                 fontSize: 18,
                 height: 1.35,
               ),
@@ -272,7 +272,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
               width: 100,
               height: 100,
               decoration: BoxDecoration(
-                color: Color(0xFF0D47A1).withValues(alpha: 0.15),
+                color: Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Center(
@@ -290,7 +290,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
           child: const Text(
             'Total Spent',
             style: TextStyle(
-              color: Color(0xFF1565C0),
+              color: Colors.white,
               fontSize: 28,
               fontWeight: FontWeight.bold,
             ),
@@ -305,7 +305,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
           child: Text(
             'This week you spent',
             style: TextStyle(
-              color: Color(0xFF1976D2),
+              color: Colors.white.withValues(alpha: 0.85),
               fontSize: 16,
             ),
           ),
@@ -319,7 +319,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
           child: Text(
             '${totalSpent.toStringAsFixed(0)} €',
             style: const TextStyle(
-              color: Color(0xFF1565C0),
+              color: Colors.white,
               fontSize: 60,
               fontWeight: FontWeight.bold,
             ),
@@ -334,7 +334,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
           child: Text(
             '${weeklyTransactions.length} transactions',
             style: TextStyle(
-              color: Color(0xFF1976D2),
+              color: Colors.white.withValues(alpha: 0.85),
               fontSize: 16,
             ),
           ),
@@ -375,7 +375,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
               width: 100,
               height: 100,
               decoration: BoxDecoration(
-                color: Color(0xFF0D47A1).withValues(alpha: 0.15),
+                color: Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Center(
@@ -393,7 +393,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
           child: const Text(
             'Biggest Transaction',
             style: TextStyle(
-              color: Color(0xFF1565C0),
+              color: Colors.white,
               fontSize: 28,
               fontWeight: FontWeight.bold,
             ),
@@ -408,7 +408,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
           child: Text(
             'Your largest expense was',
             style: TextStyle(
-              color: Color(0xFF1976D2),
+              color: Colors.white.withValues(alpha: 0.85),
               fontSize: 16,
             ),
           ),
@@ -422,7 +422,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
           child: Text(
             '${biggestTransaction.amount.toStringAsFixed(0)} €',
             style: const TextStyle(
-              color: Color(0xFF1565C0),
+              color: Colors.white,
               fontSize: 60,
               fontWeight: FontWeight.bold,
             ),
@@ -437,7 +437,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
           child: Text(
             biggestTransaction.category,
             style: TextStyle(
-              color: Color(0xFF1976D2),
+              color: Colors.white.withValues(alpha: 0.85),
               fontSize: 16,
             ),
           ),
@@ -450,12 +450,12 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
     return _buildCard(
       index: 2,
       content: [
-        const Icon(Icons.sentiment_satisfied, size: 80, color: Color(0xFF1565C0)),
+        const Icon(Icons.sentiment_satisfied, size: 80, color: Colors.white),
         const SizedBox(height: 28),
         Text(
           title,
           style: const TextStyle(
-            color: Color(0xFF1565C0),
+            color: Colors.white,
             fontSize: 28,
             fontWeight: FontWeight.bold,
           ),
@@ -465,7 +465,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
           message,
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: Color(0xFF1976D2),
+            color: Colors.white.withValues(alpha: 0.85),
             fontSize: 16,
           ),
         ),
@@ -491,7 +491,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
           child: Text(
             'Your daily average',
             style: TextStyle(
-              color: Color(0xFF1976D2),
+              color: Colors.white.withValues(alpha: 0.85),
               fontSize: 24,
             ),
           ),
@@ -505,7 +505,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
           child: Text(
             '€${dailyAverage.toStringAsFixed(0)}',
             style: const TextStyle(
-              color: Color(0xFF1565C0),
+              color: Colors.white,
               fontSize: 60,
               fontWeight: FontWeight.bold,
             ),
@@ -520,7 +520,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
           child: Text(
             'per day this week',
             style: TextStyle(
-              color: Color(0xFF42A5F5),
+              color: Colors.white.withValues(alpha: 0.75),
               fontSize: 18,
             ),
           ),
@@ -548,7 +548,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
           child: Text(
             'You spent money on',
             style: TextStyle(
-              color: Color(0xFF1976D2),
+              color: Colors.white.withValues(alpha: 0.85),
               fontSize: 24,
             ),
           ),
@@ -562,7 +562,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
           child: Text(
             '$daysWithSpending',
             style: const TextStyle(
-              color: Color(0xFF1565C0),
+              color: Colors.white,
               fontSize: 66,
               fontWeight: FontWeight.bold,
             ),
@@ -577,7 +577,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
           child: Text(
             'out of 7 days',
             style: TextStyle(
-              color: Color(0xFF42A5F5),
+              color: Colors.white.withValues(alpha: 0.75),
               fontSize: 18,
             ),
           ),
@@ -596,7 +596,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
             begin: const Offset(0, 0.3),
             end: Offset.zero,
           ).animate(_slideAnimation),
-          child: const Icon(Icons.celebration, size: 80, color: Color(0xFF1565C0)),
+          child: const Icon(Icons.celebration, size: 80, color: Colors.white),
         ),
         const SizedBox(height: 28),
         SlideTransition(
@@ -608,7 +608,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
             'Great job tracking\nyour spending!',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Color(0xFF1565C0),
+              color: Colors.white,
               fontSize: 30,
               fontWeight: FontWeight.bold,
               height: 1.2,
@@ -625,7 +625,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
             'Keep it up and reach\nyour financial goals',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Color(0xFF1976D2),
+              color: Colors.white.withValues(alpha: 0.85),
               fontSize: 18,
               height: 1.35,
             ),
@@ -684,7 +684,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
                   onTap: () => Navigator.of(context).pop(),
                   child: Icon(
                     Icons.close,
-                    color: Color(0xFF1976D2),
+                    color: Colors.white.withValues(alpha: 0.85),
                     size: 24,
                   ),
                 ),
