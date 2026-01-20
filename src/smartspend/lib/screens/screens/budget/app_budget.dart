@@ -562,7 +562,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
             );
             displayBudgeted = savingsGoals.fold(
               0,
-              (sum, goal) => sum + goal.targetAmount,
+              (sum, goal) => sum + (goal.targetAmount / goal.durationMonths),
             );
           }
 
