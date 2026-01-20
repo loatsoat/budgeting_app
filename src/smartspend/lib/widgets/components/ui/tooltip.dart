@@ -27,21 +27,23 @@ class CustomTooltip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Tooltip(
       message: message,
-      padding: padding ?? const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding:
+          padding ?? const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       verticalOffset: verticalOffset ?? 20,
       preferBelow: preferBelow,
       waitDuration: waitDuration ?? const Duration(milliseconds: 500),
       showDuration: showDuration ?? const Duration(seconds: 2),
-      textStyle: textStyle ?? theme.textTheme.bodySmall?.copyWith(
-        color: Colors.white,
-      ),
-      decoration: decoration ?? BoxDecoration(
-        color: theme.primaryColor,
-        borderRadius: BorderRadius.circular(6),
-      ),
+      textStyle:
+          textStyle ?? theme.textTheme.bodySmall?.copyWith(color: Colors.white),
+      decoration:
+          decoration ??
+          BoxDecoration(
+            color: theme.primaryColor,
+            borderRadius: BorderRadius.circular(6),
+          ),
       child: child,
     );
   }
@@ -77,7 +79,7 @@ class RichTooltip extends StatelessWidget {
 
   void _showTooltipDialog(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     showDialog(
       context: context,
       barrierColor: Colors.transparent,
@@ -102,13 +104,15 @@ class RichTooltip extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: backgroundColor ?? theme.cardColor,
                   borderRadius: borderRadius ?? BorderRadius.circular(8),
-                  boxShadow: boxShadow ?? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                  boxShadow:
+                      boxShadow ??
+                      [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
                 ),
                 child: content,
               ),

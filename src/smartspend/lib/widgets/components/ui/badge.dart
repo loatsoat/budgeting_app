@@ -1,11 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum BadgeVariant {
-  primary,
-  secondary,
-  destructive,
-  outline,
-}
+enum BadgeVariant { primary, secondary, destructive, outline }
 
 class CustomBadge extends StatelessWidget {
   final String text;
@@ -26,11 +21,11 @@ class CustomBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     Color backgroundColor;
     Color textColor;
     Color? borderColor;
-    
+
     switch (variant) {
       case BadgeVariant.primary:
         backgroundColor = theme.primaryColor;
@@ -55,7 +50,8 @@ class CustomBadge extends StatelessWidget {
     }
 
     Widget badge = Container(
-      padding: padding ?? const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding:
+          padding ?? const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: backgroundColor,
         border: borderColor != null ? Border.all(color: borderColor) : null,
@@ -66,10 +62,7 @@ class CustomBadge extends StatelessWidget {
         children: [
           if (icon != null) ...[
             IconTheme(
-              data: IconThemeData(
-                color: textColor,
-                size: 12,
-              ),
+              data: IconThemeData(color: textColor, size: 12),
               child: icon!,
             ),
             const SizedBox(width: 4),
@@ -86,10 +79,7 @@ class CustomBadge extends StatelessWidget {
     );
 
     if (onTap != null) {
-      return GestureDetector(
-        onTap: onTap,
-        child: badge,
-      );
+      return GestureDetector(onTap: onTap, child: badge);
     }
 
     return badge;

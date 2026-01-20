@@ -23,34 +23,28 @@ class CustomAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     Widget avatar = CircleAvatar(
       radius: size / 2,
       backgroundColor: backgroundColor ?? theme.colorScheme.secondary,
       foregroundColor: foregroundColor ?? theme.colorScheme.onSecondary,
       backgroundImage: imageUrl != null ? NetworkImage(imageUrl!) : null,
       child: imageUrl == null
-          ? (fallbackIcon ?? 
-              (fallbackText != null 
-                  ? Text(
-                      fallbackText!,
-                      style: TextStyle(
-                        fontSize: size * 0.4,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    )
-                  : Icon(
-                      Icons.person,
-                      size: size * 0.6,
-                    )))
+          ? (fallbackIcon ??
+                (fallbackText != null
+                    ? Text(
+                        fallbackText!,
+                        style: TextStyle(
+                          fontSize: size * 0.4,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      )
+                    : Icon(Icons.person, size: size * 0.6)))
           : null,
     );
 
     if (onTap != null) {
-      return GestureDetector(
-        onTap: onTap,
-        child: avatar,
-      );
+      return GestureDetector(onTap: onTap, child: avatar);
     }
 
     return avatar;
@@ -81,7 +75,7 @@ class AvatarGroup extends StatelessWidget {
         ...visibleAvatars.asMap().entries.map((entry) {
           final index = entry.key;
           final avatar = entry.value;
-          
+
           return Container(
             margin: EdgeInsets.only(left: index > 0 ? spacing : 0),
             child: avatar,

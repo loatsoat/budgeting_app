@@ -15,7 +15,8 @@ class CurrencyConverterDialog extends StatefulWidget {
   });
 
   @override
-  State<CurrencyConverterDialog> createState() => _CurrencyConverterDialogState();
+  State<CurrencyConverterDialog> createState() =>
+      _CurrencyConverterDialogState();
 }
 
 class _CurrencyConverterDialogState extends State<CurrencyConverterDialog> {
@@ -51,25 +52,11 @@ class _CurrencyConverterDialogState extends State<CurrencyConverterDialog> {
         constraints: const BoxConstraints(maxHeight: 600),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF1A1F3A),
-              Color(0xFF2A2F4A),
-            ],
-          ),
+          color: const Color(0xFF1A2030),
           border: Border.all(
-            color: const Color(0xFF00F5FF).withValues(alpha: 0.3),
+            color: const Color(0xFF0D47A1).withValues(alpha: 0.3),
             width: 2,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF00F5FF).withValues(alpha: 0.2),
-              blurRadius: 30,
-              offset: const Offset(0, 10),
-            ),
-          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -89,12 +76,12 @@ class _CurrencyConverterDialogState extends State<CurrencyConverterDialog> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF00F5FF).withValues(alpha: 0.2),
+                      color: const Color(0xFF0D47A1).withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
                       Icons.currency_exchange,
-                      color: Color(0xFF00F5FF),
+                      color: Color(0xFF0D47A1),
                       size: 28,
                     ),
                   ),
@@ -114,7 +101,7 @@ class _CurrencyConverterDialogState extends State<CurrencyConverterDialog> {
                         Text(
                           '€${widget.amount.toStringAsFixed(2)}',
                           style: const TextStyle(
-                            color: Color(0xFF00F5FF),
+                            color: Color(0xFF0D47A1),
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
@@ -124,7 +111,7 @@ class _CurrencyConverterDialogState extends State<CurrencyConverterDialog> {
                   ),
                   IconButton(
                     onPressed: _refreshRates,
-                    icon: const Icon(Icons.refresh, color: Color(0xFF00F5FF)),
+                    icon: const Icon(Icons.refresh, color: Color(0xFF0D47A1)),
                     tooltip: 'Refresh',
                   ),
                   IconButton(
@@ -148,7 +135,9 @@ class _CurrencyConverterDialogState extends State<CurrencyConverterDialog> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF00F5FF)),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Color(0xFF0D47A1),
+                            ),
                           ),
                           SizedBox(height: 16),
                           Text(
@@ -159,7 +148,6 @@ class _CurrencyConverterDialogState extends State<CurrencyConverterDialog> {
                       ),
                     );
                   }
-
                   // Error state
                   else if (snapshot.hasError) {
                     return Padding(
@@ -184,7 +172,10 @@ class _CurrencyConverterDialogState extends State<CurrencyConverterDialog> {
                           const SizedBox(height: 8),
                           Text(
                             'Please check your internet connection',
-                            style: const TextStyle(color: Colors.white60, fontSize: 14),
+                            style: const TextStyle(
+                              color: Colors.white60,
+                              fontSize: 14,
+                            ),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 20),
@@ -193,7 +184,7 @@ class _CurrencyConverterDialogState extends State<CurrencyConverterDialog> {
                             icon: const Icon(Icons.refresh),
                             label: const Text('Retry'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF00F5FF),
+                              backgroundColor: const Color(0xFF5B8DEF),
                               foregroundColor: Colors.white,
                             ),
                           ),
@@ -201,7 +192,6 @@ class _CurrencyConverterDialogState extends State<CurrencyConverterDialog> {
                       ),
                     );
                   }
-
                   // Success state
                   else if (snapshot.hasData) {
                     final exchangeRate = snapshot.data!;
@@ -210,10 +200,17 @@ class _CurrencyConverterDialogState extends State<CurrencyConverterDialog> {
                       children: [
                         // Date info
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
                           child: Row(
                             children: [
-                              const Icon(Icons.update, color: Colors.white60, size: 16),
+                              const Icon(
+                                Icons.update,
+                                color: Colors.white60,
+                                size: 16,
+                              ),
                               const SizedBox(width: 8),
                               Text(
                                 'Updated: ${exchangeRate.date}',
@@ -233,13 +230,21 @@ class _CurrencyConverterDialogState extends State<CurrencyConverterDialog> {
                             itemCount: _currencies.length,
                             itemBuilder: (context, index) {
                               final currency = _currencies[index];
-                              final rate = exchangeRate.getRateFor(currency['code']!);
-                              final convertedAmount = rate != null 
-                                  ? exchangeRate.convert(widget.amount, currency['code']!)
+                              final rate = exchangeRate.getRateFor(
+                                currency['code']!,
+                              );
+                              final convertedAmount = rate != null
+                                  ? exchangeRate.convert(
+                                      widget.amount,
+                                      currency['code']!,
+                                    )
                                   : null;
 
                               return Container(
-                                margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                                margin: const EdgeInsets.symmetric(
+                                  vertical: 4,
+                                  horizontal: 8,
+                                ),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withValues(alpha: 0.05),
                                   borderRadius: BorderRadius.circular(12),
@@ -252,7 +257,9 @@ class _CurrencyConverterDialogState extends State<CurrencyConverterDialog> {
                                     width: 50,
                                     height: 50,
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF00F5FF).withValues(alpha: 0.1),
+                                      color: const Color(
+                                        0xFF0D47A1,
+                                      ).withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Center(
@@ -271,7 +278,8 @@ class _CurrencyConverterDialogState extends State<CurrencyConverterDialog> {
                                     ),
                                   ),
                                   subtitle: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         currency['name']!,
@@ -284,7 +292,9 @@ class _CurrencyConverterDialogState extends State<CurrencyConverterDialog> {
                                         Text(
                                           '€1 = ${rate.toStringAsFixed(4)}',
                                           style: TextStyle(
-                                            color: Colors.white.withValues(alpha: 0.5),
+                                            color: Colors.white.withValues(
+                                              alpha: 0.5,
+                                            ),
                                             fontSize: 11,
                                           ),
                                         ),
@@ -292,13 +302,15 @@ class _CurrencyConverterDialogState extends State<CurrencyConverterDialog> {
                                   ),
                                   trailing: convertedAmount != null
                                       ? Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          crossAxisAlignment: CrossAxisAlignment.end,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
                                           children: [
                                             Text(
                                               '${currency['code']!} ${convertedAmount.toStringAsFixed(2)}',
                                               style: const TextStyle(
-                                                color: Color(0xFF00F5FF),
+                                                color: Color(0xFF0D47A1),
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 16,
                                               ),
@@ -314,7 +326,9 @@ class _CurrencyConverterDialogState extends State<CurrencyConverterDialog> {
                                         )
                                       : const Text(
                                           'N/A',
-                                          style: TextStyle(color: Colors.white38),
+                                          style: TextStyle(
+                                            color: Colors.white38,
+                                          ),
                                         ),
                                 ),
                               );

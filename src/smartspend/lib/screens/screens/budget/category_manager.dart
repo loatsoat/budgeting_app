@@ -16,7 +16,10 @@ Future<void> showManageCategoriesDialog(
       final keys = categories.keys.toList();
       return AlertDialog(
         backgroundColor: const Color(0xFF1A1F3A),
-        title: const Text('Manage Categories', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Manage Categories',
+          style: TextStyle(color: Colors.white),
+        ),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -24,6 +27,8 @@ Future<void> showManageCategoriesDialog(
               final cd = categories[k]!;
               final count = categoryBudgets[k]?.length ?? 0;
               final isIncome = k == 'income';
+              final isSavings = k == 'savings';
+              final isLocked = isIncome || isSavings;
               return ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: Container(
@@ -31,18 +36,28 @@ Future<void> showManageCategoriesDialog(
                   height: 36,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: cd.solidColor.withValues(alpha:0.15),
+                    color: cd.solidColor.withValues(alpha: 0.15),
                   ),
                   child: Center(child: Text(cd.icon)),
                 ),
-                title: Text(cd.name, style: const TextStyle(color: Colors.white)),
-                subtitle: Text('$count subcategories', style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
-                onTap: () {
-                  Navigator.pop(context);
-                  onEditCategory(k, cd);
-                },
-                trailing: isIncome
-                    ? Icon(Icons.lock, color: Colors.white54) // income cannot be deleted
+                title: Text(
+                  cd.name,
+                  style: const TextStyle(color: Colors.white),
+                ),
+                subtitle: Text(
+                  isLocked
+                      ? 'Protected category'
+                      : '$count subcategories',
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                ),
+                onTap: isLocked
+                    ? null
+                    : () {
+                        Navigator.pop(context);
+                        onEditCategory(k, cd);
+                      },
+                trailing: isLocked
+                    ? null
                     : IconButton(
                         icon: const Icon(Icons.delete, color: Colors.red),
                         onPressed: () async {
@@ -50,15 +65,28 @@ Future<void> showManageCategoriesDialog(
                             context: context,
                             builder: (ctx) => AlertDialog(
                               backgroundColor: const Color(0xFF1A1F3A),
-                              title: Text('Delete ${cd.name}?', style: const TextStyle(color: Colors.white)),
+                              title: Text(
+                                'Delete ${cd.name}?',
+                                style: const TextStyle(color: Colors.white),
+                              ),
                               content: Text(
                                 'This will remove the category and all its subcategories.',
-                                style: TextStyle(color: Colors.white.withValues(alpha: 0.8)),
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                ),
                               ),
                               actions: [
-                                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel', style: TextStyle(color: Colors.white70))),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx, false),
+                                  child: const Text(
+                                    'Cancel',
+                                    style: TextStyle(color: Colors.white70),
+                                  ),
+                                ),
                                 ElevatedButton(
-                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.red,
+                                  ),
                                   onPressed: () => Navigator.pop(ctx, true),
                                   child: const Text('Delete'),
                                 ),
@@ -69,9 +97,19 @@ Future<void> showManageCategoriesDialog(
                             categories.remove(k);
                             categoryBudgets.remove(k);
                             onChanged();
-                            if (context.mounted) Navigator.pop(context); // close manage dialog
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                            } // close manage dialog
                             // reopen to show updated list
-                            if (context.mounted) await showManageCategoriesDialog(context, categories, categoryBudgets, onEditCategory, onChanged);
+                            if (context.mounted) {
+                              await showManageCategoriesDialog(
+                                context,
+                                categories,
+                                categoryBudgets,
+                                onEditCategory,
+                                onChanged,
+                              );
+                            }
                           }
                         },
                       ),
@@ -85,7 +123,9 @@ Future<void> showManageCategoriesDialog(
             child: const Text('Close', style: TextStyle(color: Colors.white70)),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00F5FF)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0D47A1),
+            ),
             onPressed: () {
               Navigator.pop(context);
               showAddCategoryDialog(
@@ -112,31 +152,95 @@ Future<void> showEditCategoryDialog(
   VoidCallback onChanged,
 ) {
   final subcats = categoryBudgets[categoryKey] ?? {};
+  final isSavings = categoryKey == 'savings';
+  
   return showDialog(
     context: context,
     builder: (context) => AlertDialog(
       backgroundColor: const Color(0xFF1A1F3A),
-      title: Text('Edit ${categoryData.name}', style: const TextStyle(color: Colors.white)),
+      title: Row(
+        children: [
+          Text(
+            'Edit ${categoryData.name}',
+            style: const TextStyle(color: Colors.white),
+          ),
+          if (isSavings)
+            const Tooltip(
+              message: 'Savings goals are managed from the Overview screen',
+              child: Padding(
+                padding: EdgeInsets.only(left: 8.0),
+                child: Icon(
+                  Icons.info_outline,
+                  color: Colors.white54,
+                  size: 20,
+                ),
+              ),
+            ),
+        ],
+      ),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (subcats.isEmpty)
+            if (isSavings)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2A3B5C).withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: const Color(0xFF5B8DEF).withValues(alpha: 0.3),
+                  ),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(
+                      Icons.lock,
+                      color: Color(0xFF5B8DEF),
+                      size: 20,
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Savings category is auto-synchronized with goals. Manage goals from the Overview tab.',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else if (subcats.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Text('No subcategories yet.', style: TextStyle(color: Colors.white.withValues(alpha: 0.6))),
+                child: Text(
+                  'No subcategories yet.',
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                ),
               )
             else
               ...subcats.entries.map((e) {
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: Text(e.key, style: const TextStyle(color: Colors.white)),
-                  subtitle: Text('€${e.value.budgeted.toStringAsFixed(0)}', style: TextStyle(color: categoryData.solidColor)),
+                  title: Text(
+                    e.key,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  subtitle: Text(
+                    '€${e.value.budgeted.toStringAsFixed(0)}',
+                    style: TextStyle(color: categoryData.solidColor),
+                  ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.edit, color: Colors.white70, size: 20),
+                        icon: const Icon(
+                          Icons.edit,
+                          color: Colors.white70,
+                          size: 20,
+                        ),
                         onPressed: () {
                           Navigator.pop(context);
                           showAddOrEditSubcategoryDialog(
@@ -151,39 +255,57 @@ Future<void> showEditCategoryDialog(
                         },
                       ),
                       IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                        icon: const Icon(
+                          Icons.delete,
+                          color: Colors.red,
+                          size: 20,
+                        ),
                         onPressed: () {
                           categoryBudgets[categoryKey]?.remove(e.key);
                           onChanged();
                           Navigator.pop(context);
                           // reopen to reflect changes
-                          showEditCategoryDialog(context, categories, categoryKey, categoryData, categoryBudgets, onChanged);
+                          showEditCategoryDialog(
+                            context,
+                            categories,
+                            categoryKey,
+                            categoryData,
+                            categoryBudgets,
+                            onChanged,
+                          );
                         },
                       ),
                     ],
                   ),
                 );
               }),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: categoryData.solidColor),
-              onPressed: () {
-                Navigator.pop(context);
-                showAddOrEditSubcategoryDialog(
-                  context,
-                  categoryKey,
-                  categoryData,
-                  categoryBudgets,
-                  onSaved: onChanged,
-                );
-              },
-              child: const Text('Add Subcategory'),
-            ),
+            if (!isSavings)
+              const SizedBox(height: 8),
+            if (!isSavings)
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: categoryData.solidColor,
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                  showAddOrEditSubcategoryDialog(
+                    context,
+                    categoryKey,
+                    categoryData,
+                    categoryBudgets,
+                    onSaved: onChanged,
+                  );
+                },
+                child: const Text('Add Subcategory'),
+              ),
           ],
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close', style: TextStyle(color: Colors.white70))),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Close', style: TextStyle(color: Colors.white70)),
+        ),
       ],
     ),
   );
@@ -202,7 +324,10 @@ Future<void> showAddCategoryDialog(
     context: context,
     builder: (context) => AlertDialog(
       backgroundColor: const Color(0xFF1A1F3A),
-      title: const Text('Add New Category', style: TextStyle(color: Colors.white)),
+      title: const Text(
+        'Add New Category',
+        style: TextStyle(color: Colors.white),
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -214,7 +339,9 @@ Future<void> showAddCategoryDialog(
               hintStyle: const TextStyle(color: Colors.white54),
               filled: true,
               fillColor: const Color(0xFF2A2F4A),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -227,18 +354,27 @@ Future<void> showAddCategoryDialog(
               hintStyle: const TextStyle(color: Colors.white54),
               filled: true,
               fillColor: const Color(0xFF2A2F4A),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
           ),
         ],
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel', style: TextStyle(color: Colors.white70))),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
+        ),
         ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00F5FF)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF0D47A1),
+          ),
           onPressed: () {
             final name = nameCtrl.text.trim();
-            final emoji = emojiCtrl.text.trim().isNotEmpty ? emojiCtrl.text.trim() : '📁';
+            final emoji = emojiCtrl.text.trim().isNotEmpty
+                ? emojiCtrl.text.trim()
+                : '📁';
             if (name.isEmpty) return;
             final key = name.toLowerCase().replaceAll(RegExp(r'\s+'), '_');
             // ensure unique key
@@ -250,9 +386,12 @@ Future<void> showAddCategoryDialog(
             }
             categories[newKey] = CategoryData(
               name: name,
-              gradientColors: [const Color(0xFF00F5FF), const Color(0xFF00D4FF)],
-              solidColor: const Color(0xFF00F5FF),
-              glowColor: const Color(0xFF00F5FF).withValues(alpha: 0.6),
+              gradientColors: [
+                const Color(0xFF0D47A1),
+                const Color(0xFF00D4FF),
+              ],
+              solidColor: const Color(0xFF0D47A1),
+              glowColor: const Color(0xFF0D47A1).withValues(alpha: 0.6),
               icon: emoji,
               subcategories: [],
             );
@@ -277,12 +416,19 @@ Future<void> showAddOrEditSubcategoryDialog(
   required VoidCallback onSaved,
 }) {
   final nameCtrl = TextEditingController(text: initialName ?? '');
-  final budgetCtrl = TextEditingController(text: initialBudget != null ? initialBudget.toStringAsFixed(0) : '');
+  final budgetCtrl = TextEditingController(
+    text: initialBudget != null ? initialBudget.toStringAsFixed(0) : '',
+  );
   return showDialog(
     context: context,
     builder: (context) => AlertDialog(
       backgroundColor: const Color(0xFF1A1F3A),
-      title: Text(initialName == null ? 'Add to ${categoryData.name}' : 'Edit $initialName', style: const TextStyle(color: Colors.white)),
+      title: Text(
+        initialName == null
+            ? 'Add to ${categoryData.name}'
+            : 'Edit $initialName',
+        style: const TextStyle(color: Colors.white),
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -294,7 +440,9 @@ Future<void> showAddOrEditSubcategoryDialog(
               hintStyle: const TextStyle(color: Colors.white54),
               filled: true,
               fillColor: const Color(0xFF2A2F4A),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -307,15 +455,22 @@ Future<void> showAddOrEditSubcategoryDialog(
               hintStyle: const TextStyle(color: Colors.white54),
               filled: true,
               fillColor: const Color(0xFF2A2F4A),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
           ),
         ],
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel', style: TextStyle(color: Colors.white70))),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
+        ),
         ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: categoryData.solidColor),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: categoryData.solidColor,
+          ),
           onPressed: () {
             final name = nameCtrl.text.trim();
             final budget = double.tryParse(budgetCtrl.text) ?? 0.0;
@@ -325,9 +480,15 @@ Future<void> showAddOrEditSubcategoryDialog(
             if (initialName != null && initialName != name) {
               // rename key
               final old = map.remove(initialName);
-              map[name] = SubcategoryBudget(budgeted: budget, spent: old?.spent ?? 0);
+              map[name] = SubcategoryBudget(
+                budgeted: budget,
+                spent: old?.spent ?? 0,
+              );
             } else {
-              map[name] = SubcategoryBudget(budgeted: budget, spent: map[initialName]?.spent ?? 0);
+              map[name] = SubcategoryBudget(
+                budgeted: budget,
+                spent: map[initialName]?.spent ?? 0,
+              );
             }
             onSaved();
             Navigator.pop(context);
@@ -351,7 +512,10 @@ Future<void> showEditBudgetDialog(
     builder: (context) => AlertDialog(
       backgroundColor: const Color.fromARGB(255, 13, 132, 132),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      title: const Text('Edit Tota Budget', style: TextStyle(color: Color.fromARGB(255, 10, 9, 9))),
+      title: const Text(
+        'Edit Tota Budget',
+        style: TextStyle(color: Color.fromARGB(255, 10, 9, 9)),
+      ),
       content: TextField(
         controller: ctrl,
         style: const TextStyle(color: Color.fromARGB(255, 255, 255, 255)),
@@ -363,11 +527,15 @@ Future<void> showEditBudgetDialog(
           fillColor: const Color(0xFF1A1F33),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: const Color(0xFF00F5FF).withValues(alpha: 0.2)),
+            borderSide: BorderSide(
+              color: const Color(0xFF0D47A1).withValues(alpha: 0.2),
+            ),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: const Color(0xFF00F5FF).withValues(alpha: 0.12)),
+            borderSide: BorderSide(
+              color: const Color(0xFF0D47A1).withValues(alpha: 0.12),
+            ),
           ),
         ),
       ),
@@ -377,13 +545,18 @@ Future<void> showEditBudgetDialog(
           child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
         ),
         ElevatedButton(
-          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF00F5FF)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF0D47A1),
+          ),
           onPressed: () {
             final newBudget = double.tryParse(ctrl.text) ?? currentBudget;
             onSaved(newBudget);
             Navigator.pop(context);
           },
-          child: const Text('Save', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600)),
+          child: const Text(
+            'Save',
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600),
+          ),
         ),
       ],
     ),

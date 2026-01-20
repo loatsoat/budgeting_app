@@ -40,16 +40,11 @@ class _ImageWithFallbackState extends State<ImageWithFallback> {
       return Container(
         width: widget.width,
         height: widget.height,
-        decoration: const BoxDecoration(
-          color: Color(0xFFF3F4F6),
-        ),
-        child: widget.errorWidget ??
+        decoration: const BoxDecoration(color: Color(0xFFF3F4F6)),
+        child:
+            widget.errorWidget ??
             const Center(
-              child: Icon(
-                Icons.broken_image,
-                color: Colors.grey,
-                size: 48,
-              ),
+              child: Icon(Icons.broken_image, color: Colors.grey, size: 48),
             ),
       );
     }
@@ -66,15 +61,9 @@ class _ImageWithFallbackState extends State<ImageWithFallback> {
         return Container(
           width: widget.width,
           height: widget.height,
-          decoration: const BoxDecoration(
-            color: Color(0xFFF3F4F6),
-          ),
+          decoration: const BoxDecoration(color: Color(0xFFF3F4F6)),
           child: const Center(
-            child: Icon(
-              Icons.broken_image,
-              color: Colors.grey,
-              size: 48,
-            ),
+            child: Icon(Icons.broken_image, color: Colors.grey, size: 48),
           ),
         );
       },

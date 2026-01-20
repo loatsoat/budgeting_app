@@ -16,7 +16,7 @@ class _AnimatedBackgroundState extends State<AnimatedBackground>
   @override
   void initState() {
     super.initState();
-    
+
     _controllers = List.generate(
       5,
       (index) => AnimationController(
@@ -26,7 +26,9 @@ class _AnimatedBackgroundState extends State<AnimatedBackground>
     );
 
     _animations = _controllers
-        .map((controller) => Tween<double>(begin: 0, end: 1).animate(controller))
+        .map(
+          (controller) => Tween<double>(begin: 0, end: 1).animate(controller),
+        )
         .toList();
   }
 
@@ -62,28 +64,33 @@ class LavaLampPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final baseColor = const Color(0xFF395587);
-    
+    final baseColor = const Color(0xFF1A2F4F);
+
     for (int i = 0; i < animations.length; i++) {
       final progress = animations[i];
-      final offsetX = size.width * 0.5 + 
+      final offsetX =
+          size.width * 0.5 +
           math.cos(progress * 2 * math.pi + i * 1.5) * size.width * 0.3;
-      final offsetY = size.height * 0.5 + 
+      final offsetY =
+          size.height * 0.5 +
           math.sin(progress * 2 * math.pi + i * 2) * size.height * 0.3;
-      
+
       final paint = Paint()
-        ..shader = RadialGradient(
-          colors: [
-            baseColor.withValues(alpha: 0.15 + i * 0.05),
-            baseColor.withValues(alpha: 0.05),
-            Colors.transparent,
-          ],
-          stops: const [0.0, 0.5, 1.0],
-        ).createShader(Rect.fromCircle(
-          center: Offset(offsetX, offsetY),
-          radius: size.width * (0.3 + i * 0.1),
-        ));
-      
+        ..shader =
+            RadialGradient(
+              colors: [
+                baseColor.withValues(alpha: 0.03 + i * 0.01),
+                baseColor.withValues(alpha: 0.01),
+                Colors.transparent,
+              ],
+              stops: const [0.0, 0.5, 1.0],
+            ).createShader(
+              Rect.fromCircle(
+                center: Offset(offsetX, offsetY),
+                radius: size.width * (0.3 + i * 0.1),
+              ),
+            );
+
       canvas.drawCircle(
         Offset(offsetX, offsetY),
         size.width * (0.3 + i * 0.1),

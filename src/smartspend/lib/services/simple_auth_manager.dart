@@ -19,7 +19,7 @@ class SimpleUser {
 class SimpleAuthManager extends ChangeNotifier {
   static final SimpleAuthManager _instance = SimpleAuthManager._internal();
   static SimpleAuthManager get instance => _instance;
-  
+
   SimpleUser? _currentUser;
   late final AppDatabase _db;
 
@@ -72,11 +72,11 @@ class SimpleAuthManager extends ChangeNotifier {
   Future<bool> login(String username, String password) async {
     try {
       final trimmedUsername = username.trim();
-      
+
       if (trimmedUsername.isEmpty) {
         throw Exception('Bitte Benutzername eingeben');
       }
-      
+
       if (password.isEmpty) {
         throw Exception('Bitte Passwort eingeben');
       }
@@ -113,18 +113,18 @@ class SimpleAuthManager extends ChangeNotifier {
   ) async {
     try {
       debugPrint('🔄 Starte Registrierung für: $username');
-      
+
       final trimmedUsername = username.trim();
       final trimmedAnswer = securityAnswer.trim();
-      
+
       if (trimmedUsername.isEmpty) {
         throw Exception('Bitte Benutzername eingeben');
       }
-      
+
       if (trimmedUsername.length < 3) {
         throw Exception('Benutzername muss mindestens 3 Zeichen haben');
       }
-      
+
       if (password.length < 6) {
         throw Exception('Passwort muss mindestens 6 Zeichen haben');
       }
@@ -136,13 +136,13 @@ class SimpleAuthManager extends ChangeNotifier {
       if (trimmedAnswer.isEmpty) {
         throw Exception('Bitte Antwort auf Sicherheitsfrage eingeben');
       }
-      
+
       // Check if username already exists
       final exists = await _db.usernameExists(trimmedUsername);
       if (exists) {
         throw Exception('Benutzername bereits vergeben');
       }
-      
+
       // Hash password, security answer, and create user
       final passwordHash = _hashPassword(password);
       final answerHash = _hashPassword(trimmedAnswer.toLowerCase());
@@ -152,7 +152,7 @@ class SimpleAuthManager extends ChangeNotifier {
         securityQuestion,
         answerHash,
       );
-      
+
       // Get the created user
       final user = await _db.getUserByUsername(trimmedUsername);
       if (user == null) {
@@ -172,12 +172,12 @@ class SimpleAuthManager extends ChangeNotifier {
   Future<String> getSecurityQuestion(String username) async {
     try {
       final trimmedUsername = username.trim();
-      
+
       final user = await _db.getUserByUsername(trimmedUsername);
       if (user == null) {
         throw Exception('Kein Benutzer mit diesem Namen gefunden');
       }
-      
+
       return user.securityQuestion;
     } catch (e) {
       debugPrint('❌ Fehler beim Abrufen der Sicherheitsfrage: $e');
@@ -194,7 +194,7 @@ class SimpleAuthManager extends ChangeNotifier {
     try {
       final trimmedUsername = username.trim();
       final trimmedAnswer = securityAnswer.trim();
-      
+
       if (newPassword.length < 6) {
         throw Exception('Neues Passwort muss mindestens 6 Zeichen haben');
       }
@@ -213,7 +213,7 @@ class SimpleAuthManager extends ChangeNotifier {
       // Update password
       final newPasswordHash = _hashPassword(newPassword);
       await _db.updatePassword(trimmedUsername, newPasswordHash);
-      
+
       debugPrint('✅ Passwort erfolgreich zurückgesetzt');
       return true;
     } catch (e) {
@@ -243,7 +243,7 @@ class SimpleAuthManager extends ChangeNotifier {
 
       final newPasswordHash = _hashPassword(newPassword);
       await _db.updatePassword(username, newPasswordHash);
-      
+
       debugPrint('✅ Passwort erfolgreich geändert');
       return true;
     } catch (e) {
@@ -270,7 +270,10 @@ class SimpleAuthManager extends ChangeNotifier {
     if (_currentUser != null) {
       await prefs.setInt('user_id', _currentUser!.id);
       await prefs.setString('username', _currentUser!.username);
-      await prefs.setString('created_at', _currentUser!.createdAt.toIso8601String());
+      await prefs.setString(
+        'created_at',
+        _currentUser!.createdAt.toIso8601String(),
+      );
     }
   }
 

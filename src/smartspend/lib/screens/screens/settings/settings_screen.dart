@@ -18,7 +18,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  
+
   bool _obscureCurrentPassword = true;
   bool _obscureNewPassword = true;
   bool _obscureConfirmPassword = true;
@@ -84,7 +84,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
       if (mounted) {
         _showSnackBar('Password changed successfully!', isError: false);
-        
+
         // Clear the form
         _currentPasswordController.clear();
         _newPasswordController.clear();
@@ -109,9 +109,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         backgroundColor: isError ? Colors.red : Colors.green,
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -128,14 +126,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             gradient: const LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFF2A3F5F),
-                Color(0xFF1A2F4F),
-              ],
+              colors: [Color(0xFF2A3F5F), Color(0xFF1A2F4F)],
             ),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: const Color(0xFF00F5FF).withValues(alpha: 0.3),
+              color: const Color(0xFF0D47A1).withValues(alpha: 0.3),
             ),
           ),
           child: Column(
@@ -243,11 +238,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF0A0E1A),
-              Color(0xFF1A1F33),
-              Color(0xFF0A0E1A),
-            ],
+            colors: [Color(0xFF0A0E1A), Color(0xFF1A1F33), Color(0xFF0A0E1A)],
           ),
         ),
         child: SafeArea(
@@ -294,10 +285,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               gradient: const LinearGradient(
-                                colors: [
-                                  Color(0xFF00F5FF),
-                                  Color(0xFF00B8FF),
-                                ],
+                                colors: [Color(0xFF0D47A1), Color(0xFF00B8FF)],
                               ),
                             ),
                             child: Center(
@@ -365,8 +353,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   color: Colors.white.withValues(alpha: 0.4),
                                 ),
                                 onPressed: () {
-                                  setState(() => _obscureCurrentPassword =
-                                      !_obscureCurrentPassword);
+                                  setState(
+                                    () => _obscureCurrentPassword =
+                                        !_obscureCurrentPassword,
+                                  );
                                 },
                               ),
                               validator: (value) {
@@ -391,8 +381,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   color: Colors.white.withValues(alpha: 0.4),
                                 ),
                                 onPressed: () {
-                                  setState(() => _obscureNewPassword =
-                                      !_obscureNewPassword);
+                                  setState(
+                                    () => _obscureNewPassword =
+                                        !_obscureNewPassword,
+                                  );
                                 },
                               ),
                               validator: (value) {
@@ -420,8 +412,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   color: Colors.white.withValues(alpha: 0.4),
                                 ),
                                 onPressed: () {
-                                  setState(() => _obscureConfirmPassword =
-                                      !_obscureConfirmPassword);
+                                  setState(
+                                    () => _obscureConfirmPassword =
+                                        !_obscureConfirmPassword,
+                                  );
                                 },
                               ),
                               validator: (value) {
@@ -436,16 +430,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                             const SizedBox(height: 24),
                             GradientButton(
-                              onPressed: _isLoading ? null : _handleChangePassword,
+                              onPressed: _isLoading
+                                  ? null
+                                  : _handleChangePassword,
                               child: _isLoading
                                   ? const SizedBox(
                                       height: 20,
                                       width: 20,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        valueColor: AlwaysStoppedAnimation<Color>(
-                                          Colors.white,
-                                        ),
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.white,
+                                            ),
                                       ),
                                     )
                                   : const Text(
@@ -464,7 +461,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const SizedBox(height: 24),
 
                     // Bank Card Section
-                    if (_isCardConnected) ... [
+                    if (_isCardConnected) ...[
                       const Text(
                         'Bank Card',
                         style: TextStyle(
@@ -485,7 +482,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 width: 40,
                                 height: 40,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFD8A5FF).withValues(alpha: 0.2),
+                                  color: const Color(
+                                    0xFFD8A5FF,
+                                  ).withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: const Icon(
@@ -515,15 +514,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 size: 16,
                               ),
                               onTap: () async {
-                                final prefs = await SharedPreferences.getInstance();
-                                await prefs.setBool('bank_card_connected', false);
+                                final prefs =
+                                    await SharedPreferences.getInstance();
+                                await prefs.setBool(
+                                  'bank_card_connected',
+                                  false,
+                                );
                                 setState(() {
                                   _isCardConnected = false;
                                 });
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text('Bank card disconnected. Button will appear on budget screen.'),
+                                      content: Text(
+                                        'Bank card disconnected. Button will appear on budget screen.',
+                                      ),
                                       backgroundColor: Color(0xFF4CAF50),
                                     ),
                                   );
@@ -558,13 +563,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                color: const Color(0xFF00F5FF)
-                                    .withValues(alpha: 0.2),
+                                color: const Color(
+                                  0xFF0D47A1,
+                                ).withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: const Icon(
                                 Icons.admin_panel_settings,
-                                color: Color(0xFF00F5FF),
+                                color: Color(0xFF0D47A1),
                                 size: 20,
                               ),
                             ),

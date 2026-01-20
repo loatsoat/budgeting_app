@@ -31,10 +31,10 @@ class AppDatabase extends _$AppDatabase {
       if (from < 2) {
         // Add security question columns with default values
         await customStatement(
-          'ALTER TABLE users ADD COLUMN security_question TEXT NOT NULL DEFAULT "What was the name of your first pet?"'
+          'ALTER TABLE users ADD COLUMN security_question TEXT NOT NULL DEFAULT "What was the name of your first pet?"',
         );
         await customStatement(
-          'ALTER TABLE users ADD COLUMN security_answer_hash TEXT NOT NULL DEFAULT ""'
+          'ALTER TABLE users ADD COLUMN security_answer_hash TEXT NOT NULL DEFAULT ""',
         );
       }
     },
@@ -42,8 +42,9 @@ class AppDatabase extends _$AppDatabase {
 
   // Get user by username
   Future<User?> getUserByUsername(String username) async {
-    return (select(users)..where((u) => u.username.equals(username)))
-        .getSingleOrNull();
+    return (select(
+      users,
+    )..where((u) => u.username.equals(username))).getSingleOrNull();
   }
 
   // Create new user
@@ -71,16 +72,18 @@ class AppDatabase extends _$AppDatabase {
 
   // Validate login
   Future<User?> validateLogin(String username, String passwordHash) async {
-    return (select(users)
-          ..where((u) =>
-              u.username.equals(username) & u.passwordHash.equals(passwordHash)))
+    return (select(users)..where(
+          (u) =>
+              u.username.equals(username) & u.passwordHash.equals(passwordHash),
+        ))
         .getSingleOrNull();
   }
 
   // Update user password
   Future<void> updatePassword(String username, String newPasswordHash) async {
-    await (update(users)..where((u) => u.username.equals(username)))
-        .write(UsersCompanion(passwordHash: Value(newPasswordHash)));
+    await (update(users)..where((u) => u.username.equals(username))).write(
+      UsersCompanion(passwordHash: Value(newPasswordHash)),
+    );
   }
 
   // Validate security answer
@@ -97,13 +100,13 @@ LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
     final file = File(p.join(dbFolder.path, 'smartspend.db'));
-    
+
     // Print the database path for easy access
     debugPrint('═══════════════════════════════════════════════');
     debugPrint('📁 DATABASE PATH:');
     debugPrint('   ${file.path}');
     debugPrint('═══════════════════════════════════════════════');
-    
+
     return NativeDatabase(file);
   });
 }

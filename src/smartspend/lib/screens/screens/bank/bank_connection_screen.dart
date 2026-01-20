@@ -25,13 +25,7 @@ class _BankConnectionScreenState extends State<BankConnectionScreen> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF0A0E1A), Color(0xFF1A1F33), Color(0xFF0A0E1A)],
-          ),
-        ),
+        decoration: const BoxDecoration(color: Color(0xFF0F172A)),
         child: SafeArea(
           child: Column(
             children: [
@@ -88,7 +82,7 @@ class _BankConnectionScreenState extends State<BankConnectionScreen> {
 
   Widget _buildTransactionCard() {
     final transaction = widget.transactions[_currentTransactionIndex];
-    
+
     return GestureDetector(
       onHorizontalDragEnd: (details) {
         if (details.primaryVelocity! > 0) {
@@ -105,22 +99,11 @@ class _BankConnectionScreenState extends State<BankConnectionScreen> {
         margin: const EdgeInsets.all(24),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(24),
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF1A2A3F), Color(0xFF2A3F5F)],
-          ),
+          color: const Color(0xFF1A2030),
           border: Border.all(
             color: const Color(0xFFD8A5FF).withValues(alpha: 0.3),
             width: 2,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFD8A5FF).withValues(alpha: 0.2),
-              blurRadius: 30,
-              offset: const Offset(0, 10),
-            ),
-          ],
         ),
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -148,7 +131,10 @@ class _BankConnectionScreenState extends State<BankConnectionScreen> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFD8A5FF).withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(20),
@@ -252,7 +238,7 @@ class _BankConnectionScreenState extends State<BankConnectionScreen> {
           const SizedBox(height: 40),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFD8A5FF),
+              backgroundColor: const Color(0xFF5B8DEF),
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -281,9 +267,7 @@ class _BankConnectionScreenState extends State<BankConnectionScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF1A2A3F).withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.1),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -371,7 +355,7 @@ class _BankConnectionScreenState extends State<BankConnectionScreen> {
       'Thursday',
       'Friday',
       'Saturday',
-      'Sunday'
+      'Sunday',
     ];
     final months = [
       'January',
@@ -385,7 +369,7 @@ class _BankConnectionScreenState extends State<BankConnectionScreen> {
       'September',
       'October',
       'November',
-      'December'
+      'December',
     ];
     return '${days[date.weekday - 1]}, ${months[date.month - 1]} ${date.day}, ${date.year}';
   }

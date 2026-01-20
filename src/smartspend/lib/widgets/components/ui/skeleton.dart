@@ -34,8 +34,8 @@ class CustomSkeleton extends StatefulWidget {
     this.highlightColor,
     this.duration,
   }) : width = size,
-        height = size,
-        borderRadius = const BorderRadius.all(Radius.circular(1000));
+       height = size,
+       borderRadius = const BorderRadius.all(Radius.circular(1000));
 
   @override
   State<CustomSkeleton> createState() => _CustomSkeletonState();
@@ -69,7 +69,8 @@ class _CustomSkeletonState extends State<CustomSkeleton>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final baseColor = widget.baseColor ?? theme.colorScheme.surface;
-    final highlightColor = widget.highlightColor ?? 
+    final highlightColor =
+        widget.highlightColor ??
         theme.colorScheme.onSurface.withValues(alpha: 0.1);
 
     return AnimatedBuilder(
@@ -123,8 +124,8 @@ class SkeletonText extends StatelessWidget {
           ),
           child: CustomSkeleton(
             height: lineHeight ?? 16,
-            width: isLastLine && lastLineWidth != null 
-                ? lastLineWidth 
+            width: isLastLine && lastLineWidth != null
+                ? lastLineWidth
                 : double.infinity,
           ),
         );

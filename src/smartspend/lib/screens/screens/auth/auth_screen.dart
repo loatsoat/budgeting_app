@@ -44,13 +44,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF0A0E1A), Color(0xFF1A1F33), Color(0xFF0A0E1A)],
-          ),
-        ),
+        decoration: const BoxDecoration(color: Color(0xFF0F172A)),
         child: Stack(
           children: [
             BudgetAnimatedBackground(controller: _rotationController),

@@ -30,7 +30,7 @@ class AddTransactionDialog extends StatefulWidget {
 class _AddTransactionDialogState extends State<AddTransactionDialog> {
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
-  
+
   TransactionType _selectedType = TransactionType.expense;
   String _selectedCategoryKey = 'food';
   String? _selectedSubcategoryName;
@@ -47,13 +47,29 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
     if (_isEditing) {
       final transaction = widget.existingTransaction!;
       _amountController.text = transaction.amount.toString();
-      _noteController.text = transaction.note == 'No note' ? '' : transaction.note;
+      _noteController.text = transaction.note == 'No note'
+          ? ''
+          : transaction.note;
       _selectedType = transaction.type;
       _selectedCategoryKey = transaction.categoryKey;
       _selectedDate = transaction.date;
       _excludeFromBudget = transaction.excludeFromBudget;
       _selectedRecurrence = transaction.recurrence;
       _recurrenceEndDate = transaction.recurrenceEndDate;
+      
+      // Set subcategory name from transaction
+      _selectedSubcategoryName = transaction.category;
+      
+      // For savings transactions, find and set the corresponding goal
+      if (transaction.categoryKey == 'savings' && 
+          widget.savingsGoals != null && 
+          widget.savingsGoals!.isNotEmpty) {
+        final matchingGoal = widget.savingsGoals!.firstWhere(
+          (goal) => goal.name == transaction.category,
+          orElse: () => widget.savingsGoals!.first,
+        );
+        _selectedGoalId = matchingGoal.id;
+      }
     }
   }
 
@@ -82,38 +98,47 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
     // For income transactions, use a generic 'Income' category
     final String categoryName;
     final String categoryKeyValue;
-    
+
     if (_selectedType == TransactionType.income) {
       categoryName = 'Income';
       categoryKeyValue = 'income';
     } else {
       final categoryData = widget.categories[_selectedCategoryKey];
       if (categoryData == null) return;
-      
-      // Use subcategory name if selected, otherwise use category name
-      categoryName = _selectedSubcategoryName ?? categoryData.name;
+
+      // For savings category, use the goal name as category
+      if (_selectedCategoryKey == 'savings' && _selectedGoalId != null && widget.savingsGoals != null) {
+        final goal = widget.savingsGoals!.firstWhere(
+          (g) => g.id == _selectedGoalId,
+          orElse: () => widget.savingsGoals!.first,
+        );
+        categoryName = goal.name;
+      } else {
+        // Use subcategory name if selected, otherwise use category name
+        categoryName = _selectedSubcategoryName ?? categoryData.name;
+      }
       categoryKeyValue = _selectedCategoryKey;
     }
 
     final transaction = Transaction(
-      id: _isEditing ? widget.existingTransaction!.id : DateTime.now().millisecondsSinceEpoch.toString(),
+      id: _isEditing
+          ? widget.existingTransaction!.id
+          : DateTime.now().millisecondsSinceEpoch.toString(),
       type: _selectedType,
       amount: normalizedAmount,
       category: categoryName,
       categoryKey: categoryKeyValue,
-      note: _noteController.text.trim().isEmpty ? 'No note' : _noteController.text.trim(),
+      note: _noteController.text.trim().isEmpty
+          ? 'No note'
+          : _noteController.text.trim(),
       date: _selectedDate,
       excludeFromBudget: _excludeFromBudget,
       recurrence: _selectedRecurrence,
       recurrenceEndDate: _recurrenceEndDate,
     );
 
-    // If savings category and goal selected, update the goal
-    if (_selectedCategoryKey == 'savings' && _selectedGoalId != null && widget.savingsGoals != null) {
-      final goal = widget.savingsGoals!.firstWhere((g) => g.id == _selectedGoalId);
-      goal.currentAmount += normalizedAmount;
-      widget.onGoalUpdated?.call(goal);
-    }
+    // NOTE: Goal updates are handled in app_budget.dart's _addTransaction and _updateTransaction
+    // to avoid double counting
 
     if (_isEditing) {
       widget.onTransactionUpdated?.call(transaction);
@@ -125,7 +150,7 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
 
   void _handleDelete() {
     if (widget.existingTransaction == null) return;
-    
+
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -135,7 +160,9 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
           decoration: BoxDecoration(
             color: const Color(0xFF1A1F3A),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFFFF4D67).withValues(alpha: 0.3)),
+            border: Border.all(
+              color: const Color(0xFFFF4D67).withValues(alpha: 0.3),
+            ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -190,7 +217,9 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                   Expanded(
                     child: GestureDetector(
                       onTap: () {
-                        widget.onTransactionDeleted?.call(widget.existingTransaction!);
+                        widget.onTransactionDeleted?.call(
+                          widget.existingTransaction!,
+                        );
                         Navigator.pop(context); // Close confirmation dialog
                         Navigator.pop(context); // Close transaction dialog
                       },
@@ -238,19 +267,9 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
           child: Container(
             width: dialogWidth,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFF2A3F5F),
-                  Color(0xFF1A2B3F),
-                  Color(0xFF0F1A2E),
-                ],
-              ),
+              color: const Color(0xFF1A2940),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: const Color(0xFF00F5FF).withValues(alpha: 0.3),
-              ),
+              border: Border.all(color: const Color(0xFF2A3B5C)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -258,14 +277,9 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                 // Header
                 Container(
                   padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        const Color(0xFFFF6B9D).withValues(alpha: 0.2),
-                        const Color(0xFF00F5FF).withValues(alpha: 0.1),
-                      ],
-                    ),
-                    borderRadius: const BorderRadius.only(
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF1A2940),
+                    borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(24),
                       topRight: Radius.circular(24),
                     ),
@@ -295,24 +309,32 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                     ],
                   ),
                 ),
-                
+
                 Padding(
                   padding: const EdgeInsets.all(24),
                   child: Column(
                     children: [
                       // Amount Input
                       Container(
-                        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 20,
+                          horizontal: 16,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.08),
+                          ),
                         ),
                         child: Column(
                           children: [
                             TextField(
                               controller: _amountController,
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
                               textAlign: TextAlign.center,
                               style: const TextStyle(
                                 color: Colors.white,
@@ -327,7 +349,7 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                                   fontWeight: FontWeight.w300,
                                 ),
                                 filled: true,
-                                fillColor: const Color(0xFF1A2B3F).withValues(alpha: 0.85),
+                                fillColor: const Color(0xFF131D2E),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                   borderSide: BorderSide.none,
@@ -338,9 +360,9 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                           ],
                         ),
                       ),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Transaction Type Selector
                       Container(
                         padding: const EdgeInsets.all(4),
@@ -350,48 +372,55 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                         ),
                         child: Row(
                           children: [
-                            _buildTypeButton('EXPENSE', TransactionType.expense),
+                            _buildTypeButton(
+                              'EXPENSE',
+                              TransactionType.expense,
+                            ),
                             _buildTypeButton('INCOME', TransactionType.income),
                           ],
                         ),
                       ),
-                      
+
                       const SizedBox(height: 24),
-                      
+
                       // Category Selector (hidden for income)
                       if (_selectedType != TransactionType.income)
                         _buildCategorySelector(),
-                      
+
                       if (_selectedType != TransactionType.income)
                         const SizedBox(height: 20),
-                      
+
                       // Goal Selector (only for savings category)
-                      if (_selectedCategoryKey == 'savings' && widget.savingsGoals != null && widget.savingsGoals!.isNotEmpty)
+                      if (_selectedCategoryKey == 'savings' &&
+                          widget.savingsGoals != null &&
+                          widget.savingsGoals!.isNotEmpty)
                         _buildGoalSelector(),
-                      
-                      if (_selectedCategoryKey == 'savings' && widget.savingsGoals != null && widget.savingsGoals!.isNotEmpty)
+
+                      if (_selectedCategoryKey == 'savings' &&
+                          widget.savingsGoals != null &&
+                          widget.savingsGoals!.isNotEmpty)
                         const SizedBox(height: 20),
-                      
+
                       // Note Input
                       _buildNoteInput(),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Date Selector
                       _buildDateSelector(),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Exclude from Budget Toggle
                       _buildExcludeToggle(),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Recurrence Selector
                       _buildRecurrenceSelector(),
-                      
+
                       const SizedBox(height: 32),
-                      
+
                       // Buttons Row
                       if (widget.existingTransaction != null)
                         Row(
@@ -401,7 +430,9 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                               child: GestureDetector(
                                 onTap: _handleDelete,
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: const Color(0xFFFF4D67),
                                     borderRadius: BorderRadius.circular(12),
@@ -425,11 +456,11 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                               child: GestureDetector(
                                 onTap: _handleSave,
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
                                   decoration: BoxDecoration(
-                                    gradient: const LinearGradient(
-                                      colors: [Color(0xFFB8860B), Color(0xFFDAA520)],
-                                    ),
+                                    color: const Color(0xFF5B8DEF),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: const Text(
@@ -455,9 +486,7 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                             width: double.infinity,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFFB8860B), Color(0xFFDAA520)],
-                              ),
+                              color: const Color(0xFF5B8DEF),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Text(
@@ -510,7 +539,9 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
             label,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.6),
+              color: isSelected
+                  ? Colors.white
+                  : Colors.white.withValues(alpha: 0.6),
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
@@ -522,8 +553,9 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
 
   Widget _buildCategorySelector() {
     final categoryData = widget.categories[_selectedCategoryKey];
-    final hasSubcategories = (widget.categoryBudgets?[_selectedCategoryKey]?.isNotEmpty ?? false);
-    
+    final hasSubcategories =
+        (widget.categoryBudgets?[_selectedCategoryKey]?.isNotEmpty ?? false);
+
     return Column(
       children: [
         GestureDetector(
@@ -595,7 +627,7 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                   color: Colors.white.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: _selectedSubcategoryName != null 
+                    color: _selectedSubcategoryName != null
                         ? Colors.cyan.withValues(alpha: 0.3)
                         : Colors.white.withValues(alpha: 0.1),
                   ),
@@ -631,8 +663,8 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                           Text(
                             _selectedSubcategoryName ?? 'Select a subcategory',
                             style: TextStyle(
-                              color: _selectedSubcategoryName != null 
-                                  ? Colors.white 
+                              color: _selectedSubcategoryName != null
+                                  ? Colors.white
                                   : Colors.white.withValues(alpha: 0.5),
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -657,10 +689,13 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
   }
 
   Widget _buildGoalSelector() {
-    final selectedGoal = _selectedGoalId != null 
-        ? widget.savingsGoals?.firstWhere((g) => g.id == _selectedGoalId, orElse: () => widget.savingsGoals!.first)
+    final selectedGoal = _selectedGoalId != null
+        ? widget.savingsGoals?.firstWhere(
+            (g) => g.id == _selectedGoalId,
+            orElse: () => widget.savingsGoals!.first,
+          )
         : null;
-    
+
     return GestureDetector(
       onTap: _showGoalPicker,
       child: Container(
@@ -669,7 +704,9 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
           color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: selectedGoal?.color.withValues(alpha: 0.3) ?? Colors.white.withValues(alpha: 0.1),
+            color:
+                selectedGoal?.color.withValues(alpha: 0.3) ??
+                Colors.white.withValues(alpha: 0.1),
           ),
         ),
         child: Row(
@@ -678,7 +715,9 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: selectedGoal?.color.withValues(alpha: 0.2) ?? Colors.white.withValues(alpha: 0.1),
+                color:
+                    selectedGoal?.color.withValues(alpha: 0.2) ??
+                    Colors.white.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Center(
@@ -762,34 +801,41 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                 shrinkWrap: true,
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 children: [
-                  ...?widget.savingsGoals?.map((goal) => ListTile(
-                        leading: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: goal.color.withValues(alpha: 0.2),
-                            shape: BoxShape.circle,
+                  ...?widget.savingsGoals?.map(
+                    (goal) => ListTile(
+                      leading: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: goal.color.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Text(
+                            goal.emoji,
+                            style: const TextStyle(fontSize: 20),
                           ),
-                          child: Center(
-                            child: Text(goal.emoji, style: const TextStyle(fontSize: 20)),
-                          ),
                         ),
-                        title: Text(
-                          goal.name,
-                          style: const TextStyle(color: Colors.white),
+                      ),
+                      title: Text(
+                        goal.name,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      subtitle: Text(
+                        '€${goal.currentAmount.toStringAsFixed(0)} / €${goal.targetAmount.toStringAsFixed(0)}',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.6),
                         ),
-                        subtitle: Text(
-                          '€${goal.currentAmount.toStringAsFixed(0)} / €${goal.targetAmount.toStringAsFixed(0)}',
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
-                        ),
-                        trailing: _selectedGoalId == goal.id
-                            ? Icon(Icons.check_circle, color: goal.color)
-                            : null,
-                        onTap: () {
-                          setState(() => _selectedGoalId = goal.id);
-                          Navigator.pop(context);
-                        },
-                      )),
+                      ),
+                      trailing: _selectedGoalId == goal.id
+                          ? Icon(Icons.check_circle, color: goal.color)
+                          : null,
+                      onTap: () {
+                        setState(() => _selectedGoalId = goal.id);
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
                   const SizedBox(height: 20),
                 ],
               ),
@@ -858,12 +904,10 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
             ),
             const SizedBox(width: 12),
             Text(
-              _selectedDate.day == DateTime.now().day ? 'Today' : 
-              '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-              ),
+              _selectedDate.day == DateTime.now().day
+                  ? 'Today'
+                  : '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+              style: const TextStyle(color: Colors.white, fontSize: 16),
             ),
           ],
         ),
@@ -889,16 +933,13 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
           const Expanded(
             child: Text(
               'Exclude from budget',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-              ),
+              style: TextStyle(color: Colors.white, fontSize: 16),
             ),
           ),
           Switch(
             value: _excludeFromBudget,
             onChanged: (value) => setState(() => _excludeFromBudget = value),
-            activeTrackColor: const Color(0xFF00F5FF),
+            activeTrackColor: const Color(0xFF0D47A1),
             activeThumbColor: Colors.white,
           ),
         ],
@@ -908,7 +949,7 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
 
   void _showCategoryPicker() {
     String? expandedCategoryKey;
-    
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -947,22 +988,24 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                       controller: scrollController,
                       itemCount: widget.categories.length,
                       itemBuilder: (context, index) {
-                        final entry = widget.categories.entries.elementAt(index);
+                        final entry = widget.categories.entries.elementAt(
+                          index,
+                        );
                         final key = entry.key;
                         final category = entry.value;
-                        
+
                         // For savings category, use savings goals as subcategories
                         final isSavingsCategory = key == 'savings';
-                        final subcategories = isSavingsCategory 
-                            ? null 
+                        final subcategories = isSavingsCategory
+                            ? null
                             : widget.categoryBudgets?[key];
-                        
-                        final hasSubcategories = isSavingsCategory 
+
+                        final hasSubcategories = isSavingsCategory
                             ? (widget.savingsGoals?.isNotEmpty ?? false)
                             : (subcategories?.isNotEmpty ?? false);
-                        
+
                         final isExpanded = expandedCategoryKey == key;
-                        
+
                         return Column(
                           children: [
                             ListTile(
@@ -970,11 +1013,16 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                                 width: 40,
                                 height: 40,
                                 decoration: BoxDecoration(
-                                  color: category.solidColor.withValues(alpha: 0.2),
+                                  color: category.solidColor.withValues(
+                                    alpha: 0.2,
+                                  ),
                                   shape: BoxShape.circle,
                                 ),
                                 child: Center(
-                                  child: Text(category.icon, style: const TextStyle(fontSize: 20)),
+                                  child: Text(
+                                    category.icon,
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
                                 ),
                               ),
                               title: Text(
@@ -983,7 +1031,9 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                               ),
                               trailing: hasSubcategories
                                   ? Icon(
-                                      isExpanded ? Icons.expand_less : Icons.expand_more,
+                                      isExpanded
+                                          ? Icons.expand_less
+                                          : Icons.expand_more,
                                       color: Colors.white70,
                                     )
                                   : null,
@@ -991,7 +1041,9 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                                 if (hasSubcategories) {
                                   // Toggle expansion
                                   setModalState(() {
-                                    expandedCategoryKey = isExpanded ? null : key;
+                                    expandedCategoryKey = isExpanded
+                                        ? null
+                                        : key;
                                   });
                                 } else {
                                   // Select category directly
@@ -1005,67 +1057,88 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                               },
                             ),
                             // Show savings goals as subcategories for savings category
-                            if (isExpanded && isSavingsCategory && widget.savingsGoals != null)
-                              ...widget.savingsGoals!.map((goal) => ListTile(
-                                    contentPadding: const EdgeInsets.only(left: 72, right: 16),
-                                    leading: Container(
-                                      width: 32,
-                                      height: 32,
-                                      decoration: BoxDecoration(
-                                        color: goal.color.withValues(alpha: 0.2),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Center(
-                                        child: Text(goal.emoji, style: const TextStyle(fontSize: 16)),
+                            if (isExpanded &&
+                                isSavingsCategory &&
+                                widget.savingsGoals != null)
+                              ...widget.savingsGoals!.map(
+                                (goal) => ListTile(
+                                  contentPadding: const EdgeInsets.only(
+                                    left: 72,
+                                    right: 16,
+                                  ),
+                                  leading: Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      color: goal.color.withValues(alpha: 0.2),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        goal.emoji,
+                                        style: const TextStyle(fontSize: 16),
                                       ),
                                     ),
-                                    title: Text(
-                                      goal.name,
-                                      style: TextStyle(
-                                        color: Colors.white.withValues(alpha: 0.9),
-                                        fontSize: 15,
+                                  ),
+                                  title: Text(
+                                    goal.name,
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.9,
                                       ),
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
+                                      fontSize: 15,
                                     ),
-                                    subtitle: Text(
-                                      '€${goal.currentAmount.toStringAsFixed(0)} / €${goal.targetAmount.toStringAsFixed(0)}',
-                                      style: TextStyle(
-                                        color: goal.color.withValues(alpha: 0.7),
-                                        fontSize: 12,
-                                      ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                  subtitle: Text(
+                                    '€${goal.currentAmount.toStringAsFixed(0)} / €${goal.targetAmount.toStringAsFixed(0)}',
+                                    style: TextStyle(
+                                      color: goal.color.withValues(alpha: 0.7),
+                                      fontSize: 12,
                                     ),
-                                    onTap: () {
-                                      setState(() {
-                                        _selectedCategoryKey = key;
-                                        _selectedSubcategoryName = goal.name;
-                                        _selectedGoalId = goal.id;
-                                      });
-                                      Navigator.pop(context);
-                                    },
-                                  )),
+                                  ),
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedCategoryKey = key;
+                                      _selectedSubcategoryName = goal.name;
+                                      _selectedGoalId = goal.id;
+                                    });
+                                    Navigator.pop(context);
+                                  },
+                                ),
+                              ),
                             // Show regular subcategories for other categories
-                            if (isExpanded && !isSavingsCategory && hasSubcategories)
-                              ...subcategories!.keys.map((subName) => ListTile(
-                                    contentPadding: const EdgeInsets.only(left: 72, right: 16),
-                                    title: Text(
-                                      subName,
-                                      style: TextStyle(
-                                        color: Colors.white.withValues(alpha: 0.9),
-                                        fontSize: 15,
+                            if (isExpanded &&
+                                !isSavingsCategory &&
+                                hasSubcategories)
+                              ...subcategories!.keys.map(
+                                (subName) => ListTile(
+                                  contentPadding: const EdgeInsets.only(
+                                    left: 72,
+                                    right: 16,
+                                  ),
+                                  title: Text(
+                                    subName,
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.9,
                                       ),
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
+                                      fontSize: 15,
                                     ),
-                                    onTap: () {
-                                      setState(() {
-                                        _selectedCategoryKey = key;
-                                        _selectedSubcategoryName = subName;
-                                        _selectedGoalId = null;
-                                      });
-                                      Navigator.pop(context);
-                                    },
-                                  )),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedCategoryKey = key;
+                                      _selectedSubcategoryName = subName;
+                                      _selectedGoalId = null;
+                                    });
+                                    Navigator.pop(context);
+                                  },
+                                ),
+                              ),
                           ],
                         );
                       },
@@ -1181,111 +1254,125 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                         colors: [Color(0xFF2A3F5F), Color(0xFF1A2F4F)],
                       ),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.1),
+                      ),
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.repeat,
-                          color: Colors.white.withValues(alpha: 0.9),
-                          size: 24,
-                        ),
-                        const SizedBox(width: 12),
-                        const Text(
-                          'Recurrence',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: RecurrenceType.values.map((type) {
-                        final isSelected = tempRecurrence == type;
-                        return GestureDetector(
-                          onTap: () {
-                            setDialogState(() {
-                              tempRecurrence = type;
-                            });
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                            decoration: BoxDecoration(
-                              color: isSelected 
-                                  ? const Color(0xFF00A8E8)
-                                  : Colors.white.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: isSelected 
-                                    ? const Color(0xFF00A8E8).withValues(alpha: 0.5)
-                                    : Colors.transparent,
-                                width: 2,
-                              ),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.repeat,
+                              color: Colors.white.withValues(alpha: 0.9),
+                              size: 24,
                             ),
-                            child: Text(
-                              type.displayName,
+                            const SizedBox(width: 12),
+                            const Text(
+                              'Recurrence',
                               style: TextStyle(
-                                color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.7),
-                                fontSize: 14,
-                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: Text(
-                            'Cancel',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.7),
-                              fontSize: 14,
-                            ),
-                          ),
+                          ],
                         ),
-                        const SizedBox(width: 12),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              _selectedRecurrence = tempRecurrence;
-                              if (tempRecurrence == RecurrenceType.never) {
-                                _recurrenceEndDate = null;
-                              }
-                            });
-                            Navigator.pop(context);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF00A8E8),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: const Text(
-                            'Done',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                        const SizedBox(height: 20),
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: RecurrenceType.values.map((type) {
+                            final isSelected = tempRecurrence == type;
+                            return GestureDetector(
+                              onTap: () {
+                                setDialogState(() {
+                                  tempRecurrence = type;
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? const Color(0xFF00A8E8)
+                                      : Colors.white.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? const Color(
+                                            0xFF00A8E8,
+                                          ).withValues(alpha: 0.5)
+                                        : Colors.transparent,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: Text(
+                                  type.displayName,
+                                  style: TextStyle(
+                                    color: isSelected
+                                        ? Colors.white
+                                        : Colors.white.withValues(alpha: 0.7),
+                                    fontSize: 14,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w600
+                                        : FontWeight.w400,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
                         ),
-                      ],
-                    ),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: Text(
+                                'Cancel',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.7),
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            ElevatedButton(
+                              onPressed: () {
+                                setState(() {
+                                  _selectedRecurrence = tempRecurrence;
+                                  if (tempRecurrence == RecurrenceType.never) {
+                                    _recurrenceEndDate = null;
+                                  }
+                                });
+                                Navigator.pop(context);
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF00A8E8),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text(
+                                'Done',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),

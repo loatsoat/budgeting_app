@@ -23,7 +23,7 @@ class CustomCheckbox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     Widget checkbox = SizedBox(
       width: 16,
       height: 16,
@@ -32,13 +32,8 @@ class CustomCheckbox extends StatelessWidget {
         onChanged: enabled ? onChanged : null,
         activeColor: activeColor ?? theme.primaryColor,
         checkColor: checkColor ?? Colors.white,
-        side: BorderSide(
-          color: theme.dividerColor,
-          width: 1,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(4),
-        ),
+        side: BorderSide(color: theme.dividerColor, width: 1),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       ),
     );
 
@@ -52,11 +47,13 @@ class CustomCheckbox extends StatelessWidget {
             onTap: enabled ? () => onChanged?.call(!value) : null,
             child: Text(
               label!,
-              style: labelStyle ?? theme.textTheme.bodyMedium?.copyWith(
-                color: enabled 
-                    ? theme.colorScheme.onSurface 
-                    : theme.colorScheme.onSurface.withValues(alpha: 0.5),
-              ),
+              style:
+                  labelStyle ??
+                  theme.textTheme.bodyMedium?.copyWith(
+                    color: enabled
+                        ? theme.colorScheme.onSurface
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                  ),
             ),
           ),
         ],

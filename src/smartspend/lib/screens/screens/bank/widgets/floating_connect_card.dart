@@ -36,13 +36,13 @@ class _FloatingConnectCardState extends State<FloatingConnectCard> {
   void _formatCardNumber(String value) {
     String formatted = '';
     int count = 0;
-    
+
     // Remove all non-digits
     String digits = value.replaceAll(RegExp(r'\D'), '');
-    
+
     // Take only first 16 digits
     digits = digits.substring(0, math.min(16, digits.length));
-    
+
     // Add space every 4 digits
     for (int i = 0; i < digits.length; i++) {
       if (count > 0 && count % 4 == 0) {
@@ -51,7 +51,7 @@ class _FloatingConnectCardState extends State<FloatingConnectCard> {
       formatted += digits[i];
       count++;
     }
-    
+
     setState(() {
       _cardNumberController.value = TextEditingValue(
         text: formatted,
@@ -72,18 +72,9 @@ class _FloatingConnectCardState extends State<FloatingConnectCard> {
           child: Container(
             width: 60,
             height: 60,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                colors: [Color(0xFFD8A5FF), Color(0xFFC77FE8)],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFC77FE8).withValues(alpha: 0.4),
-                  blurRadius: 15,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+              color: Color(0xFF5B8DEF),
             ),
             child: const Icon(Icons.credit_card, color: Colors.white, size: 28),
           ),
@@ -98,7 +89,10 @@ class _FloatingConnectCardState extends State<FloatingConnectCard> {
       barrierDismissible: true,
       builder: (context) => SafeArea(
         child: Dialog(
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 24,
+          ),
           backgroundColor: Colors.transparent,
           child: LayoutBuilder(
             builder: (ctx, constraints) {
@@ -148,7 +142,11 @@ class _FloatingConnectCardState extends State<FloatingConnectCard> {
                                 ),
                                 GestureDetector(
                                   onTap: () => Navigator.pop(context),
-                                  child: const Icon(Icons.close, color: Colors.white70, size: 24),
+                                  child: const Icon(
+                                    Icons.close,
+                                    color: Colors.white70,
+                                    size: 24,
+                                  ),
                                 ),
                               ],
                             ),
@@ -162,15 +160,25 @@ class _FloatingConnectCardState extends State<FloatingConnectCard> {
                               decoration: const BoxDecoration(
                                 shape: BoxShape.circle,
                                 gradient: LinearGradient(
-                                  colors: [Color(0xFFD8A5FF), Color(0xFFC77FE8)],
+                                  colors: [
+                                    Color(0xFFD8A5FF),
+                                    Color(0xFFC77FE8),
+                                  ],
                                 ),
                               ),
-                              child: const Icon(Icons.credit_card, color: Colors.white, size: 40),
+                              child: const Icon(
+                                Icons.credit_card,
+                                color: Colors.white,
+                                size: 40,
+                              ),
                             ),
                           ),
                           // description
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
                             child: Text(
                               'Link your bank card to automatically import transactions',
                               textAlign: TextAlign.center,
@@ -182,7 +190,10 @@ class _FloatingConnectCardState extends State<FloatingConnectCard> {
                           ),
                           // card number input field
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 16,
+                            ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -198,12 +209,16 @@ class _FloatingConnectCardState extends State<FloatingConnectCard> {
                                 const SizedBox(height: 8),
                                 Container(
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF2A3B5C).withValues(alpha: 0.5),
+                                    color: const Color(
+                                      0xFF2A3B5C,
+                                    ).withValues(alpha: 0.5),
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: _isCardNumberValid 
-                                          ? const Color(0xFFD8A5FF) 
-                                          : Colors.white.withValues(alpha: 0.15),
+                                      color: _isCardNumberValid
+                                          ? const Color(0xFFD8A5FF)
+                                          : Colors.white.withValues(
+                                              alpha: 0.15,
+                                            ),
                                     ),
                                   ),
                                   child: TextField(
@@ -223,13 +238,16 @@ class _FloatingConnectCardState extends State<FloatingConnectCard> {
                                       counterText: '',
                                       border: InputBorder.none,
                                       filled: false,
-                                      contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 12,
-                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 12,
+                                          ),
                                       hintText: '1234 5678 9012 3456',
                                       hintStyle: TextStyle(
-                                        color: Colors.white.withValues(alpha: 0.3),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.3,
+                                        ),
                                         fontSize: 14,
                                         letterSpacing: 2,
                                       ),
@@ -237,13 +255,16 @@ class _FloatingConnectCardState extends State<FloatingConnectCard> {
                                     onChanged: _formatCardNumber,
                                   ),
                                 ),
-                                if (!_isCardNumberValid && _cardNumberController.text.isNotEmpty)
+                                if (!_isCardNumberValid &&
+                                    _cardNumberController.text.isNotEmpty)
                                   Padding(
                                     padding: const EdgeInsets.only(top: 8),
                                     child: Text(
                                       'Please enter a valid 16-digit card number',
                                       style: TextStyle(
-                                        color: Colors.red.withValues(alpha: 0.7),
+                                        color: Colors.red.withValues(
+                                          alpha: 0.7,
+                                        ),
                                         fontSize: 11,
                                       ),
                                     ),
@@ -253,13 +274,16 @@ class _FloatingConnectCardState extends State<FloatingConnectCard> {
                           ),
                           // connect button
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 20,
+                            ),
                             child: SizedBox(
                               width: double.infinity,
                               height: 50,
                               child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFD8A5FF),
+                                  backgroundColor: const Color(0xFF5B8DEF),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(14),
                                   ),
@@ -273,7 +297,9 @@ class _FloatingConnectCardState extends State<FloatingConnectCard> {
                                   } else {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
-                                        content: Text('Please enter a valid 16-digit card number'),
+                                        content: Text(
+                                          'Please enter a valid 16-digit card number',
+                                        ),
                                         backgroundColor: Colors.red,
                                       ),
                                     );
@@ -282,7 +308,11 @@ class _FloatingConnectCardState extends State<FloatingConnectCard> {
                                 child: const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.check, color: Colors.white, size: 20),
+                                    Icon(
+                                      Icons.check,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
                                     SizedBox(width: 8),
                                     Text(
                                       'CONNECT CARD',
@@ -317,7 +347,10 @@ class _FloatingConnectCardState extends State<FloatingConnectCard> {
       barrierDismissible: true,
       builder: (dialogContext) => SafeArea(
         child: Dialog(
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 24,
+          ),
           backgroundColor: Colors.transparent,
           child: LayoutBuilder(
             builder: (ctx, constraints) {
@@ -354,7 +387,10 @@ class _FloatingConnectCardState extends State<FloatingConnectCard> {
                               ),
                               GestureDetector(
                                 onTap: () => Navigator.pop(dialogContext),
-                                child: const Icon(Icons.close, color: Colors.white70),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: Colors.white70,
+                                ),
                               ),
                             ],
                           ),
@@ -363,12 +399,16 @@ class _FloatingConnectCardState extends State<FloatingConnectCard> {
                         Expanded(
                           child: SingleChildScrollView(
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
                               child: _SwipeDeck(
                                 transactions: widget.transactions,
                                 onAction: widget.onTransactionAction,
                                 onEdit: widget.onTransactionEdit,
-                                parentContext: context, // Pass the parent context
+                                parentContext:
+                                    context, // Pass the parent context
                               ),
                             ),
                           ),
@@ -428,7 +468,11 @@ class _SwipeDeckState extends State<_SwipeDeck> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.check_circle, color: Color(0xFFD8A5FF), size: 48),
+              const Icon(
+                Icons.check_circle,
+                color: Color(0xFFD8A5FF),
+                size: 48,
+              ),
               const SizedBox(height: 12),
               Text(
                 'All transactions reviewed',
@@ -450,7 +494,6 @@ class _SwipeDeckState extends State<_SwipeDeck> {
             setState(() {
               drag = (drag + d.delta.dx).clamp(-240.0, 240.0);
             });
-
           },
           onHorizontalDragEnd: (_) {
             if (drag > 60) {
@@ -495,10 +538,12 @@ class _SwipeDeckState extends State<_SwipeDeck> {
                     children: [
                       Expanded(
                         child: Opacity(
-                          opacity: drag < -20 ? ((-drag - 20) / 80).clamp(0.0, 0.3) : 0.0,
+                          opacity: drag < -20
+                              ? ((-drag - 20) / 80).clamp(0.0, 0.3)
+                              : 0.0,
                           child: Container(
                             decoration: BoxDecoration(
-                              color: const Color(0xFF2196F3), // Blue for edit
+                              color: const Color(0xFF0D47A1), // Blue for edit
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: const Center(
@@ -513,10 +558,14 @@ class _SwipeDeckState extends State<_SwipeDeck> {
                       ),
                       Expanded(
                         child: Opacity(
-                          opacity: drag > 20 ? ((drag - 20) / 80).clamp(0.0, 0.3) : 0.0,
+                          opacity: drag > 20
+                              ? ((drag - 20) / 80).clamp(0.0, 0.3)
+                              : 0.0,
                           child: Container(
                             decoration: BoxDecoration(
-                              color: const Color(0xFF4CAF50), // Green for accept
+                              color: const Color(
+                                0xFF4CAF50,
+                              ), // Green for accept
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: const Center(
@@ -536,7 +585,10 @@ class _SwipeDeckState extends State<_SwipeDeck> {
               // card
               Transform.translate(
                 offset: Offset(drag, 0),
-                child: _TransactionCard(tx: tx, position: '${index + 1}/${widget.transactions.length}'),
+                child: _TransactionCard(
+                  tx: tx,
+                  position: '${index + 1}/${widget.transactions.length}',
+                ),
               ),
             ],
           ),
@@ -562,14 +614,6 @@ class _TransactionCard extends StatelessWidget {
         gradient: const LinearGradient(
           colors: [Color(0xFF1A2A3F), Color(0xFF2A3F5F)],
         ),
-        border: Border.all(color: const Color(0xFFD8A5FF).withValues(alpha: 0.2)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFD8A5FF).withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -585,15 +629,26 @@ class _TransactionCard extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: const Color(0xFFD8A5FF).withValues(alpha: 0.3),
                 ),
-                child: const Icon(Icons.restaurant, color: Color(0xFFD8A5FF), size: 24),
+                child: const Icon(
+                  Icons.restaurant,
+                  color: Color(0xFFD8A5FF),
+                  size: 24,
+                ),
               ),
-              Text('Af $position', style: const TextStyle(color: Colors.white70, fontSize: 12)),
+              Text(
+                'Af $position',
+                style: const TextStyle(color: Colors.white70, fontSize: 12),
+              ),
             ],
           ),
           const SizedBox(height: 12),
           Text(
             '-${tx.amount.toStringAsFixed(2)} €',
-            style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 12),
           _labelValue('MERCHANT', tx.merchant ?? 'Unknown'),
@@ -608,7 +663,11 @@ class _TransactionCard extends StatelessWidget {
             ),
             child: Text(
               tx.category,
-              style: const TextStyle(color: Color(0xFFD8A5FF), fontSize: 12, fontWeight: FontWeight.w500),
+              style: const TextStyle(
+                color: Color(0xFFD8A5FF),
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -625,9 +684,22 @@ class _TransactionCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 11)),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.6),
+            fontSize: 11,
+          ),
+        ),
         const SizedBox(height: 4),
-        Text(value, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
       ],
     );
   }

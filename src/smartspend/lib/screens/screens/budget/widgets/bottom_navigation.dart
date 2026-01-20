@@ -14,105 +14,102 @@ class BudgetBottomNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
     final bottomInset = MediaQuery.of(context).padding.bottom;
 
     // Dynamic navigation bar height
-    final navHeight = (screenHeight * 0.09).clamp(60.0, 80.0);
-    final fabSize = (screenWidth * 0.14).clamp(56.0, 68.0);
+    final navHeight = 70.0;
 
-    return SizedBox(
-      height: navHeight + fabSize * 0.5 + bottomInset,
-      child: Stack(
-        alignment: Alignment.bottomCenter,
-        clipBehavior: Clip.none,
+    return Container(
+      height: navHeight + bottomInset,
+      decoration: const BoxDecoration(
+        color: Color(0xFF2A3B5C),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: EdgeInsets.only(bottom: bottomInset),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          // Navigation bar background
-          Container(
-            height: navHeight + bottomInset,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [
-                  Color(0xFF1A1F33),
-                  Color(0xFF0A0E1A),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+          // OVERVIEW tab
+          Expanded(
+            child: Center(
+              child: _buildNavItem(
+                context,
+                'overview',
+                Icons.visibility,
+                'OVERVIEW',
+                const LinearGradient(
+                  colors: [Color(0xFF5B8DEF), Color(0xFF4A7BC8)],
+                ),
               ),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, -3),
-                ),
-              ],
-            ),
-            padding: EdgeInsets.only(bottom: bottomInset),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                // Left item (OVERVIEW)
-                Expanded(
-                  child: Center(
-                    child: _buildNavItem(
-                      context,
-                      'overview',
-                      Icons.visibility,
-                      'OVERVIEW',
-                      const LinearGradient(
-                        colors: [Color(0xFF00F5FF), Color(0xFF00B8FF)],
-                      ),
-                    ),
-                  ),
-                ),
-                
-                // Space for the FAB
-                SizedBox(width: fabSize + 20),
-                
-                // Right item (BUDGET)
-                Expanded(
-                  child: Center(
-                    child: _buildNavItem(
-                      context,
-                      'budget',
-                      Icons.account_balance_wallet,
-                      'BUDGET',
-                      const LinearGradient(
-                        colors: [Color(0xFFFF6B9D), Color(0xFFFF3D8F)],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
             ),
           ),
 
-          // Center FAB
-          Positioned(
-            bottom: navHeight * 0.5 + bottomInset,
-            child: GestureDetector(
-              onTap: onAddTransaction,
-              child: Container(
-                width: fabSize,
-                height: fabSize,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFF6B9D), Color(0xFFFF3D8F)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFFF6B9D).withValues(alpha: 0.4),
-                      blurRadius: 15,
-                      offset: const Offset(0, 6),
+          // TRANSACTIONS tab
+          Expanded(
+            child: Center(
+              child: _buildNavItem(
+                context,
+                'budget',
+                Icons.account_balance_wallet,
+                'BUDGET',
+                const LinearGradient(
+                  colors: [Color(0xFF5B8DEF), Color(0xFF4A7BC8)],
+                ),
+              ),
+            ),
+          ),
+
+          // TRANSACTIONS tab
+          Expanded(
+            child: Center(
+              child: _buildNavItem(
+                context,
+                'transactions',
+                Icons.receipt_long,
+                'TRANSACTIONS',
+                const LinearGradient(
+                  colors: [Color(0xFF5B8DEF), Color(0xFF4A7BC8)],
+                ),
+              ),
+            ),
+          ),
+
+          // ADD button
+          Expanded(
+            child: Center(
+              child: GestureDetector(
+                onTap: onAddTransaction,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 6,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.add_circle,
+                            color: const Color(0xFF5B8DEF),
+                            size: 24,
+                          ),
+                          const SizedBox(height: 2),
+                          const Text(
+                            'ADD',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
-                child: Icon(Icons.add, color: Colors.white, size: fabSize * 0.45),
               ),
             ),
           ),
@@ -123,52 +120,57 @@ class BudgetBottomNavigation extends StatelessWidget {
 
   Widget _buildNavItem(
     BuildContext context,
-    String tabKey, 
-    IconData icon, 
-    String label, 
-    Gradient gradient
+    String tabKey,
+    IconData icon,
+    String label,
+    Gradient gradient,
   ) {
     final isActive = activeTab == tabKey;
 
     return GestureDetector(
       onTap: () => onTabChanged(tabKey),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        decoration: BoxDecoration(
-          gradient: isActive ? gradient : null,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: isActive
-              ? [
-                  BoxShadow(
-                    color: gradient.colors.first.withValues(alpha: 0.4),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(16)),
+            child: SizedBox(
+              width: 90,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, color: Colors.white, size: 22),
+                  const SizedBox(height: 2),
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.visible,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
                   ),
-                ]
-              : [],
-        ),
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.center,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: Colors.white, size: 22),
-              const SizedBox(height: 2),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 9,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
-                ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+          if (isActive)
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              margin: const EdgeInsets.only(top: 4),
+              height: 3,
+              width: 40,
+              decoration: BoxDecoration(
+                color: const Color(0xFF5B8DEF),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+        ],
       ),
     );
   }

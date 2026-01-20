@@ -22,24 +22,7 @@ class CircularBudgetChart extends StatelessWidget {
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(
-          color: const Color(0xFF00F5FF).withValues(alpha:0.3),
-        ),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1A1F3A),
-            Color(0xFF2A2F4A),
-          ],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF00F5FF).withValues(alpha:0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: const Color(0xFF2A3B5C).withValues(alpha: 0.8),
       ),
       child: Column(
         children: [
@@ -72,7 +55,7 @@ class CircularBudgetChart extends StatelessWidget {
                     backgroundColor: Colors.white.withValues(alpha: 0.1),
                     valueColor: AlwaysStoppedAnimation<Color>(
                       budgetPercentage > 100
-                          ? Colors.red
+                          ? const Color(0xFFDC3545)
                           : budgetPercentage > 80
                           ? const Color(0xFFFFAA00)
                           : const Color(0xFF00FF88),
@@ -86,7 +69,9 @@ class CircularBudgetChart extends StatelessWidget {
                     Text(
                       '€${budgetLeft.abs().toStringAsFixed(0)}',
                       style: TextStyle(
-                        color: budgetLeft < 0 ? Colors.red : const Color(0xFF00FF88),
+                        color: budgetLeft < 0
+                            ? const Color(0xFFDC3545)
+                            : const Color(0xFF00FF88),
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
                       ),
@@ -94,7 +79,9 @@ class CircularBudgetChart extends StatelessWidget {
                     Text(
                       budgetLeft < 0 ? 'budget exceeded' : 'left to spend',
                       style: TextStyle(
-                        color: budgetLeft < 0 ? Colors.red.withValues(alpha: 0.7) : Colors.white70,
+                        color: budgetLeft < 0
+                            ? const Color(0xFFDC3545).withOpacity(0.7)
+                            : Colors.white70,
                         fontSize: 14,
                       ),
                     ),
@@ -103,7 +90,7 @@ class CircularBudgetChart extends StatelessWidget {
                       '${budgetPercentage.toStringAsFixed(1)}% used',
                       style: TextStyle(
                         color: budgetPercentage > 100
-                            ? Colors.red
+                            ? const Color(0xFFDC3545)
                             : budgetPercentage > 80
                             ? const Color(0xFFFFAA00)
                             : const Color(0xFF00FF88),
@@ -124,14 +111,14 @@ class CircularBudgetChart extends StatelessWidget {
               _buildSummaryItem(
                 'Budget',
                 '€${totalBudget.toStringAsFixed(0)}',
-                const Color(0xFF00F5FF),
+                const Color(0xFF4CAF50),
                 onTap: onBudgetTap, // ADD THIS PARAMETER
               ),
-              _buildSummaryItem(
-                'Spent',
-                '€${totalSpent.toStringAsFixed(0)}',
-                const Color(0xFFFF6B9D),
-              ),
+                _buildSummaryItem(
+                  'Spent',
+                  '€${totalSpent.toStringAsFixed(0)}',
+                  const Color(0xFFDC3545),
+                ),
             ],
           ),
         ],
@@ -160,21 +147,14 @@ class CircularBudgetChart extends StatelessWidget {
             ),
             if (onTap != null) ...[
               const SizedBox(width: 4),
-              Icon(
-                Icons.edit,
-                color: color.withValues(alpha:0.7),
-                size: 16,
-              ),
+              Icon(Icons.edit, color: color.withValues(alpha: 0.7), size: 16),
             ],
           ],
         ),
         const SizedBox(height: 4),
         Text(
           label,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 12,
-          ),
+          style: const TextStyle(color: Colors.white70, fontSize: 12),
         ),
       ],
     );

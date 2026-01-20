@@ -33,14 +33,7 @@ class Transaction {
 
 enum TransactionType { expense, income, transfer }
 
-enum RecurrenceType {
-  never,
-  weekly,
-  biweekly,
-  monthly,
-  quarterly,
-  yearly,
-}
+enum RecurrenceType { never, weekly, biweekly, monthly, quarterly, yearly }
 
 extension RecurrenceTypeExtension on RecurrenceType {
   String get displayName {
@@ -107,15 +100,18 @@ class SavingsGoal {
     this.currentAmount = 0,
     this.description,
     this.targetDate,
-    this.color = const Color(0xFF00F5FF),
+    this.color = const Color(0xFF0D47A1),
     this.emoji = '🎯',
     this.durationMonths = 12,
   });
 
-  double get progressPercentage => targetAmount > 0 ? (currentAmount / targetAmount).clamp(0.0, 1.0) : 0.0;
-  double get remainingAmount => (targetAmount - currentAmount).clamp(0.0, double.infinity);
+  double get progressPercentage =>
+      targetAmount > 0 ? (currentAmount / targetAmount).clamp(0.0, 1.0) : 0.0;
+  double get remainingAmount =>
+      (targetAmount - currentAmount).clamp(0.0, double.infinity);
   bool get isCompleted => currentAmount >= targetAmount;
-  double get monthlyAmount => durationMonths > 0 ? (targetAmount / durationMonths) : targetAmount;
+  double get monthlyAmount =>
+      durationMonths > 0 ? (targetAmount / durationMonths) : targetAmount;
 }
 
 // Default Categories Configuration
@@ -195,12 +191,12 @@ final Map<String, CategoryData> incomeCategories = {
   'salary': CategoryData(
     name: 'Salary',
     gradientColors: [
-      const Color(0xFF00F5FF),
+      const Color(0xFF0D47A1),
       const Color(0xFF00D4FF),
       const Color(0xFF00B8FF),
     ],
-    solidColor: const Color(0xFF00F5FF),
-    glowColor: const Color(0xFF00F5FF).withValues(alpha: 0.6),
+    solidColor: const Color(0xFF0D47A1),
+    glowColor: const Color(0xFF0D47A1).withValues(alpha: 0.6),
     icon: '💼',
     subcategories: ['Monthly Salary', 'Bonus', 'Commission'],
   ),

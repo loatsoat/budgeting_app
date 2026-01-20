@@ -7,10 +7,7 @@ import '../../../widgets/widgets/custom_text_field.dart';
 class ForgotPasswordScreen extends StatefulWidget {
   final VoidCallback onBackToLogin;
 
-  const ForgotPasswordScreen({
-    super.key,
-    required this.onBackToLogin,
-  });
+  const ForgotPasswordScreen({super.key, required this.onBackToLogin});
 
   @override
   State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
@@ -23,7 +20,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _securityAnswerController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  
+
   bool _isLoading = false;
   bool _showResetForm = false;
   String? _securityQuestion;
@@ -48,7 +45,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       final question = await SimpleAuthManager.instance.getSecurityQuestion(
         _usernameController.text.trim(),
       );
-      
+
       setState(() {
         _securityQuestion = question;
         _showResetForm = true;
@@ -99,7 +96,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         _securityAnswerController.text,
         _newPasswordController.text,
       );
-      
+
       setState(() => _isLoading = false);
 
       if (mounted) {
@@ -114,7 +111,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             ),
           ),
         );
-        
+
         // Go back to login
         Future.delayed(const Duration(seconds: 1), () {
           if (mounted) widget.onBackToLogin();
@@ -152,15 +149,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
               onPressed: widget.onBackToLogin,
-              icon: const Icon(
-                Icons.arrow_back,
-                color: Color(0xFF00F5FF),
-              ),
+              icon: const Icon(Icons.arrow_back, color: Color(0xFF0D47A1)),
               label: const Text(
                 'Back to Login',
-                style: TextStyle(
-                  color: Color(0xFF00F5FF),
-                ),
+                style: TextStyle(color: Color(0xFF0D47A1)),
               ),
             ),
           ),
@@ -176,7 +168,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            _showResetForm 
+            _showResetForm
                 ? 'Answer your security question'
                 : 'Enter your username to continue',
             textAlign: TextAlign.center,
@@ -186,7 +178,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             ),
           ),
           const SizedBox(height: 40),
-          
+
           // Step 1: Get Security Question
           if (!_showResetForm)
             GlassmorphicCard(
@@ -217,7 +209,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               width: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
                               ),
                             )
                           : const Text(
@@ -245,10 +239,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF00F5FF).withValues(alpha: 0.1),
+                        color: const Color(0xFF0D47A1).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: const Color(0xFF00F5FF).withValues(alpha: 0.3),
+                          color: const Color(0xFF0D47A1).withValues(alpha: 0.3),
                         ),
                       ),
                       child: Column(
@@ -296,7 +290,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       obscureText: _obscurePassword,
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
                           color: Colors.white.withValues(alpha: 0.4),
                         ),
                         onPressed: () {
@@ -322,11 +318,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       obscureText: _obscureConfirmPassword,
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                          _obscureConfirmPassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
                           color: Colors.white.withValues(alpha: 0.4),
                         ),
                         onPressed: () {
-                          setState(() => _obscureConfirmPassword = !_obscureConfirmPassword);
+                          setState(
+                            () => _obscureConfirmPassword =
+                                !_obscureConfirmPassword,
+                          );
                         },
                       ),
                       validator: (value) {
@@ -348,7 +349,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               width: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
                               ),
                             )
                           : const Text(

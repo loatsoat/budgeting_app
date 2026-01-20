@@ -22,26 +22,33 @@ class BudgetDataService {
 
       // Save total budget
       await prefs.setDouble('${userKey}totalBudget', totalBudget);
-      
+
       // Save budgetEqualsIncome flag
       await prefs.setBool('${userKey}budgetEqualsIncome', budgetEqualsIncome);
 
       // Save transactions
-      final transactionsJson = transactions.map((t) => {
-        'id': t.id,
-        'type': t.type.toString(),
-        'amount': t.amount,
-        'category': t.category,
-        'categoryKey': t.categoryKey,
-        'note': t.note,
-        'date': t.date.toIso8601String(),
-        'merchant': t.merchant,
-        'description': t.description,
-        'excludeFromBudget': t.excludeFromBudget,
-        'recurrence': t.recurrence.toString(),
-        'recurrenceEndDate': t.recurrenceEndDate?.toIso8601String(),
-      }).toList();
-      await prefs.setString('${userKey}transactions', jsonEncode(transactionsJson));
+      final transactionsJson = transactions
+          .map(
+            (t) => {
+              'id': t.id,
+              'type': t.type.toString(),
+              'amount': t.amount,
+              'category': t.category,
+              'categoryKey': t.categoryKey,
+              'note': t.note,
+              'date': t.date.toIso8601String(),
+              'merchant': t.merchant,
+              'description': t.description,
+              'excludeFromBudget': t.excludeFromBudget,
+              'recurrence': t.recurrence.toString(),
+              'recurrenceEndDate': t.recurrenceEndDate?.toIso8601String(),
+            },
+          )
+          .toList();
+      await prefs.setString(
+        '${userKey}transactions',
+        jsonEncode(transactionsJson),
+      );
 
       // Save category budgets
       Map<String, dynamic> budgetsJson = {};
@@ -54,22 +61,32 @@ class BudgetDataService {
           };
         });
       });
-      await prefs.setString('${userKey}categoryBudgets', jsonEncode(budgetsJson));
+      await prefs.setString(
+        '${userKey}categoryBudgets',
+        jsonEncode(budgetsJson),
+      );
 
       // Save savings goals
       if (savingsGoals != null) {
-        final savingsGoalsJson = savingsGoals.map((g) => {
-          'id': g.id,
-          'name': g.name,
-          'targetAmount': g.targetAmount,
-          'currentAmount': g.currentAmount,
-          'description': g.description,
-          'targetDate': g.targetDate?.toIso8601String(),
-          'color': g.color.value,
-          'emoji': g.emoji,
-          'durationMonths': g.durationMonths,
-        }).toList();
-        await prefs.setString('${userKey}savingsGoals', jsonEncode(savingsGoalsJson));
+        final savingsGoalsJson = savingsGoals
+            .map(
+              (g) => {
+                'id': g.id,
+                'name': g.name,
+                'targetAmount': g.targetAmount,
+                'currentAmount': g.currentAmount,
+                'description': g.description,
+                'targetDate': g.targetDate?.toIso8601String(),
+                'color': g.color.toARGB32(),
+                'emoji': g.emoji,
+                'durationMonths': g.durationMonths,
+              },
+            )
+            .toList();
+        await prefs.setString(
+          '${userKey}savingsGoals',
+          jsonEncode(savingsGoalsJson),
+        );
       }
 
       debugPrint('✅ Budget data saved for user $userId');
@@ -92,30 +109,34 @@ class BudgetDataService {
       List<Transaction> transactions = [];
       if (transactionsString != null) {
         final List<dynamic> transactionsJson = jsonDecode(transactionsString);
-        transactions = transactionsJson.map((t) => Transaction(
-          id: t['id'],
-          type: TransactionType.values.firstWhere(
-            (e) => e.toString() == t['type'],
-            orElse: () => TransactionType.expense,
-          ),
-          amount: t['amount'].toDouble(),
-          category: t['category'],
-          categoryKey: t['categoryKey'],
-          note: t['note'],
-          date: DateTime.parse(t['date']),
-          merchant: t['merchant'],
-          description: t['description'],
-          excludeFromBudget: t['excludeFromBudget'] ?? false,
-          recurrence: t['recurrence'] != null
-              ? RecurrenceType.values.firstWhere(
-                  (e) => e.toString() == t['recurrence'],
-                  orElse: () => RecurrenceType.never,
-                )
-              : RecurrenceType.never,
-          recurrenceEndDate: t['recurrenceEndDate'] != null
-              ? DateTime.parse(t['recurrenceEndDate'])
-              : null,
-        )).toList();
+        transactions = transactionsJson
+            .map(
+              (t) => Transaction(
+                id: t['id'],
+                type: TransactionType.values.firstWhere(
+                  (e) => e.toString() == t['type'],
+                  orElse: () => TransactionType.expense,
+                ),
+                amount: t['amount'].toDouble(),
+                category: t['category'],
+                categoryKey: t['categoryKey'],
+                note: t['note'],
+                date: DateTime.parse(t['date']),
+                merchant: t['merchant'],
+                description: t['description'],
+                excludeFromBudget: t['excludeFromBudget'] ?? false,
+                recurrence: t['recurrence'] != null
+                    ? RecurrenceType.values.firstWhere(
+                        (e) => e.toString() == t['recurrence'],
+                        orElse: () => RecurrenceType.never,
+                      )
+                    : RecurrenceType.never,
+                recurrenceEndDate: t['recurrenceEndDate'] != null
+                    ? DateTime.parse(t['recurrenceEndDate'])
+                    : null,
+              ),
+            )
+            .toList();
       }
 
       // Load category budgets
@@ -139,27 +160,34 @@ class BudgetDataService {
       List<SavingsGoal> savingsGoals = [];
       if (savingsGoalsString != null) {
         final List<dynamic> savingsGoalsJson = jsonDecode(savingsGoalsString);
-        savingsGoals = savingsGoalsJson.map((g) => SavingsGoal(
-          id: g['id'],
-          name: g['name'],
-          targetAmount: g['targetAmount'].toDouble(),
-          currentAmount: g['currentAmount']?.toDouble() ?? 0,
-          description: g['description'],
-          targetDate: g['targetDate'] != null ? DateTime.parse(g['targetDate']) : null,
-          color: Color(g['color']),
-          emoji: g['emoji'] ?? '🎯',
-          durationMonths: (g['durationMonths'] is int)
-              ? g['durationMonths']
-              : (g['durationMonths'] is double)
-                  ? (g['durationMonths'] as double).toInt()
-                  : 12,
-        )).toList();
+        savingsGoals = savingsGoalsJson
+            .map(
+              (g) => SavingsGoal(
+                id: g['id'],
+                name: g['name'],
+                targetAmount: g['targetAmount'].toDouble(),
+                currentAmount: g['currentAmount']?.toDouble() ?? 0,
+                description: g['description'],
+                targetDate: g['targetDate'] != null
+                    ? DateTime.parse(g['targetDate'])
+                    : null,
+                color: Color(g['color']),
+                emoji: g['emoji'] ?? '🎯',
+                durationMonths: (g['durationMonths'] is int)
+                    ? g['durationMonths']
+                    : (g['durationMonths'] is double)
+                    ? (g['durationMonths'] as double).toInt()
+                    : 12,
+              ),
+            )
+            .toList();
       }
 
       debugPrint('✅ Budget data loaded for user $userId');
 
       // Load budgetEqualsIncome flag
-      final budgetEqualsIncome = prefs.getBool('${userKey}budgetEqualsIncome') ?? false;
+      final budgetEqualsIncome =
+          prefs.getBool('${userKey}budgetEqualsIncome') ?? false;
 
       return {
         'totalBudget': totalBudget,

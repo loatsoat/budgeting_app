@@ -128,6 +128,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
           if (data['savingsGoals'] != null) {
             savingsGoals = data['savingsGoals'];
           }
+          _syncSavingsBudgetsWithGoals();
           // Recalculate spent amounts from actual transactions
           _recalculateSpentAmounts();
           // Generate AI recommendations
@@ -182,6 +183,17 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
             transaction.amount;
       }
     }
+  }
+
+  // Keep savings category budgets aligned with savings goals
+  void _syncSavingsBudgetsWithGoals() {
+    categoryBudgets['savings'] = {
+      for (final goal in savingsGoals)
+        goal.name: SubcategoryBudget(
+          budgeted: goal.targetAmount,
+          spent: goal.currentAmount,
+        ),
+    };
   }
 
   // Save user-specific budget data
@@ -285,6 +297,8 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                   Expanded(
                     child: activeTab == 'budget'
                         ? _buildBudgetTab()
+                        : activeTab == 'transactions'
+                        ? _buildTransactionsTab()
                         : WalletOverviewContent(
                             key: const ValueKey('wallet_overview'),
                             transactions: transactions,
@@ -292,23 +306,14 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                             totalBudget: availableBudget,
                             totalSpent: totalSpent,
                             onTransactionEdit: _editTransaction,
-                          tabNotifier: _walletTabNotifier,
-                          onListStateChanged: (isList) => setState(() {}),
-                          budgetEqualsIncome: budgetEqualsIncome,
+                            tabNotifier: _walletTabNotifier,
+                            onListStateChanged: (isList) => setState(() {}),
+                            budgetEqualsIncome: budgetEqualsIncome,
                             savingsGoals: savingsGoals,
                             onGoalCreated: (goal) {
                               setState(() {
                                 savingsGoals.add(goal);
-                                // Automatically add goal to savings category budget
-                                if (!categoryBudgets.containsKey('savings')) {
-                                  categoryBudgets['savings'] = {};
-                                }
-                                // Add the goal as a subcategory with monthly amount as budgeted
-                                categoryBudgets['savings']![goal.name] =
-                                    SubcategoryBudget(
-                                      budgeted: goal.monthlyAmount,
-                                      spent: goal.currentAmount,
-                                    );
+                                _syncSavingsBudgetsWithGoals();
                               });
                               _saveUserBudgetData(); // Save after goal creation
                             },
@@ -318,14 +323,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                                   (g) => g.id == goal.id,
                                 );
                                 if (index != -1) savingsGoals[index] = goal;
-                                if (!categoryBudgets.containsKey('savings')) {
-                                  categoryBudgets['savings'] = {};
-                                }
-                                categoryBudgets['savings']![goal.name] =
-                                    SubcategoryBudget(
-                                      budgeted: goal.monthlyAmount,
-                                      spent: goal.currentAmount,
-                                    );
+                                _syncSavingsBudgetsWithGoals();
                               });
                               _saveUserBudgetData(); // Save after goal update
                             },
@@ -334,9 +332,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                                 savingsGoals.removeWhere(
                                   (g) => g.id == goal.id,
                                 );
-                                if (categoryBudgets.containsKey('savings')) {
-                                  categoryBudgets['savings']!.remove(goal.name);
-                                }
+                                _syncSavingsBudgetsWithGoals();
                               });
                               _saveUserBudgetData();
                               if (mounted) {
@@ -362,7 +358,9 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
               right: 0,
               child: BudgetBottomNavigation(
                 activeTab: activeTab,
-                onTabChanged: (tab) => setState(() => activeTab = tab),
+                onTabChanged: (tab) {
+                  setState(() => activeTab = tab);
+                },
                 onAddTransaction: _showAddTransactionDialog,
               ),
             ),
@@ -373,14 +371,14 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                 transactions: bankTransactions,
                 onCardConnected: () async {
                   await _saveCardConnectionStatus(true);
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Bank card connected successfully!'),
-                        backgroundColor: Color(0xFF4CAF50),
-                      ),
-                    );
-                  }
+                  if (!mounted) return;
+                  // ignore: use_build_context_synchronously
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Bank card connected successfully!'),
+                      backgroundColor: Color(0xFF4CAF50),
+                    ),
+                  );
                 },
                 onTransactionAction: (transaction, isAccepted) {
                   setState(() {
@@ -478,7 +476,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                 Text(
                   '€${totalSpent.toStringAsFixed(0)} / €${totalBudget.toStringAsFixed(0)} spent',
                   style: const TextStyle(
-                    color: Color(0xFF00F5FF),
+                    color: Color.fromARGB(255, 250, 250, 251),
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
@@ -501,7 +499,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                   },
                   icon: Icon(
                     isEditingBudgets ? Icons.check : Icons.edit,
-                    color: Colors.white70,
+                    color: const Color(0xFF5B8DEF),
                     size: 24,
                   ),
                 ),
@@ -510,7 +508,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                   IconButton(
                     icon: const Icon(
                       Icons.add_circle_outline,
-                      color: Color(0xFF00F5FF),
+                      color: Color(0xFF0D47A1),
                     ),
                     onPressed: _showManageCategoriesDialog,
                   ),
@@ -547,7 +545,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
             );
             displayBudgeted = savingsGoals.fold(
               0,
-              (sum, goal) => sum + goal.monthlyAmount,
+              (sum, goal) => sum + goal.targetAmount,
             );
           }
 
@@ -555,15 +553,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
             margin: const EdgeInsets.only(bottom: 16),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              gradient: LinearGradient(
-                colors: [
-                  const Color(0xFF1A1F3A).withValues(alpha: 0.85),
-                  const Color(0xFF2A2F4A).withValues(alpha: 0.6),
-                ],
-              ),
-              border: Border.all(
-                color: categoryData.solidColor.withValues(alpha: 0.25),
-              ),
+              color: const Color(0xFF2A3B5C).withValues(alpha: 0.8),
             ),
             child: Column(
               children: [
@@ -615,7 +605,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                                 '€${displaySpent.toStringAsFixed(0)} / €${displayBudgeted.toStringAsFixed(0)}',
                                 style: TextStyle(
                                   color: displaySpent > displayBudgeted
-                                      ? Colors.red
+                                      ? const Color.fromARGB(255, 253, 252, 252)
                                       : categoryData.solidColor,
                                   fontSize: 13,
                                 ),
@@ -667,92 +657,102 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
         ? (goal.currentAmount / goal.targetAmount) * 100
         : 0.0;
 
-    // Calculate this month's contribution to the goal from transactions
+    // Track how much landed in this goal this month for extra context
     final now = DateTime.now();
     final monthStart = DateTime(now.year, now.month, 1);
     final nextMonthStart = DateTime(now.year, now.month + 1, 1);
     final monthlyContribution = transactions
-        .where((t) {
-          final inMonth =
-              !t.date.isBefore(monthStart) && t.date.isBefore(nextMonthStart);
-          final isSavings = t.categoryKey == 'savings';
-          final mentionsGoal =
-              (t.note.contains(goal.name) ?? false) ||
-              (t.description?.contains(goal.name) ?? false);
-          return inMonth &&
-              isSavings &&
-              mentionsGoal &&
-              t.type == TransactionType.expense;
-        })
-        .fold<double>(0.0, (sum, t) => sum + t.amount);
+      .where((t) {
+        final inMonth =
+          !t.date.isBefore(monthStart) && t.date.isBefore(nextMonthStart);
+        final isSavings = t.categoryKey == 'savings';
+        final matchesGoal = t.category == goal.name;
+        return inMonth &&
+          isSavings &&
+          matchesGoal &&
+          t.type == TransactionType.expense;
+      })
+      .fold<double>(0.0, (sum, t) => sum + t.amount);
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: goal.color.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(goal.emoji, style: const TextStyle(fontSize: 16)),
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  goal.name,
-                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: goal.color.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(goal.emoji, style: const TextStyle(fontSize: 16)),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      goal.name,
+                      style: const TextStyle(color: Colors.white70, fontSize: 14),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      height: 4,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(2),
+                        color: Colors.white.withValues(alpha: 0.1),
+                      ),
+                      child: FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: (percentage / 100).clamp(0.0, 1.0),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(2),
+                            color: percentage >= 100 ? Colors.green : goal.color,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  '€${goal.currentAmount.toStringAsFixed(0)} / €${goal.targetAmount.toStringAsFixed(0)}',
+                  style: TextStyle(
+                    color: goal.color,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                 ),
-                const SizedBox(height: 4),
-                Container(
-                  height: 4,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(2),
-                    color: Colors.white.withValues(alpha: 0.1),
-                  ),
-                  child: FractionallySizedBox(
-                    alignment: Alignment.centerLeft,
-                    widthFactor: (percentage / 100).clamp(0.0, 1.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(2),
-                        color: percentage >= 100 ? Colors.green : goal.color,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          Flexible(
+        ),
+        if (monthlyContribution > 0)
+          Padding(
+            padding: const EdgeInsets.only(left: 64, bottom: 8),
             child: Text(
-              '€${monthlyContribution.toStringAsFixed(0)} / €${goal.monthlyAmount.toStringAsFixed(0)}',
+              'This month: +€${monthlyContribution.toStringAsFixed(0)} of €${goal.monthlyAmount.toStringAsFixed(0)}',
               style: TextStyle(
-                color: goal.color,
-                fontSize: 12,
+                color: Colors.white.withValues(alpha: 0.6),
+                fontSize: 11,
                 fontWeight: FontWeight.w500,
               ),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
             ),
           ),
-        ],
-      ),
+      ],
     );
   }
 
@@ -767,11 +767,6 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-        ),
-      ),
       child: Row(
         children: [
           const SizedBox(width: 64),
@@ -798,7 +793,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                     child: Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(2),
-                        color: percentage > 90 ? Colors.red : categoryColor,
+                        color: percentage > 90 ? const Color.fromARGB(255, 250, 249, 249) : categoryColor,
                       ),
                     ),
                   ),
@@ -841,14 +836,14 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
                 side: BorderSide(
-                  color: const Color(0xFF00F5FF).withValues(alpha: 0.3),
+                  color: const Color(0xFF0D47A1).withValues(alpha: 0.3),
                 ),
               ),
               title: const Row(
                 children: [
                   Icon(
                     Icons.account_balance_wallet,
-                    color: Color(0xFF00F5FF),
+                    color: Color(0xFF0D47A1),
                     size: 24,
                   ),
                   SizedBox(width: 12),
@@ -881,7 +876,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                       color: const Color(0xFF2A3B5C).withValues(alpha: 0.5),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: const Color(0xFF00F5FF).withValues(alpha: 0.2),
+                        color: const Color(0xFF0D47A1).withValues(alpha: 0.2),
                       ),
                     ),
                     child: Row(
@@ -916,7 +911,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                               localBudgetEqualsIncome = value;
                             });
                           },
-                          activeThumbColor: const Color(0xFF00F5FF),
+                          activeThumbColor: const Color(0xFF0D47A1),
                         ),
                       ],
                     ),
@@ -934,14 +929,14 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF00F5FF).withValues(alpha: 0.1),
+                        color: const Color(0xFF0D47A1).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
                         children: [
                           const Icon(
                             Icons.info_outline,
-                            color: Color(0xFF00F5FF),
+                            color: Color(0xFF0D47A1),
                             size: 20,
                           ),
                           const SizedBox(width: 12),
@@ -974,12 +969,22 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                         budgetEqualsIncome = true;
                       });
                       Navigator.of(context).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      final messenger = ScaffoldMessenger.of(context);
+                      messenger.clearSnackBars();
+                      messenger.showSnackBar(
                         SnackBar(
-                          content: Text(
-                            'Budget set to income: €${totalIncome.toStringAsFixed(0)}',
+                          behavior: SnackBarBehavior.floating,
+                          dismissDirection: DismissDirection.horizontal,
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
                           ),
-                          backgroundColor: const Color(0xFF00F5FF),
+                          content: const Text(
+                            'Budget set to income and locked to your current income.',
+                          ),
+                          backgroundColor: const Color(0xFF0D47A1),
+                          showCloseIcon: true,
+                          closeIconColor: Colors.white70,
                         ),
                       );
                     } else {
@@ -990,12 +995,22 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                           budgetEqualsIncome = false;
                         });
                         Navigator.of(context).pop();
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        final messenger = ScaffoldMessenger.of(context);
+                        messenger.clearSnackBars();
+                        messenger.showSnackBar(
                           SnackBar(
+                            behavior: SnackBarBehavior.floating,
+                            dismissDirection: DismissDirection.horizontal,
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 12,
+                            ),
                             content: Text(
                               'Budget updated to €${newBudget.toStringAsFixed(0)}',
                             ),
-                            backgroundColor: const Color(0xFF00F5FF),
+                            backgroundColor: const Color(0xFF0D47A1),
+                            showCloseIcon: true,
+                            closeIconColor: Colors.white70,
                           ),
                         );
                       } else {
@@ -1009,7 +1024,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00F5FF),
+                    backgroundColor: const Color(0xFF0D47A1),
                     foregroundColor: const Color(0xFF1A1F3A),
                   ),
                   child: const Text('Save'),
@@ -1047,7 +1062,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Budgets saved successfully!'),
-        backgroundColor: Color(0xFF00F5FF),
+        backgroundColor: Color(0xFF0D47A1),
       ),
     );
   }
@@ -1088,18 +1103,336 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
           setState(() {
             final index = savingsGoals.indexWhere((g) => g.id == goal.id);
             if (index != -1) savingsGoals[index] = goal;
-            if (!categoryBudgets.containsKey('savings')) {
-              categoryBudgets['savings'] = {};
-            }
-            categoryBudgets['savings']![goal.name] = SubcategoryBudget(
-              budgeted: goal.monthlyAmount,
-              spent: goal.currentAmount,
-            );
+            _syncSavingsBudgetsWithGoals();
           });
           _saveUserBudgetData(); // Save after goal update
         },
       ),
     );
+  }
+
+  Widget _buildTransactionsTab() {
+    // Group transactions by month
+    final Map<String, List<Transaction>> transactionsByMonth = {};
+
+    for (final transaction in transactions) {
+      final monthKey =
+          '${transaction.date.year}-${transaction.date.month.toString().padLeft(2, '0')}';
+      if (!transactionsByMonth.containsKey(monthKey)) {
+        transactionsByMonth[monthKey] = [];
+      }
+      transactionsByMonth[monthKey]!.add(transaction);
+    }
+
+    // Sort months in descending order
+    final sortedMonthKeys = transactionsByMonth.keys.toList()
+      ..sort((a, b) => b.compareTo(a));
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 140),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              const Icon(
+                Icons.receipt_long,
+                color: Color(0xFF8E9AAF),
+                size: 28,
+              ),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'All Transactions',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'Complete transaction history',
+                      style: TextStyle(color: Color(0xFF8E9AAF), fontSize: 14),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+
+          // Transaction summary cards
+          Row(
+            children: [
+              Expanded(
+                child: _buildSummaryCard(
+                  'Total Expenses',
+                  transactions
+                      .where((t) => t.type == TransactionType.expense)
+                      .fold<double>(0, (sum, t) => sum + t.amount),
+                  const Color(0xFFE53935),
+                  Icons.arrow_downward,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildSummaryCard(
+                  'Total Income',
+                  transactions
+                      .where((t) => t.type == TransactionType.income)
+                      .fold<double>(0, (sum, t) => sum + t.amount),
+                  const Color(0xFF4CAF50),
+                  Icons.arrow_upward,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+
+          // Transactions by month
+          if (transactions.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(48.0),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.inbox_outlined,
+                      size: 64,
+                      color: Colors.white.withValues(alpha: 0.3),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No transactions yet',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.6),
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            ...sortedMonthKeys.map((monthKey) {
+              final monthTransactions = transactionsByMonth[monthKey]!
+                ..sort((a, b) => b.date.compareTo(a.date));
+
+              final parts = monthKey.split('-');
+              final year = int.parse(parts[0]);
+              final month = int.parse(parts[1]);
+              final monthName = _getMonthName(month);
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Text(
+                      '$monthName $year',
+                      style: const TextStyle(
+                        color: Color(0xFF5B8DEF),
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  ...monthTransactions.map(
+                    (transaction) => _buildTransactionItem(transaction),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+              );
+            }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard(
+    String title,
+    double amount,
+    Color color,
+    IconData icon,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.25),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            '€${amount.toStringAsFixed(2)}',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTransactionItem(Transaction transaction) {
+    final categoryData = transaction.type == TransactionType.income
+        ? incomeCategories[transaction.categoryKey]
+        : categories[transaction.categoryKey];
+    final isExpense = transaction.type == TransactionType.expense;
+
+    return GestureDetector(
+      onTap: () => _editTransaction(transaction),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            child: Row(
+              children: [
+                // Category Icon
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color:
+                        categoryData?.solidColor.withValues(alpha: 0.2) ??
+                        const Color(0x33808080),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Center(
+                    child: Text(
+                      categoryData?.icon ?? '💰',
+                      style: const TextStyle(fontSize: 24),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+
+                // Transaction Details
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        transaction.category,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        transaction.note,
+                        style: const TextStyle(
+                          color: Color(0xFF8E9AAF),
+                          fontSize: 14,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _formatTransactionDate(transaction.date),
+                        style: const TextStyle(
+                          color: Color(0xFF6B7789),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Amount
+                Text(
+                  '${isExpense ? '-' : '+'}€${transaction.amount.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    color: isExpense
+                        ? const Color(0xFFFF6B9D)
+                        : const Color(0xFF4CAF50),
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: const Color(0xFF2A3B5C).withValues(alpha: 0.3),
+            indent: 76,
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getMonthName(int month) {
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    return months[month - 1];
+  }
+
+  String _formatTransactionDate(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final transactionDate = DateTime(date.year, date.month, date.day);
+
+    if (transactionDate == today) {
+      return 'Today at ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+    } else if (transactionDate == today.subtract(const Duration(days: 1))) {
+      return 'Yesterday at ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+    } else {
+      return '${date.day}/${date.month}/${date.year}';
+    }
   }
 
   void _addTransaction(Transaction transaction) {
@@ -1161,13 +1494,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
           setState(() {
             final index = savingsGoals.indexWhere((g) => g.id == goal.id);
             if (index != -1) savingsGoals[index] = goal;
-            if (!categoryBudgets.containsKey('savings')) {
-              categoryBudgets['savings'] = {};
-            }
-            categoryBudgets['savings']![goal.name] = SubcategoryBudget(
-              budgeted: goal.monthlyAmount,
-              spent: goal.currentAmount,
-            );
+            _syncSavingsBudgetsWithGoals();
           });
           _saveUserBudgetData(); // Save after goal update
         },
@@ -1183,6 +1510,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
       if (index != -1) {
         final oldTransaction = transactions[index];
 
+        // Handle removal from old category/savings
         if (!oldTransaction.excludeFromBudget &&
             oldTransaction.type == TransactionType.expense) {
           final oldCategoryKey = oldTransaction.categoryKey;
@@ -1193,30 +1521,55 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
             categoryBudgets[oldCategoryKey]![oldTransaction.category]!.spent -=
                 oldTransaction.amount;
           }
+
+          // Remove from savings goal if it was a savings transaction
+          if (oldCategoryKey == 'savings') {
+            for (var goal in savingsGoals) {
+              if (goal.name == oldTransaction.category) {
+                goal.currentAmount -= oldTransaction.amount;
+                break;
+              }
+            }
+          }
         }
 
         // If this is a recurring transaction, remove all its old occurrences first
         if (oldTransaction.recurrence != RecurrenceType.never) {
-          transactions.removeWhere(
+          // First, collect the occurrences to remove and subtract from budgets
+          final occurrencesToRemove = transactions.where(
             (t) => t.id.startsWith('${oldTransaction.id}_'),
-          );
+          ).toList();
 
-          // Also subtract the old occurrences from budgets
-          for (final t in transactions.where(
-            (t) => t.id.startsWith('${oldTransaction.id}_'),
-          )) {
+          // Subtract the old occurrences from budgets BEFORE removing them
+          for (final t in occurrencesToRemove) {
             if (!t.excludeFromBudget && t.type == TransactionType.expense) {
               final categoryKey = t.categoryKey;
               if (categoryBudgets.containsKey(categoryKey) &&
                   categoryBudgets[categoryKey]!.containsKey(t.category)) {
                 categoryBudgets[categoryKey]![t.category]!.spent -= t.amount;
               }
+
+              // Remove from savings goal if it was a savings transaction
+              if (categoryKey == 'savings') {
+                for (var goal in savingsGoals) {
+                  if (goal.name == t.category) {
+                    goal.currentAmount -= t.amount;
+                    break;
+                  }
+                }
+              }
             }
           }
+
+          // Now remove the occurrences from the transactions list
+          transactions.removeWhere(
+            (t) => t.id.startsWith('${oldTransaction.id}_'),
+          );
         }
 
         transactions[index] = updatedTransaction;
 
+        // Handle addition to new category/savings
         if (!updatedTransaction.excludeFromBudget &&
             updatedTransaction.type == TransactionType.expense) {
           final categoryKey = updatedTransaction.categoryKey;
@@ -1234,7 +1587,20 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
 
           categoryBudgets[categoryKey]![updatedTransaction.category]!.spent +=
               updatedTransaction.amount;
+
+          // Add to savings goal if it's a savings transaction
+          if (categoryKey == 'savings') {
+            for (var goal in savingsGoals) {
+              if (goal.name == updatedTransaction.category) {
+                goal.currentAmount += updatedTransaction.amount;
+                break;
+              }
+            }
+          }
         }
+
+        // Sync savings budgets with goals after all updates
+        _syncSavingsBudgetsWithGoals();
       }
 
       // Regenerate recommendations after update
@@ -1251,7 +1617,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
         content: Text(
           'Transaction updated: €${updatedTransaction.amount.toStringAsFixed(2)}',
         ),
-        backgroundColor: const Color(0xFF2196F3),
+        backgroundColor: const Color(0xFF0D47A1),
       ),
     );
   }
@@ -1371,11 +1737,12 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
       // Remove from savings goal if applicable
       if (transaction.categoryKey == 'savings') {
         for (var goal in savingsGoals) {
-          if (goal.currentAmount >= transaction.amount) {
+          if (goal.name == transaction.category) {
             goal.currentAmount -= transaction.amount;
             break;
           }
         }
+        _syncSavingsBudgetsWithGoals();
       }
 
       // Remove the transaction
@@ -1422,13 +1789,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
           setState(() {
             final index = savingsGoals.indexWhere((g) => g.id == goal.id);
             if (index != -1) savingsGoals[index] = goal;
-            if (!categoryBudgets.containsKey('savings')) {
-              categoryBudgets['savings'] = {};
-            }
-            categoryBudgets['savings']![goal.name] = SubcategoryBudget(
-              budgeted: goal.monthlyAmount,
-              spent: goal.currentAmount,
-            );
+            _syncSavingsBudgetsWithGoals();
           });
           _saveUserBudgetData();
         },

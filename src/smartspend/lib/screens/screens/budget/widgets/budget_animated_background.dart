@@ -1,65 +1,51 @@
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
 
 class BudgetAnimatedBackground extends StatelessWidget {
   final AnimationController controller;
 
-  const BudgetAnimatedBackground({
-    super.key,
-    required this.controller,
-  });
+  const BudgetAnimatedBackground({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: controller,
-      builder: (context, child) {
-        return Stack(
-          children: [
-            // Rotating gradient orbs
-            Positioned(
-              top: 100,
-              left: -50,
-              child: Transform.rotate(
-                angle: controller.value * 2 * math.pi,
-                child: Container(
-                  width: 200,
-                  height: 200,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        const Color(0xFF00F5FF).withValues(alpha: 0.3),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
+    return Stack(
+      children: [
+        // Static subtle glow - top left
+        Positioned(
+          top: 50,
+          left: -100,
+          child: Container(
+            width: 250,
+            height: 250,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  const Color(0xFF2A3F5F).withValues(alpha: 0.08),
+                  Colors.transparent,
+                ],
               ),
             ),
-            Positioned(
-              top: 300,
-              right: -100,
-              child: Transform.rotate(
-                angle: -controller.value * 2 * math.pi,
-                child: Container(
-                  width: 300,
-                  height: 300,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        const Color(0xFFA855F7).withValues(alpha: 0.2),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
+          ),
+        ),
+        // Static subtle glow - bottom right
+        Positioned(
+          bottom: 100,
+          right: -150,
+          child: Container(
+            width: 300,
+            height: 300,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [
+                  const Color(0xFF1A2F4F).withValues(alpha: 0.05),
+                  Colors.transparent,
+                ],
               ),
             ),
-          ],
-        );
-      },
+          ),
+        ),
+      ],
     );
   }
 }

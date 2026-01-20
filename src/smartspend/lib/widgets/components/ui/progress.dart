@@ -24,7 +24,7 @@ class CustomProgress extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final clampedValue = value.clamp(0.0, 1.0);
-    
+
     Widget progressBar = Container(
       height: height ?? 8,
       decoration: BoxDecoration(
@@ -52,10 +52,7 @@ class CustomProgress extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 if (label != null)
-                  Text(
-                    label!,
-                    style: theme.textTheme.bodySmall,
-                  ),
+                  Text(label!, style: theme.textTheme.bodySmall),
                 if (showPercentage)
                   Text(
                     '${(clampedValue * 100).round()}%',
@@ -96,7 +93,7 @@ class CircularProgress extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return SizedBox(
       width: size,
       height: size,
@@ -106,7 +103,8 @@ class CircularProgress extends StatelessWidget {
           CircularProgressIndicator(
             value: value.clamp(0.0, 1.0),
             strokeWidth: strokeWidth,
-            backgroundColor: backgroundColor ?? theme.primaryColor.withValues(alpha: 0.2),
+            backgroundColor:
+                backgroundColor ?? theme.primaryColor.withValues(alpha: 0.2),
             valueColor: AlwaysStoppedAnimation<Color>(
               valueColor ?? theme.primaryColor,
             ),

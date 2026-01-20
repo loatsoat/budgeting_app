@@ -21,7 +21,7 @@ class CustomCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Container(
       margin: margin,
       child: Card(
@@ -29,9 +29,7 @@ class CustomCard extends StatelessWidget {
         color: backgroundColor ?? theme.cardColor,
         shape: RoundedRectangleBorder(
           borderRadius: borderRadius ?? BorderRadius.circular(12),
-          side: BorderSide(
-            color: theme.dividerColor.withValues(alpha: 0.1),
-          ),
+          side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
         ),
         child: Padding(
           padding: padding ?? const EdgeInsets.all(24),
@@ -68,17 +66,11 @@ class CardHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (title != null) title!,
-                if (subtitle != null) ...[
-                  const SizedBox(height: 4),
-                  subtitle!,
-                ],
+                if (subtitle != null) ...[const SizedBox(height: 4), subtitle!],
               ],
             ),
           ),
-          if (action != null) ...[
-            const SizedBox(width: 16),
-            action!,
-          ],
+          if (action != null) ...[const SizedBox(width: 16), action!],
         ],
       ),
     );
@@ -89,21 +81,17 @@ class CardTitle extends StatelessWidget {
   final String text;
   final TextStyle? style;
 
-  const CardTitle({
-    super.key,
-    required this.text,
-    this.style,
-  });
+  const CardTitle({super.key, required this.text, this.style});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Text(
       text,
-      style: style ?? theme.textTheme.headlineSmall?.copyWith(
-        fontWeight: FontWeight.w600,
-      ),
+      style:
+          style ??
+          theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600),
     );
   }
 }
@@ -112,21 +100,19 @@ class CardDescription extends StatelessWidget {
   final String text;
   final TextStyle? style;
 
-  const CardDescription({
-    super.key,
-    required this.text,
-    this.style,
-  });
+  const CardDescription({super.key, required this.text, this.style});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Text(
       text,
-      style: style ?? theme.textTheme.bodyMedium?.copyWith(
-        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-      ),
+      style:
+          style ??
+          theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+          ),
     );
   }
 }
@@ -135,18 +121,11 @@ class CardContent extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
 
-  const CardContent({
-    super.key,
-    required this.child,
-    this.padding,
-  });
+  const CardContent({super.key, required this.child, this.padding});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: padding ?? EdgeInsets.zero,
-      child: child,
-    );
+    return Padding(padding: padding ?? EdgeInsets.zero, child: child);
   }
 }
 
@@ -154,11 +133,7 @@ class CardFooter extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
 
-  const CardFooter({
-    super.key,
-    required this.child,
-    this.padding,
-  });
+  const CardFooter({super.key, required this.child, this.padding});
 
   @override
   Widget build(BuildContext context) {

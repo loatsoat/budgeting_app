@@ -27,7 +27,7 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
-  
+
   // Security questions
   String? _selectedSecurityQuestion;
   final List<String> _securityQuestions = [
@@ -111,10 +111,10 @@ class _SignupScreenState extends State<SignupScreen> {
       }
     } catch (e) {
       setState(() => _isLoading = false);
-      
+
       if (mounted) {
         String errorMessage = e.toString().replaceFirst('Exception: ', '');
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
@@ -143,15 +143,10 @@ class _SignupScreenState extends State<SignupScreen> {
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
               onPressed: widget.onBackToLogin,
-              icon: const Icon(
-                Icons.arrow_back,
-                color: Color(0xFF00F5FF),
-              ),
+              icon: const Icon(Icons.arrow_back, color: Color(0xFF0D47A1)),
               label: const Text(
                 'Back to Login',
-                style: TextStyle(
-                  color: Color(0xFF00F5FF),
-                ),
+                style: TextStyle(color: Color(0xFF0D47A1)),
               ),
             ),
           ),
@@ -206,7 +201,9 @@ class _SignupScreenState extends State<SignupScreen> {
                     obscureText: _obscurePassword,
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                         color: Colors.white.withValues(alpha: 0.4),
                       ),
                       onPressed: () {
@@ -232,11 +229,16 @@ class _SignupScreenState extends State<SignupScreen> {
                     obscureText: _obscureConfirmPassword,
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                        _obscureConfirmPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                         color: Colors.white.withValues(alpha: 0.4),
                       ),
                       onPressed: () {
-                        setState(() => _obscureConfirmPassword = !_obscureConfirmPassword);
+                        setState(
+                          () => _obscureConfirmPassword =
+                              !_obscureConfirmPassword,
+                        );
                       },
                     ),
                     validator: (value) {
@@ -289,7 +291,9 @@ class _SignupScreenState extends State<SignupScreen> {
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide(
-                            color: const Color(0xFF395587).withValues(alpha: 0.5),
+                            color: const Color(
+                              0xFF395587,
+                            ).withValues(alpha: 0.5),
                           ),
                         ),
                         hintText: 'Select a security question',
@@ -310,7 +314,10 @@ class _SignupScreenState extends State<SignupScreen> {
                             question,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(color: Colors.white, fontSize: 13),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                            ),
                           ),
                         );
                       }).toList(),
@@ -341,7 +348,9 @@ class _SignupScreenState extends State<SignupScreen> {
                             width: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           )
                         : const Text(

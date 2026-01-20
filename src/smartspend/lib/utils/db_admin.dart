@@ -31,7 +31,7 @@ class DatabaseAdmin {
   static Future<String> getDatabasePath() async {
     final dbFolder = await getApplicationDocumentsDirectory();
     final dbPath = p.join(dbFolder.path, 'smartspend.db');
-    
+
     debugPrint('📁 Database location:');
     debugPrint('   $dbPath');
     return dbPath;
@@ -43,7 +43,9 @@ class DatabaseAdmin {
     debugPrint('📊 Database Statistics:');
     debugPrint('   Total Users: ${users.length}');
     for (var user in users) {
-      debugPrint('   - ID: ${user.id}, Username: ${user.username}, Created: ${user.createdAt}');
+      debugPrint(
+        '   - ID: ${user.id}, Username: ${user.username}, Created: ${user.createdAt}',
+      );
     }
   }
 }
@@ -87,7 +89,9 @@ class _DatabaseAdminScreenState extends State<DatabaseAdminScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Benutzer löschen?'),
-        content: const Text('Diese Aktion kann nicht rückgängig gemacht werden.'),
+        content: const Text(
+          'Diese Aktion kann nicht rückgängig gemacht werden.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -106,9 +110,9 @@ class _DatabaseAdminScreenState extends State<DatabaseAdminScreen> {
       await DatabaseAdmin.deleteUser(userId);
       _loadUsers();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Benutzer gelöscht')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Benutzer gelöscht')));
       }
     }
   }
@@ -165,21 +169,23 @@ class _DatabaseAdminScreenState extends State<DatabaseAdminScreen> {
                     ),
                   )
                 else
-                  ..._users.map((user) => Card(
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            child: Text(user.username[0].toUpperCase()),
-                          ),
-                          title: Text(user.username),
-                          subtitle: Text(
-                            'ID: ${user.id} • Erstellt: ${user.createdAt.toString().split('.')[0]}',
-                          ),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () => _deleteUser(user.id),
-                          ),
+                  ..._users.map(
+                    (user) => Card(
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          child: Text(user.username[0].toUpperCase()),
                         ),
-                      )),
+                        title: Text(user.username),
+                        subtitle: Text(
+                          'ID: ${user.id} • Erstellt: ${user.createdAt.toString().split('.')[0]}',
+                        ),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () => _deleteUser(user.id),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
     );

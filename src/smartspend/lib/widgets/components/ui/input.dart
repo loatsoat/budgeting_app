@@ -36,13 +36,12 @@ class CustomInput extends StatelessWidget {
     this.focusNode,
     this.maxLines = 1,
     this.minLines,
-   
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -71,12 +70,10 @@ class CustomInput extends StatelessWidget {
             color: Colors.white,
             fontWeight: FontWeight.w600,
           ),
-          cursorColor: Color(0xFF00F5FF),
+          cursorColor: Color(0xFF0D47A1),
           decoration: InputDecoration(
             hintText: placeholder,
-            hintStyle: TextStyle(
-              color: Colors.white.withValues(alpha: 0.55),
-            ),
+            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.55)),
             prefixIcon: prefixIcon,
             suffixIcon: suffixIcon,
             errorText: errorText,
@@ -97,22 +94,17 @@ class CustomInput extends StatelessWidget {
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(
-                color: Color(0xFF00F5FF),
+                color: Color(0xFF0D47A1),
                 width: 1.5,
               ),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Colors.red,
-              ),
+              borderSide: const BorderSide(color: Colors.red),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(
-                color: Colors.red,
-                width: 1.5,
-              ),
+              borderSide: const BorderSide(color: Colors.red, width: 1.5),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 14,

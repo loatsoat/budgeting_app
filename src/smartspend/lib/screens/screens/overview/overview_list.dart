@@ -37,17 +37,7 @@ class _OverviewListScreenState extends State<OverviewListScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF0A0E1A),
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF2A3F5F),
-              Color(0xFF1A1F33),
-              Color(0xFF0A0E1A),
-            ],
-          ),
-        ),
+        decoration: const BoxDecoration(color: Color(0xFF0F172A)),
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.only(bottom: 100),
@@ -79,11 +69,22 @@ class _OverviewListScreenState extends State<OverviewListScreen> {
         children: [
           const Text(
             '23:34 Tuesday 4 Nov.',
-            style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
           ),
           Row(
             children: [
-              const Text('100%', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500)),
+              const Text(
+                '100%',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               const SizedBox(width: 8),
               Container(
                 width: 24,
@@ -95,7 +96,7 @@ class _OverviewListScreenState extends State<OverviewListScreen> {
                 child: Container(
                   margin: const EdgeInsets.all(1),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF00F5FF),
+                    color: const Color(0xFF0D47A1),
                     borderRadius: BorderRadius.circular(1),
                   ),
                 ),
@@ -124,7 +125,11 @@ class _OverviewListScreenState extends State<OverviewListScreen> {
             child: Center(
               child: Text(
                 'Personal Wallet',
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
@@ -148,14 +153,18 @@ class _OverviewListScreenState extends State<OverviewListScreen> {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: [Color(0xFF00F5FF), Color(0xFF00D4FF)]),
+            color: const Color(0xFF5B8DEF),
             borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(color: const Color(0xFF00F5FF).withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 2)),
-            ],
           ),
           child: const Center(
-            child: Text('LIST', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+            child: Text(
+              'LIST',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ),
       ),
@@ -169,32 +178,49 @@ class _OverviewListScreenState extends State<OverviewListScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF2A3F5F).withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF00F5FF).withValues(alpha: 0.3)),
+        border: Border.all(
+          color: const Color(0xFF0D47A1).withValues(alpha: 0.3),
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          _roundIconButton(Icons.chevron_left, const Color(0xFF00F5FF)),
+          _roundIconButton(Icons.chevron_left, const Color(0xFF0D47A1)),
           Column(
             children: [
               Text(
                 _currentMonth,
-                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: 4),
               Row(
                 children: [
                   Text(
                     '$_transactionCount TRANSACTIONS',
-                    style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 12, fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.6),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                   const SizedBox(width: 8),
-                  Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFFFF6B9D), shape: BoxShape.circle)),
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFF6B9D),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
                 ],
               ),
             ],
           ),
-          _roundIconButton(Icons.chevron_right, const Color(0xFF00F5FF)),
+          _roundIconButton(Icons.chevron_right, const Color(0xFF0D47A1)),
         ],
       ),
     );
@@ -203,7 +229,10 @@ class _OverviewListScreenState extends State<OverviewListScreen> {
   Widget _roundIconButton(IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: Icon(icon, color: color, size: 20),
     );
   }
@@ -229,7 +258,10 @@ class _OverviewListScreenState extends State<OverviewListScreen> {
                 });
               },
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 8,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -238,17 +270,26 @@ class _OverviewListScreenState extends State<OverviewListScreen> {
                       children: [
                         Text(
                           _lists[i]['title'],
-                          style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           _lists[i]['subtitle'],
-                          style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 12),
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.6),
+                            fontSize: 12,
+                          ),
                         ),
                       ],
                     ),
                     Icon(
-                      _expanded[i] == true ? Icons.expand_less : Icons.expand_more,
+                      _expanded[i] == true
+                          ? Icons.expand_less
+                          : Icons.expand_more,
                       color: Colors.white.withValues(alpha: 0.7),
                     ),
                   ],
@@ -266,12 +307,20 @@ class _OverviewListScreenState extends State<OverviewListScreen> {
                     for (final entry in _lists[i]['content'] as List<String>)
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 6),
-                        child: Text(entry, style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 14)),
+                        child: Text(
+                          entry,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.75),
+                            fontSize: 14,
+                          ),
+                        ),
                       ),
                   ],
                 ),
               ),
-              crossFadeState: (_expanded[i] == true) ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+              crossFadeState: (_expanded[i] == true)
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
               duration: const Duration(milliseconds: 200),
             ),
             const Divider(color: Color(0xFF2A3F5F), height: 1),
@@ -285,12 +334,11 @@ class _OverviewListScreenState extends State<OverviewListScreen> {
     return Container(
       width: 60,
       height: 60,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [Color(0xFFFF6B9D), Color(0xFFFF3D8F)]),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFFFF6B9D), Color(0xFFFF3D8F)],
+        ),
         shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(color: const Color(0xFFFF6B9D).withValues(alpha: 0.4), blurRadius: 20, offset: const Offset(0, 8)),
-        ],
       ),
       child: const Icon(Icons.add, color: Colors.white, size: 28),
     );
@@ -320,13 +368,26 @@ class _OverviewListScreenState extends State<OverviewListScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: const BoxDecoration(
-                      gradient: LinearGradient(colors: [Color(0xFF00F5FF), Color(0xFF00D4FF)]),
+                      gradient: LinearGradient(
+                        colors: [Color(0xFF0D47A1), Color(0xFF00D4FF)],
+                      ),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.visibility, color: Colors.white, size: 24),
+                    child: const Icon(
+                      Icons.visibility,
+                      color: Colors.white,
+                      size: 24,
+                    ),
                   ),
                   const SizedBox(height: 8),
-                  const Text('Overview', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500)),
+                  const Text(
+                    'Overview',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ],
               ),
               Column(
@@ -334,11 +395,25 @@ class _OverviewListScreenState extends State<OverviewListScreen> {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.1), shape: BoxShape.circle),
-                    child: const Icon(Icons.calendar_month, color: Colors.white70, size: 24),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.calendar_month,
+                      color: Colors.white70,
+                      size: 24,
+                    ),
                   ),
                   const SizedBox(height: 8),
-                  Text('Budget', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12, fontWeight: FontWeight.w500)),
+                  Text(
+                    'Budget',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.7),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ],
               ),
             ],

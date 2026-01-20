@@ -20,14 +20,14 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _isLoading = false;
   late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
 
   @override
   void initState() {
@@ -36,7 +36,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       duration: const Duration(seconds: 3),
       vsync: this,
     )..repeat(reverse: false);
-    _pulseAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_pulseController);
   }
 
   @override
@@ -66,10 +65,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       }
     } catch (e) {
       setState(() => _isLoading = false);
-      
+
       if (mounted) {
         String errorMessage = e.toString().replaceFirst('Exception: ', '');
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
@@ -95,42 +94,30 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         children: [
           const SizedBox(height: 40),
           // Logo
-          AnimatedBuilder(
-            animation: _pulseAnimation,
-            builder: (context, child) {
-              return Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  color: Colors.transparent,
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF00F5FF).withValues(alpha: 0.3 + _pulseAnimation.value * 0.2),
-                      blurRadius: 40 + _pulseAnimation.value * 20,
-                      spreadRadius: 0,
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: Image.asset(
-                    'assets/images/logo.png',
-                    width: 40,
-                    height: 40,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      // Fallback to icon if image not found
-                      return const Icon(
-                        Icons.account_balance_wallet,
-                        size: 40,
-                        color: Color(0xFF00F5FF),
-                      );
-                    },
-                  ),
-                ),
-              );
-            },
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              color: const Color(0xFF1A2544),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: Image.asset(
+                'assets/images/logo.png',
+                width: 40,
+                height: 40,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  // Fallback to icon if image not found
+                  return const Icon(
+                    Icons.account_balance_wallet,
+                    size: 40,
+                    color: Color(0xFF5B8DEF),
+                  );
+                },
+              ),
+            ),
           ),
           const SizedBox(height: 20),
           const Text(
@@ -179,7 +166,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     obscureText: _obscurePassword,
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                         color: Colors.white.withValues(alpha: 0.4),
                       ),
                       onPressed: () {
@@ -201,7 +190,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       child: const Text(
                         'Forgot Password?',
                         style: TextStyle(
-                          color: Color(0xFF00F5FF),
+                          color: Color(0xFF0D47A1),
                           fontSize: 14,
                         ),
                       ),
@@ -216,7 +205,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             width: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           )
                         : const Text(
@@ -247,7 +238,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 child: const Text(
                   'Sign Up',
                   style: TextStyle(
-                    color: Color(0xFF00F5FF),
+                    color: Color(0xFF0D47A1),
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),

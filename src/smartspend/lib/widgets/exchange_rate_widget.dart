@@ -3,7 +3,7 @@ import '../models/exchange_rate.dart';
 import '../services/exchange_rate_service.dart';
 
 /// Widget that displays exchange rates using FutureBuilder
-/// 
+///
 /// Best practices implemented:
 /// 1. Uses FutureBuilder for async data display
 /// 2. API call is NOT in build() method - stored in a Future field
@@ -48,24 +48,10 @@ class _ExchangeRateWidgetState extends State<ExchangeRateWidget> {
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1A1F3A),
-            Color(0xFF2A2F4A),
-          ],
-        ),
+        color: const Color(0xFF1A2030),
         border: Border.all(
-          color: const Color(0xFF00F5FF).withValues(alpha: 0.3),
+          color: const Color(0xFF0D47A1).withValues(alpha: 0.3),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF00F5FF).withValues(alpha: 0.1),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -81,12 +67,12 @@ class _ExchangeRateWidgetState extends State<ExchangeRateWidget> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF00F5FF).withValues(alpha: 0.2),
+                        color: const Color(0xFF0D47A1).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(
                         Icons.currency_exchange,
-                        color: Color(0xFF00F5FF),
+                        color: Color(0xFF0D47A1),
                         size: 24,
                       ),
                     ),
@@ -104,10 +90,7 @@ class _ExchangeRateWidgetState extends State<ExchangeRateWidget> {
                         ),
                         Text(
                           'Live from API',
-                          style: TextStyle(
-                            color: Colors.white60,
-                            fontSize: 12,
-                          ),
+                          style: TextStyle(color: Colors.white60, fontSize: 12),
                         ),
                       ],
                     ),
@@ -115,13 +98,13 @@ class _ExchangeRateWidgetState extends State<ExchangeRateWidget> {
                 ),
                 IconButton(
                   onPressed: _refreshRates,
-                  icon: const Icon(Icons.refresh, color: Color(0xFF00F5FF)),
+                  icon: const Icon(Icons.refresh, color: Color(0xFF0D47A1)),
                   tooltip: 'Refresh rates',
                 ),
               ],
             ),
           ),
-          
+
           const Divider(color: Colors.white12, height: 1),
 
           // FutureBuilder - PROPER WAY to display async data
@@ -136,7 +119,9 @@ class _ExchangeRateWidgetState extends State<ExchangeRateWidget> {
                     child: Column(
                       children: [
                         CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF00F5FF)),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Color(0xFF0D47A1),
+                          ),
                         ),
                         SizedBox(height: 16),
                         Text(
@@ -148,7 +133,6 @@ class _ExchangeRateWidgetState extends State<ExchangeRateWidget> {
                   ),
                 );
               }
-              
               // Error state
               else if (snapshot.hasError) {
                 return Padding(
@@ -171,14 +155,17 @@ class _ExchangeRateWidgetState extends State<ExchangeRateWidget> {
                       const SizedBox(height: 4),
                       Text(
                         snapshot.error.toString(),
-                        style: const TextStyle(color: Colors.white60, fontSize: 12),
+                        style: const TextStyle(
+                          color: Colors.white60,
+                          fontSize: 12,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 12),
                       ElevatedButton(
                         onPressed: _refreshRates,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF00F5FF),
+                          backgroundColor: const Color(0xFF5B8DEF),
                         ),
                         child: const Text('Retry'),
                       ),
@@ -186,16 +173,18 @@ class _ExchangeRateWidgetState extends State<ExchangeRateWidget> {
                   ),
                 );
               }
-              
               // Success state - data available
               else if (snapshot.hasData) {
                 final exchangeRate = snapshot.data!;
-                
+
                 return Column(
                   children: [
                     // Date info
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       child: Text(
                         'Base: EUR • Updated: ${exchangeRate.date}',
                         style: const TextStyle(
@@ -204,7 +193,7 @@ class _ExchangeRateWidgetState extends State<ExchangeRateWidget> {
                         ),
                       ),
                     ),
-                    
+
                     // Currency rates list
                     ListView.builder(
                       shrinkWrap: true,
@@ -213,7 +202,7 @@ class _ExchangeRateWidgetState extends State<ExchangeRateWidget> {
                       itemBuilder: (context, index) {
                         final currency = _currencies[index];
                         final rate = exchangeRate.getRateFor(currency['code']!);
-                        
+
                         return ListTile(
                           leading: Text(
                             currency['flag']!,
@@ -228,12 +217,17 @@ class _ExchangeRateWidgetState extends State<ExchangeRateWidget> {
                           ),
                           subtitle: Text(
                             currency['name']!,
-                            style: const TextStyle(color: Colors.white60, fontSize: 12),
+                            style: const TextStyle(
+                              color: Colors.white60,
+                              fontSize: 12,
+                            ),
                           ),
                           trailing: Text(
-                            rate != null ? '€1 = ${rate.toStringAsFixed(4)}' : 'N/A',
+                            rate != null
+                                ? '€1 = ${rate.toStringAsFixed(4)}'
+                                : 'N/A',
                             style: const TextStyle(
-                              color: Color(0xFF00F5FF),
+                              color: Color(0xFF0D47A1),
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),
@@ -244,7 +238,6 @@ class _ExchangeRateWidgetState extends State<ExchangeRateWidget> {
                   ],
                 );
               }
-              
               // Fallback state
               else {
                 return const Padding(

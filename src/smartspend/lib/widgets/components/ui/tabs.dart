@@ -52,7 +52,7 @@ class _CustomTabsState extends State<CustomTabs>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Column(
       children: [
         Container(
@@ -63,17 +63,17 @@ class _CustomTabsState extends State<CustomTabs>
           ),
           child: TabBar(
             controller: _tabController,
-            tabs: widget.tabs.map((tab) => Tab(
-              text: tab.label,
-              icon: tab.icon,
-            )).toList(),
+            tabs: widget.tabs
+                .map((tab) => Tab(text: tab.label, icon: tab.icon))
+                .toList(),
             indicator: BoxDecoration(
               color: theme.cardColor,
               borderRadius: BorderRadius.circular(9),
             ),
             indicatorSize: TabBarIndicatorSize.tab,
             labelColor: widget.labelColor ?? theme.colorScheme.onSurface,
-            unselectedLabelColor: widget.unselectedLabelColor ?? 
+            unselectedLabelColor:
+                widget.unselectedLabelColor ??
                 theme.colorScheme.onSurface.withValues(alpha: 0.6),
             labelStyle: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.w500,
@@ -99,11 +99,7 @@ class TabItem {
   final Widget content;
   final Widget? icon;
 
-  const TabItem({
-    required this.label,
-    required this.content,
-    this.icon,
-  });
+  const TabItem({required this.label, required this.content, this.icon});
 }
 
 class SimpleTabs extends StatelessWidget {
@@ -121,7 +117,7 @@ class SimpleTabs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Column(
       children: [
         Row(
@@ -129,7 +125,7 @@ class SimpleTabs extends StatelessWidget {
             final index = entry.key;
             final tab = entry.value;
             final isSelected = index == selectedIndex;
-            
+
             return Expanded(
               child: GestureDetector(
                 onTap: () => onChanged?.call(index),
@@ -138,8 +134,8 @@ class SimpleTabs extends StatelessWidget {
                   decoration: BoxDecoration(
                     border: Border(
                       bottom: BorderSide(
-                        color: isSelected 
-                            ? theme.primaryColor 
+                        color: isSelected
+                            ? theme.primaryColor
                             : Colors.transparent,
                         width: 2,
                       ),
@@ -151,9 +147,11 @@ class SimpleTabs extends StatelessWidget {
                       if (tab.icon != null) ...[
                         IconTheme(
                           data: IconThemeData(
-                            color: isSelected 
-                                ? theme.primaryColor 
-                                : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                            color: isSelected
+                                ? theme.primaryColor
+                                : theme.colorScheme.onSurface.withValues(
+                                    alpha: 0.6,
+                                  ),
                           ),
                           child: tab.icon!,
                         ),
@@ -162,11 +160,13 @@ class SimpleTabs extends StatelessWidget {
                       Text(
                         tab.label,
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: isSelected 
-                              ? theme.primaryColor 
-                              : theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                          fontWeight: isSelected 
-                              ? FontWeight.w600 
+                          color: isSelected
+                              ? theme.primaryColor
+                              : theme.colorScheme.onSurface.withValues(
+                                  alpha: 0.6,
+                                ),
+                          fontWeight: isSelected
+                              ? FontWeight.w600
                               : FontWeight.normal,
                         ),
                       ),

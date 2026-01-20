@@ -1,17 +1,25 @@
 import 'package:flutter/material.dart';
 import '../models/budget_models.dart';
 
-void showCreateGoalDialog(BuildContext context, Function(SavingsGoal) onGoalCreated) {
+void showCreateGoalDialog(
+  BuildContext context,
+  Function(SavingsGoal) onGoalCreated,
+) {
   showDialog(
     context: context,
     builder: (context) => CreateGoalDialog(onGoalCreated: onGoalCreated),
   );
 }
 
-void showAddMoneyDialog(BuildContext context, SavingsGoal goal, Function(double) onMoneyAdded) {
+void showAddMoneyDialog(
+  BuildContext context,
+  SavingsGoal goal,
+  Function(double) onMoneyAdded,
+) {
   showDialog(
     context: context,
-    builder: (context) => AddMoneyDialog(goal: goal, onMoneyAdded: onMoneyAdded),
+    builder: (context) =>
+        AddMoneyDialog(goal: goal, onMoneyAdded: onMoneyAdded),
   );
 }
 
@@ -46,13 +54,24 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
   final _targetAmountController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _durationMonthsController = TextEditingController(text: '12');
-  
-  String selectedEmoji = '🎯';
-  Color selectedColor = const Color(0xFF00F5FF);
 
-  final List<String> emojis = ['🎯', '🏠', '🚗', '✈️', '💻', '📱', '🎮', '💍', '🎓', '🏖️'];
+  String selectedEmoji = '🎯';
+  Color selectedColor = const Color(0xFF0D47A1);
+
+  final List<String> emojis = [
+    '🎯',
+    '🏠',
+    '🚗',
+    '✈️',
+    '💻',
+    '📱',
+    '🎮',
+    '💍',
+    '🎓',
+    '🏖️',
+  ];
   final List<Color> colors = [
-    const Color(0xFF00F5FF),
+    const Color(0xFF0D47A1),
     const Color(0xFFFF6B9D),
     const Color(0xFFA855F7),
     const Color(0xFF10F4B1),
@@ -71,18 +90,24 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
 
   void _createGoal() {
     if (_formKey.currentState!.validate()) {
-      final parsedDuration = int.tryParse(_durationMonthsController.text.trim());
-      final duration = (parsedDuration != null && parsedDuration > 0) ? parsedDuration : 12;
+      final parsedDuration = int.tryParse(
+        _durationMonthsController.text.trim(),
+      );
+      final duration = (parsedDuration != null && parsedDuration > 0)
+          ? parsedDuration
+          : 12;
       final goal = SavingsGoal(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         name: _nameController.text.trim(),
         targetAmount: double.parse(_targetAmountController.text),
-        description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
+        description: _descriptionController.text.trim().isEmpty
+            ? null
+            : _descriptionController.text.trim(),
         emoji: selectedEmoji,
         color: selectedColor,
         durationMonths: duration,
       );
-      
+
       widget.onGoalCreated(goal);
       Navigator.of(context).pop();
     }
@@ -100,14 +125,11 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF1A1F3A),
-              Color(0xFF2A2F4A),
-            ],
+            colors: [Color(0xFF1A1F3A), Color(0xFF2A2F4A)],
           ),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: const Color(0xFF00F5FF).withValues(alpha: 0.3),
+            color: const Color(0xFF0D47A1).withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -172,7 +194,10 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
                           ),
                         ),
                         child: Center(
-                          child: Text(emoji, style: const TextStyle(fontSize: 24)),
+                          child: Text(
+                            emoji,
+                            style: const TextStyle(fontSize: 24),
+                          ),
                         ),
                       ),
                     );
@@ -206,15 +231,6 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
                             color: Colors.white,
                             width: isSelected ? 3 : 0,
                           ),
-                          boxShadow: isSelected
-                              ? [
-                                  BoxShadow(
-                                    color: color.withValues(alpha: 0.5),
-                                    blurRadius: 10,
-                                    spreadRadius: 2,
-                                  ),
-                                ]
-                              : null,
                         ),
                       ),
                     );
@@ -227,18 +243,26 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     labelText: 'Goal Name',
-                    labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                    labelStyle: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.6),
+                    ),
                     hintText: 'e.g., New Laptop',
-                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+                    hintStyle: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.5),
+                    ),
                     filled: true,
                     fillColor: const Color(0xFF1A2B3F),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.15),
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.15),
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -260,18 +284,26 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
                     labelText: 'Target Amount (€)',
-                    labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                    labelStyle: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.6),
+                    ),
                     hintText: 'e.g., 1000',
-                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+                    hintStyle: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.5),
+                    ),
                     filled: true,
                     fillColor: const Color(0xFF1A2B3F),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.15),
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.15),
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -282,7 +314,8 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
                     if (value == null || value.isEmpty) {
                       return 'Please enter a target amount';
                     }
-                    if (double.tryParse(value) == null || double.parse(value) <= 0) {
+                    if (double.tryParse(value) == null ||
+                        double.parse(value) <= 0) {
                       return 'Please enter a valid amount';
                     }
                     return null;
@@ -296,18 +329,26 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
                     labelText: 'Duration (months)',
-                    labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                    labelStyle: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.6),
+                    ),
                     hintText: 'e.g., 12',
-                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+                    hintStyle: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.5),
+                    ),
                     filled: true,
                     fillColor: const Color(0xFF1A2B3F),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.15),
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.15),
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -333,18 +374,26 @@ class _CreateGoalDialogState extends State<CreateGoalDialog> {
                   maxLines: 2,
                   decoration: InputDecoration(
                     labelText: 'Description (Optional)',
-                    labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                    labelStyle: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.6),
+                    ),
                     hintText: 'What are you saving for?',
-                    hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+                    hintStyle: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.5),
+                    ),
                     filled: true,
                     fillColor: const Color(0xFF1A2B3F),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.15),
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.15),
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -425,9 +474,20 @@ class _EditGoalDialogState extends State<EditGoalDialog> {
   late String selectedEmoji;
   late Color selectedColor;
 
-  final List<String> emojis = ['🎯', '🏠', '🚗', '✈️', '💻', '📱', '🎮', '💍', '🎓', '🏖️'];
+  final List<String> emojis = [
+    '🎯',
+    '🏠',
+    '🚗',
+    '✈️',
+    '💻',
+    '📱',
+    '🎮',
+    '💍',
+    '🎓',
+    '🏖️',
+  ];
   final List<Color> colors = [
-    const Color(0xFF00F5FF),
+    const Color(0xFF0D47A1),
     const Color(0xFFFF6B9D),
     const Color(0xFFA855F7),
     const Color(0xFF10F4B1),
@@ -439,9 +499,15 @@ class _EditGoalDialogState extends State<EditGoalDialog> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.goal.name);
-    _targetAmountController = TextEditingController(text: widget.goal.targetAmount.toStringAsFixed(0));
-    _descriptionController = TextEditingController(text: widget.goal.description ?? '');
-    _durationMonthsController = TextEditingController(text: widget.goal.durationMonths.toString());
+    _targetAmountController = TextEditingController(
+      text: widget.goal.targetAmount.toStringAsFixed(0),
+    );
+    _descriptionController = TextEditingController(
+      text: widget.goal.description ?? '',
+    );
+    _durationMonthsController = TextEditingController(
+      text: widget.goal.durationMonths.toString(),
+    );
     selectedEmoji = widget.goal.emoji;
     selectedColor = widget.goal.color;
   }
@@ -462,7 +528,9 @@ class _EditGoalDialogState extends State<EditGoalDialog> {
       if (parsed != null && parsed > 0) {
         widget.goal.targetAmount = parsed;
       }
-      final parsedDuration = int.tryParse(_durationMonthsController.text.trim());
+      final parsedDuration = int.tryParse(
+        _durationMonthsController.text.trim(),
+      );
       if (parsedDuration != null && parsedDuration > 0) {
         widget.goal.durationMonths = parsedDuration;
       }
@@ -483,22 +551,30 @@ class _EditGoalDialogState extends State<EditGoalDialog> {
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1A1F3A),
         title: const Text('Delete goal', style: TextStyle(color: Colors.white)),
-        content: const Text('Are you sure you want to delete this goal? This cannot be undone.', style: TextStyle(color: Colors.white70)),
+        content: const Text(
+          'Are you sure you want to delete this goal? This cannot be undone.',
+          style: TextStyle(color: Colors.white70),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white70)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.white70),
+            ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF4D67)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFF4D67),
+            ),
             child: const Text('Delete'),
           ),
         ],
       ),
     );
 
-    if (confirmed == true) {
+    if (confirmed == true && mounted) {
       Navigator.of(context).pop();
       widget.onGoalDeleted();
     }
@@ -516,14 +592,11 @@ class _EditGoalDialogState extends State<EditGoalDialog> {
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF1A1F3A),
-              Color(0xFF2A2F4A),
-            ],
+            colors: [Color(0xFF1A1F3A), Color(0xFF2A2F4A)],
           ),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: const Color(0xFF00F5FF).withValues(alpha: 0.3),
+            color: const Color(0xFF0D47A1).withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -592,7 +665,10 @@ class _EditGoalDialogState extends State<EditGoalDialog> {
                           ),
                         ),
                         child: Center(
-                          child: Text(emoji, style: const TextStyle(fontSize: 24)),
+                          child: Text(
+                            emoji,
+                            style: const TextStyle(fontSize: 24),
+                          ),
                         ),
                       ),
                     );
@@ -626,15 +702,6 @@ class _EditGoalDialogState extends State<EditGoalDialog> {
                             color: Colors.white,
                             width: isSelected ? 3 : 0,
                           ),
-                          boxShadow: isSelected
-                              ? [
-                                  BoxShadow(
-                                    color: color.withValues(alpha: 0.5),
-                                    blurRadius: 10,
-                                    spreadRadius: 2,
-                                  ),
-                                ]
-                              : null,
                         ),
                       ),
                     );
@@ -647,16 +714,22 @@ class _EditGoalDialogState extends State<EditGoalDialog> {
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     labelText: 'Goal Name',
-                    labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                    labelStyle: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.6),
+                    ),
                     filled: true,
                     fillColor: Colors.white.withValues(alpha: 0.05),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.2),
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.2),
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -678,16 +751,22 @@ class _EditGoalDialogState extends State<EditGoalDialog> {
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
                     labelText: 'Duration (months)',
-                    labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                    labelStyle: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.6),
+                    ),
                     filled: true,
                     fillColor: Colors.white.withValues(alpha: 0.05),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.2),
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.2),
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -713,16 +792,22 @@ class _EditGoalDialogState extends State<EditGoalDialog> {
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
                     labelText: 'Target Amount (€)',
-                    labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                    labelStyle: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.6),
+                    ),
                     filled: true,
                     fillColor: Colors.white.withValues(alpha: 0.05),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.2),
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.2),
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -733,7 +818,8 @@ class _EditGoalDialogState extends State<EditGoalDialog> {
                     if (value == null || value.isEmpty) {
                       return 'Please enter a target amount';
                     }
-                    if (double.tryParse(value) == null || double.parse(value) <= 0) {
+                    if (double.tryParse(value) == null ||
+                        double.parse(value) <= 0) {
                       return 'Please enter a valid amount';
                     }
                     return null;
@@ -747,16 +833,22 @@ class _EditGoalDialogState extends State<EditGoalDialog> {
                   maxLines: 2,
                   decoration: InputDecoration(
                     labelText: 'Description (Optional)',
-                    labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                    labelStyle: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.6),
+                    ),
                     filled: true,
                     fillColor: Colors.white.withValues(alpha: 0.05),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.2),
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.2)),
+                      borderSide: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.2),
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -774,13 +866,15 @@ class _EditGoalDialogState extends State<EditGoalDialog> {
                       child: ElevatedButton(
                         onPressed: _saveChanges,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: selectedColor,
+                          backgroundColor: const Color(0xFF5B8DEF),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
                           elevation: 4,
-                          shadowColor: selectedColor.withValues(alpha: 0.4),
+                          shadowColor: const Color(
+                            0xFF5B8DEF,
+                          ).withValues(alpha: 0.4),
                         ),
                         child: const Text(
                           'Save Changes',
@@ -859,10 +953,7 @@ class _AddMoneyDialogState extends State<AddMoneyDialog> {
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF1A1F3A),
-              Color(0xFF2A2F4A),
-            ],
+            colors: [Color(0xFF1A1F3A), Color(0xFF2A2F4A)],
           ),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
@@ -924,18 +1015,26 @@ class _AddMoneyDialogState extends State<AddMoneyDialog> {
                 autofocus: true,
                 decoration: InputDecoration(
                   labelText: 'Amount to Add (€)',
-                  labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6)),
+                  labelStyle: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.6),
+                  ),
                   hintText: '0.00',
-                  hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+                  hintStyle: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.5),
+                  ),
                   filled: true,
                   fillColor: const Color(0xFF1A2B3F),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+                    borderSide: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.15),
+                    ),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
+                    borderSide: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.15),
+                    ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -946,7 +1045,8 @@ class _AddMoneyDialogState extends State<AddMoneyDialog> {
                   if (value == null || value.isEmpty) {
                     return 'Please enter an amount';
                   }
-                  if (double.tryParse(value) == null || double.parse(value) <= 0) {
+                  if (double.tryParse(value) == null ||
+                      double.parse(value) <= 0) {
                     return 'Please enter a valid amount';
                   }
                   return null;
@@ -958,7 +1058,7 @@ class _AddMoneyDialogState extends State<AddMoneyDialog> {
                 child: ElevatedButton(
                   onPressed: _addMoney,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: widget.goal.color,
+                    backgroundColor: const Color(0xFF5B8DEF),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
@@ -968,10 +1068,7 @@ class _AddMoneyDialogState extends State<AddMoneyDialog> {
                   ),
                   child: const Text(
                     'Add to Goal',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),

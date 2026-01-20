@@ -6,10 +6,10 @@ class SpendingRecommendationsWidget extends StatelessWidget {
   final VoidCallback? onDismiss;
 
   const SpendingRecommendationsWidget({
-    Key? key,
+    super.key,
     required this.recommendations,
     this.onDismiss,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +26,7 @@ class SpendingRecommendationsWidget extends StatelessWidget {
             children: [
               const Icon(
                 Icons.lightbulb_outline,
-                color: Color(0xFF00F5FF),
+                color: Color(0xFF0D47A1),
                 size: 20,
               ),
               const SizedBox(width: 8),
@@ -112,21 +112,21 @@ class SpendingRecommendationsWidget extends StatelessWidget {
                       recommendation.title,
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 15,
+                        fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Text(
                       recommendation.message,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.7),
-                        fontSize: 13,
-                        height: 1.4,
+                        fontSize: 12,
+                        height: 1.3,
                       ),
-                      maxLines: 3,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
@@ -186,10 +186,10 @@ class SpendingRecommendationsWidget extends StatelessWidget {
         };
       case RecommendationType.insight:
         return {
-          'bg': const Color(0xFF00F5FF),
-          'border': const Color(0xFF00F5FF),
-          'icon': const Color(0xFF00F5FF),
-          'badge': const Color(0xFF00F5FF),
+          'bg': const Color(0xFF0D47A1),
+          'border': const Color(0xFF0D47A1),
+          'icon': const Color(0xFF0D47A1),
+          'badge': const Color(0xFF0D47A1),
         };
     }
   }

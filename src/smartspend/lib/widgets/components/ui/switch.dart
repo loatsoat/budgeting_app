@@ -23,7 +23,7 @@ class CustomSwitch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     Widget switchWidget = Switch(
       value: value,
       onChanged: enabled ? onChanged : null,
@@ -38,11 +38,13 @@ class CustomSwitch extends StatelessWidget {
         children: [
           Text(
             label!,
-            style: labelStyle ?? theme.textTheme.bodyMedium?.copyWith(
-              color: enabled 
-                  ? theme.colorScheme.onSurface 
-                  : theme.colorScheme.onSurface.withValues(alpha: 0.5),
-            ),
+            style:
+                labelStyle ??
+                theme.textTheme.bodyMedium?.copyWith(
+                  color: enabled
+                      ? theme.colorScheme.onSurface
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                ),
           ),
           const SizedBox(width: 12),
           switchWidget,

@@ -15,7 +15,10 @@ class SavingsGoalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final progressPercentage = (goal.progressPercentage * 100).clamp(0.0, 100.0);
+    final progressPercentage = (goal.progressPercentage * 100).clamp(
+      0.0,
+      100.0,
+    );
 
     return GestureDetector(
       onTap: onTap,
@@ -23,27 +26,12 @@ class SavingsGoalCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              goal.color.withValues(alpha: 0.2),
-              goal.color.withValues(alpha: 0.1),
-            ],
-          ),
+          color: const Color(0xFF2A3B5C).withValues(alpha: 0.8),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: goal.color.withValues(alpha: 0.3),
             width: 1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: goal.color.withValues(alpha: 0.2),
-              blurRadius: 20,
-              spreadRadius: 0,
-              offset: const Offset(0, 10),
-            ),
-          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,7 +89,10 @@ class SavingsGoalCard extends StatelessWidget {
                 ),
                 if (goal.isCompleted)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF4CAF50).withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
@@ -111,7 +102,11 @@ class SavingsGoalCard extends StatelessWidget {
                     ),
                     child: const Row(
                       children: [
-                        Icon(Icons.check_circle, color: Color(0xFF4CAF50), size: 16),
+                        Icon(
+                          Icons.check_circle,
+                          color: Color(0xFF4CAF50),
+                          size: 16,
+                        ),
                         SizedBox(width: 4),
                         Text(
                           'Done',
@@ -236,13 +231,15 @@ class SavingsGoalCard extends StatelessWidget {
                 child: ElevatedButton(
                   onPressed: onAddMoney,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: goal.color.withValues(alpha: 0.2),
-                    foregroundColor: goal.color,
+                    backgroundColor: const Color(
+                      0xFF5B8DEF,
+                    ).withValues(alpha: 0.2),
+                    foregroundColor: const Color(0xFF5B8DEF),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
-                      side: BorderSide(
-                        color: goal.color.withValues(alpha: 0.5),
+                      side: const BorderSide(
+                        color: Color(0xFF5B8DEF),
                         width: 1,
                       ),
                     ),

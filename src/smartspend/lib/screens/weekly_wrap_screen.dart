@@ -22,7 +22,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
   late AnimationController _textController;
   late Animation<double> _slideAnimation;
   late Animation<double> _textAnimation;
-  
+
   int _currentPage = 0;
   final int _totalPages = 6;
 
@@ -30,27 +30,27 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
   void initState() {
     super.initState();
     _pageController = PageController();
-    
+
     _slideController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    
+
     _textController = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-    
+
     _slideAnimation = CurvedAnimation(
       parent: _slideController,
       curve: Curves.easeOutCubic,
     );
-    
+
     _textAnimation = CurvedAnimation(
       parent: _textController,
       curve: Curves.easeOut,
     );
-    
+
     // Start animations
     _slideController.forward();
     Future.delayed(const Duration(milliseconds: 300), () {
@@ -70,12 +70,12 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
     if (_currentPage < _totalPages - 1) {
       _textController.reset();
       _slideController.reset();
-      
+
       _pageController.nextPage(
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
       );
-      
+
       Future.delayed(const Duration(milliseconds: 200), () {
         _slideController.forward();
         Future.delayed(const Duration(milliseconds: 300), () {
@@ -87,8 +87,6 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
     }
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -97,11 +95,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF0F1224),
-              Color(0xFF1A1F33),
-              Color(0xFF101528),
-            ],
+            colors: [Color(0xFF0F1224), Color(0xFF1A1F33), Color(0xFF101528)],
           ),
         ),
         child: SafeArea(
@@ -283,14 +277,18 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
     final expenseTransactions = weeklyTransactions
         .where((t) => t.type == TransactionType.expense)
         .toList();
-    
+
     if (expenseTransactions.isEmpty) {
-      return _buildNoDataPage('No Expenses', 'You haven\'t spent anything this week!');
+      return _buildNoDataPage(
+        'No Expenses',
+        'You haven\'t spent anything this week!',
+      );
     }
-    
+
     // Find the biggest transaction
-    final biggestTransaction = expenseTransactions
-        .reduce((a, b) => a.amount > b.amount ? a : b);
+    final biggestTransaction = expenseTransactions.reduce(
+      (a, b) => a.amount > b.amount ? a : b,
+    );
 
     return _buildCard(
       index: 2,
@@ -381,11 +379,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
     return _buildCard(
       index: 2,
       content: [
-        const Icon(
-          Icons.sentiment_satisfied,
-          size: 80,
-          color: Colors.white,
-        ),
+        const Icon(Icons.sentiment_satisfied, size: 80, color: Colors.white),
         const SizedBox(height: 28),
         Text(
           title,
@@ -531,11 +525,7 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
             begin: const Offset(0, 0.3),
             end: Offset.zero,
           ).animate(_slideAnimation),
-          child: const Icon(
-            Icons.celebration,
-            size: 80,
-            color: Colors.white,
-          ),
+          child: const Icon(Icons.celebration, size: 80, color: Colors.white),
         ),
         const SizedBox(height: 28),
         SlideTransition(
@@ -578,18 +568,24 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
     final now = DateTime.now();
     final weekStart = now.subtract(Duration(days: now.weekday - 1));
     final weekEnd = weekStart.add(const Duration(days: 6));
-    
+
     return widget.transactions.where((transaction) {
       final transactionDate = DateTime(
         transaction.date.year,
         transaction.date.month,
         transaction.date.day,
       );
-      final weekStartDate = DateTime(weekStart.year, weekStart.month, weekStart.day);
+      final weekStartDate = DateTime(
+        weekStart.year,
+        weekStart.month,
+        weekStart.day,
+      );
       final weekEndDate = DateTime(weekEnd.year, weekEnd.month, weekEnd.day);
-      
-      return transactionDate.isAfter(weekStartDate.subtract(const Duration(days: 1))) &&
-             transactionDate.isBefore(weekEndDate.add(const Duration(days: 1)));
+
+      return transactionDate.isAfter(
+            weekStartDate.subtract(const Duration(days: 1)),
+          ) &&
+          transactionDate.isBefore(weekEndDate.add(const Duration(days: 1)));
     }).toList();
   }
 
@@ -644,7 +640,9 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: isLast ? () => Navigator.of(context).pop() : _nextPage,
+                  onPressed: isLast
+                      ? () => Navigator.of(context).pop()
+                      : _nextPage,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.black.withValues(alpha: 0.28),
                     foregroundColor: Colors.white,

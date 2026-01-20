@@ -14,26 +14,26 @@ class ExchangeRateService {
   static const String _baseUrl = 'https://api.frankfurter.app';
 
   /// Fetch latest exchange rates for EUR
-  /// Returns a Future<ExchangeRate> - proper async pattern
-  /// 
+  /// Returns a `Future<ExchangeRate>` - proper async pattern
+  ///
   /// This method should NEVER be called in a build() method
   /// Use FutureBuilder widget instead
   static Future<ExchangeRate> fetchLatestRates() async {
     try {
       // Make HTTP GET request
-      final response = await http.get(
-        Uri.parse('$_baseUrl/latest?from=EUR'),
-      );
+      final response = await http.get(Uri.parse('$_baseUrl/latest?from=EUR'));
 
       // Check if request was successful
       if (response.statusCode == 200) {
         // Parse JSON response
         final Map<String, dynamic> jsonData = json.decode(response.body);
-        
+
         // Deserialize JSON to ExchangeRate object
         return ExchangeRate.fromJson(jsonData);
       } else {
-        throw Exception('Failed to load exchange rates. Status: ${response.statusCode}');
+        throw Exception(
+          'Failed to load exchange rates. Status: ${response.statusCode}',
+        );
       }
     } catch (e) {
       throw Exception('Error fetching exchange rates: $e');
@@ -41,7 +41,9 @@ class ExchangeRateService {
   }
 
   /// Fetch exchange rates for specific currencies
-  static Future<ExchangeRate> fetchRatesForCurrencies(List<String> currencies) async {
+  static Future<ExchangeRate> fetchRatesForCurrencies(
+    List<String> currencies,
+  ) async {
     try {
       final currencyParams = currencies.join(',');
       final response = await http.get(
@@ -62,7 +64,8 @@ class ExchangeRateService {
   /// Fetch historical rates for a specific date
   static Future<ExchangeRate> fetchHistoricalRates(DateTime date) async {
     try {
-      final dateString = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      final dateString =
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
       final response = await http.get(
         Uri.parse('$_baseUrl/$dateString?from=EUR'),
       );

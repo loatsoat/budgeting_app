@@ -45,21 +45,7 @@ class CategoryCard extends StatelessWidget {
         border: Border.all(
           color: categoryData.solidColor.withValues(alpha: 0.3),
         ),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF1A1F3A).withValues(alpha: 0.8),
-            const Color(0xFF2A2F4A).withValues(alpha: 0.6),
-          ],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: categoryData.glowColor.withValues(alpha: 0.2),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: const Color(0xFF1A2030),
       ),
       child: Column(
         children: [
@@ -79,12 +65,6 @@ class CategoryCard extends StatelessWidget {
                       gradient: LinearGradient(
                         colors: categoryData.gradientColors,
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: categoryData.glowColor.withValues(alpha: 0.4),
-                          blurRadius: 15,
-                        ),
-                      ],
                     ),
                     child: Center(
                       child: Text(
@@ -124,21 +104,22 @@ class CategoryCard extends StatelessWidget {
                     children: [
                       CustomBadge(
                         text: '${percentage.toStringAsFixed(0)}%',
-                        variant: percentage > 90 
-                            ? BadgeVariant.destructive 
-                            : percentage > 75 
-                                ? BadgeVariant.secondary 
-                                : BadgeVariant.primary,
+                        variant: percentage > 90
+                            ? BadgeVariant.destructive
+                            : percentage > 75
+                            ? BadgeVariant.secondary
+                            : BadgeVariant.primary,
                       ),
                       const SizedBox(height: 8),
                       if (isEditingBudgets)
                         IconButton(
-                          icon: Icon(
+                          icon: const Icon(
                             Icons.edit,
-                            color: categoryData.solidColor,
+                            color: Color(0xFF5B8DEF),
                             size: 20,
                           ),
-                          onPressed: () => onEditCategory(categoryKey, categoryData),
+                          onPressed: () =>
+                              onEditCategory(categoryKey, categoryData),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                         )

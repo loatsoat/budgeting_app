@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum AlertVariant {
-  info,
-  destructive,
-}
+enum AlertVariant { info, destructive }
 
 class CustomAlert extends StatelessWidget {
   final Widget? title;
@@ -26,11 +23,11 @@ class CustomAlert extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     Color backgroundColor;
     Color textColor;
     Color borderColor;
-    
+
     switch (variant) {
       case AlertVariant.info:
         backgroundColor = theme.cardColor;
@@ -57,10 +54,7 @@ class CustomAlert extends StatelessWidget {
         children: [
           if (icon != null) ...[
             IconTheme(
-              data: IconThemeData(
-                color: textColor,
-                size: 16,
-              ),
+              data: IconThemeData(color: textColor, size: 16),
               child: icon!,
             ),
             const SizedBox(width: 12),
@@ -82,7 +76,7 @@ class CustomAlert extends StatelessWidget {
                 if (description != null)
                   DefaultTextStyle(
                     style: theme.textTheme.bodySmall!.copyWith(
-                      color: variant == AlertVariant.destructive 
+                      color: variant == AlertVariant.destructive
                           ? textColor.withValues(alpha: 0.9)
                           : theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
@@ -101,11 +95,7 @@ class AlertTitle extends StatelessWidget {
   final String text;
   final TextStyle? style;
 
-  const AlertTitle({
-    super.key,
-    required this.text,
-    this.style,
-  });
+  const AlertTitle({super.key, required this.text, this.style});
 
   @override
   Widget build(BuildContext context) {
@@ -117,11 +107,7 @@ class AlertDescription extends StatelessWidget {
   final String text;
   final TextStyle? style;
 
-  const AlertDescription({
-    super.key,
-    required this.text,
-    this.style,
-  });
+  const AlertDescription({super.key, required this.text, this.style});
 
   @override
   Widget build(BuildContext context) {
