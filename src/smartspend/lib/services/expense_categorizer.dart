@@ -1,5 +1,3 @@
-import 'dart:math';
-
 class ExpenseCategorizer {
   static final ExpenseCategorizer _instance = ExpenseCategorizer._internal();
 
@@ -166,52 +164,6 @@ class ExpenseCategorizer {
       'venmo',
     ],
   };
-
-  // Get similarity score between two strings (0 to 1)
-  double _stringSimilarity(String a, String b) {
-    final aLower = a.toLowerCase();
-    final bLower = b.toLowerCase();
-
-    if (aLower == bLower) return 1.0;
-    if (aLower.contains(bLower) || bLower.contains(aLower)) return 0.8;
-
-    // Levenshtein distance based similarity
-    final distance = _levenshteinDistance(aLower, bLower);
-    final maxLength = max(aLower.length, bLower.length);
-    return 1.0 - (distance / maxLength);
-  }
-
-  // Levenshtein distance algorithm
-  int _levenshteinDistance(String a, String b) {
-    final aLength = a.length;
-    final bLength = b.length;
-    final distances = List<List<int>>.generate(
-      aLength + 1,
-      (i) => List<int>.filled(bLength + 1, 0),
-    );
-
-    for (var i = 0; i <= aLength; i++) {
-      distances[i][0] = i;
-    }
-    for (var j = 0; j <= bLength; j++) {
-      distances[0][j] = j;
-    }
-
-    for (var i = 1; i <= aLength; i++) {
-      for (var j = 1; j <= bLength; j++) {
-        final cost = a[i - 1] == b[j - 1] ? 0 : 1;
-        distances[i][j] = min(
-          min(
-            distances[i - 1][j] + 1,
-            distances[i][j - 1] + 1,
-          ),
-          distances[i - 1][j - 1] + cost,
-        );
-      }
-    }
-
-    return distances[aLength][bLength];
-  }
 
   /// Categorize expense based on description and merchant
   CategoryPrediction categorizeExpense({
