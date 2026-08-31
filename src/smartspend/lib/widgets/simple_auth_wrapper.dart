@@ -32,10 +32,6 @@ class _SimpleAuthWrapperState extends State<SimpleAuthWrapper> {
     }
   }
 
-  void _onAuthSuccess() {
-    // Auth state will be updated by the manager automatically
-  }
-
   @override
   Widget build(BuildContext context) {
     return AnimatedSwitcher(
@@ -45,13 +41,12 @@ class _SimpleAuthWrapperState extends State<SimpleAuthWrapper> {
   }
 
   Widget _buildCurrentScreen() {
-    // Check Firebase auth state
     if (_authManager.isAuthenticated) {
       return const BudgetApp(key: ValueKey('budget_app'));
     } else {
       return AuthScreen(
         key: const ValueKey('auth_screen'),
-        onAuthSuccess: _onAuthSuccess,
+        onAuthSuccess: () {},
       );
     }
   }

@@ -4,6 +4,7 @@ import '../../../models/budget_models.dart';
 import '../../../services/simple_auth_manager.dart';
 import '../../../services/budget_data_service.dart';
 import '../../../services/spending_recommendations_service.dart';
+import '../../../utils/constants.dart';
 import '../../../widgets/components/ui/input.dart';
 import '../../../widgets/add_transaction_dialog.dart';
 import '../../../widgets/spending_recommendations_widget.dart';
@@ -30,17 +31,17 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
   Map<String, String> tempBudgetValues = {};
 
   // Budget Data
-  double totalBudget = 1000;
+  double totalBudget = AppConstants.defaultTotalBudget;
   bool budgetEqualsIncome = false;
   List<Transaction> transactions = [];
   Map<String, CategoryData> categories = Map.from(defaultCategories);
   Map<String, Map<String, SubcategoryBudget>> categoryBudgets = {
-    'housing': {
-      'Rent': SubcategoryBudget(budgeted: 200, spent: 200),
-      'Gym': SubcategoryBudget(budgeted: 10, spent: 10),
+    AppConstants.housingCategory: {
+      'Rent': SubcategoryBudget(budgeted: AppConstants.defaultRentBudget, spent: AppConstants.defaultRentBudget),
+      'Gym': SubcategoryBudget(budgeted: AppConstants.defaultGymBudget, spent: AppConstants.defaultGymBudget),
     },
-    'food': {'Groceries': SubcategoryBudget(budgeted: 30, spent: 30)},
-    'savings': {'Savings': SubcategoryBudget(budgeted: 0, spent: 0)},
+    AppConstants.foodCategory: {'Groceries': SubcategoryBudget(budgeted: AppConstants.defaultGroceriesBudget, spent: AppConstants.defaultGroceriesBudget)},
+    AppConstants.savingsCategory: {'Savings': SubcategoryBudget(budgeted: AppConstants.defaultSavingsBudget, spent: AppConstants.defaultSavingsBudget)},
   };
 
   // Savings & Recommendations
@@ -92,7 +93,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _rotationController = AnimationController(
-      duration: const Duration(seconds: 20),
+      duration: AppConstants.rotationAnimationDuration,
       vsync: this,
     )..repeat();
     _loadUserBudgetData();
@@ -102,13 +103,13 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
   Future<void> _loadCardConnectionStatus() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _isCardConnected = prefs.getBool('bank_card_connected') ?? false;
+      _isCardConnected = prefs.getBool(AppConstants.bankCardConnectedKey) ?? false;
     });
   }
 
   Future<void> _saveCardConnectionStatus(bool connected) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('bank_card_connected', connected);
+    await prefs.setBool(AppConstants.bankCardConnectedKey, connected);
     setState(() {
       _isCardConnected = connected;
     });
@@ -297,7 +298,7 @@ class _BudgetAppState extends State<BudgetApp> with TickerProviderStateMixin {
                   ),
                   Expanded(
                     child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
+                      duration: AppConstants.screenTransitionDuration,
                       switchInCurve: Curves.easeInOut,
                       switchOutCurve: Curves.easeInOut,
                       transitionBuilder: (Widget child, Animation<double> animation) {
