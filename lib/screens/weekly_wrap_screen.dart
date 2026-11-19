@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/budget_models.dart';
+import '../widgets/wrap_slide_card.dart';
 
 class WeeklyWrapScreen extends StatefulWidget {
   final List<Transaction> transactions;
@@ -87,77 +88,26 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
     }
   }
 
+  // Slides [child] up from [dy] (and fades it in) in sync with the page-entry animations.
+  Widget _reveal(double dy, Widget child, {bool fade = true}) {
+    return SlideTransition(
+      position: Tween<Offset>(
+        begin: Offset(0, dy),
+        end: Offset.zero,
+      ).animate(_slideAnimation),
+      child: fade
+          ? FadeTransition(opacity: _textAnimation, child: child)
+          : child,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final weeklyTransactions = _getWeeklyTransactions();
-    
+
     // If no transactions, show a message and return
     if (weeklyTransactions.isEmpty) {
-      return Scaffold(
-        body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFFE3F2FD), Color(0xFFBBDEFB), Color(0xFF90CAF9)],
-            ),
-          ),
-          child: SafeArea(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.inbox,
-                    size: 80,
-                    color: Colors.white54,
-                  ),
-                  const SizedBox(height: 28),
-                  const Text(
-                    'No Transactions This Week',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Add some transactions to see\nyour weekly wrap',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.75),
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-                  GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 14,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF5B8DEF),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text(
-                        'Go Back',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
+      return const WrapEmptyState();
     }
 
     return Scaffold(
@@ -195,56 +145,34 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
     return _buildCard(
       index: 0,
       content: [
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.5),
-            end: Offset.zero,
-          ).animate(_slideAnimation),
-          child: FadeTransition(
-            opacity: _textAnimation,
-            child: const Icon(
-              Icons.auto_awesome,
-              size: 80,
-              color: Colors.white,
-            ),
-          ),
+        _reveal(
+          0.5,
+          const Icon(Icons.auto_awesome, size: 80, color: Colors.white),
         ),
         const SizedBox(height: 28),
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.3),
-            end: Offset.zero,
-          ).animate(_slideAnimation),
-          child: FadeTransition(
-            opacity: _textAnimation,
-            child: const Text(
-              'Your Weekly\nSpending Wrap',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 34,
-                fontWeight: FontWeight.bold,
-                height: 1.2,
-              ),
+        _reveal(
+          0.3,
+          const Text(
+            'Your Weekly\nSpending Wrap',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 34,
+              fontWeight: FontWeight.bold,
+              height: 1.2,
             ),
           ),
         ),
         const SizedBox(height: 14),
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.2),
-            end: Offset.zero,
-          ).animate(_slideAnimation),
-          child: FadeTransition(
-            opacity: _textAnimation,
-            child: Text(
-              'Let\'s see how you spent\nyour money this week',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.85),
-                fontSize: 18,
-                height: 1.35,
-              ),
+        _reveal(
+          0.2,
+          Text(
+            'Let\'s see how you spent\nyour money this week',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.85),
+              fontSize: 18,
+              height: 1.35,
             ),
           ),
         ),
@@ -258,88 +186,13 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
         .where((t) => t.type == TransactionType.expense)
         .fold<double>(0, (sum, t) => sum + t.amount);
 
-    return _buildCard(
+    return _statSlide(
       index: 1,
-      content: [
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.3),
-            end: Offset.zero,
-          ).animate(_slideAnimation),
-          child: FadeTransition(
-            opacity: _textAnimation,
-            child: Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
-              ),
-              child: const Center(
-                child: Text('💰', style: TextStyle(fontSize: 50)),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 28),
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.2),
-            end: Offset.zero,
-          ).animate(_slideAnimation),
-          child: const Text(
-            'Total Spent',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.1),
-            end: Offset.zero,
-          ).animate(_slideAnimation),
-          child: Text(
-            'This week you spent',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.85),
-              fontSize: 16,
-            ),
-          ),
-        ),
-        const SizedBox(height: 28),
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.3),
-            end: Offset.zero,
-          ).animate(_slideAnimation),
-          child: Text(
-            '${totalSpent.toStringAsFixed(0)} €',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 60,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.1),
-            end: Offset.zero,
-          ).animate(_slideAnimation),
-          child: Text(
-            '${weeklyTransactions.length} transactions',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.85),
-              fontSize: 16,
-            ),
-          ),
-        ),
-      ],
+      emoji: '💰',
+      title: 'Total Spent',
+      subtitle: 'This week you spent',
+      value: '${totalSpent.toStringAsFixed(0)} €',
+      caption: '${weeklyTransactions.length} transactions',
     );
   }
 
@@ -361,86 +214,91 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
       (a, b) => a.amount > b.amount ? a : b,
     );
 
-    return _buildCard(
+    return _statSlide(
       index: 2,
+      emoji: '💸',
+      title: 'Biggest Transaction',
+      subtitle: 'Your largest expense was',
+      value: '${biggestTransaction.amount.toStringAsFixed(0)} €',
+      caption: biggestTransaction.category,
+    );
+  }
+
+  // Shared layout of the "big number" slides: emoji badge, title, subtitle, value, caption.
+  Widget _statSlide({
+    required int index,
+    required String emoji,
+    required String title,
+    required String subtitle,
+    required String value,
+    required String caption,
+  }) {
+    return _buildCard(
+      index: index,
       content: [
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.3),
-            end: Offset.zero,
-          ).animate(_slideAnimation),
-          child: FadeTransition(
-            opacity: _textAnimation,
-            child: Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
-              ),
-              child: const Center(
-                child: Text('💸', style: TextStyle(fontSize: 50)),
-              ),
+        _reveal(
+          0.3,
+          Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(emoji, style: const TextStyle(fontSize: 50)),
             ),
           ),
         ),
         const SizedBox(height: 28),
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.2),
-            end: Offset.zero,
-          ).animate(_slideAnimation),
-          child: const Text(
-            'Biggest Transaction',
-            style: TextStyle(
+        _reveal(
+          0.2,
+          Text(
+            title,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 28,
               fontWeight: FontWeight.bold,
             ),
           ),
+          fade: false,
         ),
         const SizedBox(height: 12),
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.1),
-            end: Offset.zero,
-          ).animate(_slideAnimation),
-          child: Text(
-            'Your largest expense was',
+        _reveal(
+          0.1,
+          Text(
+            subtitle,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.85),
               fontSize: 16,
             ),
           ),
+          fade: false,
         ),
         const SizedBox(height: 28),
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.3),
-            end: Offset.zero,
-          ).animate(_slideAnimation),
-          child: Text(
-            '${biggestTransaction.amount.toStringAsFixed(0)} €',
+        _reveal(
+          0.3,
+          Text(
+            value,
             style: const TextStyle(
               color: Colors.white,
               fontSize: 60,
               fontWeight: FontWeight.bold,
             ),
           ),
+          fade: false,
         ),
         const SizedBox(height: 12),
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.1),
-            end: Offset.zero,
-          ).animate(_slideAnimation),
-          child: Text(
-            biggestTransaction.category,
+        _reveal(
+          0.1,
+          Text(
+            caption,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.85),
               fontSize: 16,
             ),
           ),
+          fade: false,
         ),
       ],
     );
@@ -480,52 +338,11 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
         .fold<double>(0, (sum, t) => sum + t.amount);
     final dailyAverage = totalSpent / 7;
 
-    return _buildCard(
+    return _numberSlide(
       index: 3,
-      content: [
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.3),
-            end: Offset.zero,
-          ).animate(_slideAnimation),
-          child: Text(
-            'Your daily average',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.85),
-              fontSize: 24,
-            ),
-          ),
-        ),
-        const SizedBox(height: 22),
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.5),
-            end: Offset.zero,
-          ).animate(_slideAnimation),
-          child: Text(
-            '€${dailyAverage.toStringAsFixed(0)}',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 60,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.2),
-            end: Offset.zero,
-          ).animate(_slideAnimation),
-          child: Text(
-            'per day this week',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.75),
-              fontSize: 18,
-            ),
-          ),
-        ),
-      ],
+      lead: 'Your daily average',
+      value: '€${dailyAverage.toStringAsFixed(0)}',
+      caption: 'per day this week',
     );
   }
 
@@ -537,50 +354,63 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
         .toSet()
         .length;
 
-    return _buildCard(
+    return _numberSlide(
       index: 4,
+      lead: 'You spent money on',
+      value: '$daysWithSpending',
+      caption: 'out of 7 days',
+      valueSize: 66,
+      captionGap: 10,
+    );
+  }
+
+  // Shared layout of the "lead-in, big number, caption" slides.
+  Widget _numberSlide({
+    required int index,
+    required String lead,
+    required String value,
+    required String caption,
+    double valueSize = 60,
+    double captionGap = 12,
+  }) {
+    return _buildCard(
+      index: index,
       content: [
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.3),
-            end: Offset.zero,
-          ).animate(_slideAnimation),
-          child: Text(
-            'You spent money on',
+        _reveal(
+          0.3,
+          Text(
+            lead,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.85),
               fontSize: 24,
             ),
           ),
+          fade: false,
         ),
         const SizedBox(height: 22),
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.5),
-            end: Offset.zero,
-          ).animate(_slideAnimation),
-          child: Text(
-            '$daysWithSpending',
-            style: const TextStyle(
+        _reveal(
+          0.5,
+          Text(
+            value,
+            style: TextStyle(
               color: Colors.white,
-              fontSize: 66,
+              fontSize: valueSize,
               fontWeight: FontWeight.bold,
             ),
           ),
+          fade: false,
         ),
-        const SizedBox(height: 10),
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.2),
-            end: Offset.zero,
-          ).animate(_slideAnimation),
-          child: Text(
-            'out of 7 days',
+        SizedBox(height: captionGap),
+        _reveal(
+          0.2,
+          Text(
+            caption,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.75),
               fontSize: 18,
             ),
           ),
+          fade: false,
         ),
       ],
     );
@@ -591,20 +421,15 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
       index: 5,
       isLast: true,
       content: [
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.3),
-            end: Offset.zero,
-          ).animate(_slideAnimation),
-          child: const Icon(Icons.celebration, size: 80, color: Colors.white),
+        _reveal(
+          0.3,
+          const Icon(Icons.celebration, size: 80, color: Colors.white),
+          fade: false,
         ),
         const SizedBox(height: 28),
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.2),
-            end: Offset.zero,
-          ).animate(_slideAnimation),
-          child: const Text(
+        _reveal(
+          0.2,
+          const Text(
             'Great job tracking\nyour spending!',
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -614,14 +439,12 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
               height: 1.2,
             ),
           ),
+          fade: false,
         ),
         const SizedBox(height: 12),
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.1),
-            end: Offset.zero,
-          ).animate(_slideAnimation),
-          child: Text(
+        _reveal(
+          0.1,
+          Text(
             'Keep it up and reach\nyour financial goals',
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -630,179 +453,45 @@ class _WeeklyWrapScreenState extends State<WeeklyWrapScreen>
               height: 1.35,
             ),
           ),
+          fade: false,
         ),
       ],
     );
   }
 
+  // Monday 00:00 up to (not including) next Monday 00:00. Built from calendar
+  // fields rather than subtracting Durations so DST changes can't shift the day.
   List<Transaction> _getWeeklyTransactions() {
     final now = DateTime.now();
-    final weekStart = now.subtract(Duration(days: now.weekday - 1));
-    final weekEnd = weekStart.add(const Duration(days: 6));
-
-    return widget.transactions.where((transaction) {
-      final transactionDate = DateTime(
-        transaction.date.year,
-        transaction.date.month,
-        transaction.date.day,
-      );
-      final weekStartDate = DateTime(
-        weekStart.year,
-        weekStart.month,
-        weekStart.day,
-      );
-      final weekEndDate = DateTime(weekEnd.year, weekEnd.month, weekEnd.day);
-
-      return transactionDate.isAfter(
-            weekStartDate.subtract(const Duration(days: 1)),
-          ) &&
-          transactionDate.isBefore(weekEndDate.add(const Duration(days: 1)));
-    }).toList();
+    final weekStart = DateTime(
+      now.year,
+      now.month,
+      now.day - (now.weekday - 1),
+    );
+    final nextWeekStart = DateTime(
+      weekStart.year,
+      weekStart.month,
+      weekStart.day + 7,
+    );
+    return widget.transactions
+        .where(
+          (t) => !t.date.isBefore(weekStart) && t.date.isBefore(nextWeekStart),
+        )
+        .toList();
   }
 
-  // Shared gradient card providing consistent layout + scroll safety
   Widget _buildCard({
     required int index,
     required List<Widget> content,
     bool isLast = false,
   }) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Container(
-          margin: const EdgeInsets.all(20),
-          padding: const EdgeInsets.all(24),
-          width: double.infinity,
-          decoration: BoxDecoration(
-            gradient: _buildGenZGradient(index),
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Column(
-            children: [
-              Align(
-                alignment: Alignment.topRight,
-                child: GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
-                  child: Icon(
-                    Icons.close,
-                    color: Colors.white.withValues(alpha: 0.85),
-                    size: 24,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Expanded(
-                child: SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: constraints.maxHeight - 24 - 24 - 80,
-                    ),
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: content,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: isLast
-                      ? () => Navigator.of(context).pop()
-                      : _nextPage,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black.withValues(alpha: 0.28),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    isLast ? 'Back to Overview' : 'Continue',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 14),
-              _buildIndicators(),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  // Gen Z vibrant gradients per page
-  LinearGradient _buildGenZGradient(int index) {
-    switch (index) {
-      case 0:
-        return const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF7F5AF0), Color(0xFFFF7AC3), Color(0xFF00D1FF)],
-        );
-      case 1:
-        return const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFFFA07A), Color(0xFFFF6FB2), Color(0xFF8E44AD)],
-        );
-      case 2:
-        return const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF9CFF2E), Color(0xFF00E5A8), Color(0xFF00A3FF)],
-        );
-      case 3:
-        return const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFFFD1A0), Color(0xFFFF8FB1), Color(0xFFB388FF)],
-        );
-      case 4:
-        return const LinearGradient(
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-          colors: [Color(0xFF00C2FF), Color(0xFF6C5CE7), Color(0xFFE84393)],
-        );
-      case 5:
-      default:
-        return const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF7AE582), Color(0xFFC084FC), Color(0xFFFF75C3)],
-        );
-    }
-  }
-
-  // Unified page indicators
-  Widget _buildIndicators() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(_totalPages, (index) {
-        final isActive = _currentPage == index;
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          width: isActive ? 24 : 8,
-          height: 4,
-          decoration: BoxDecoration(
-            color: isActive
-                ? Color(0xFF1565C0)
-                : Color(0xFF1565C0).withValues(alpha: 0.35),
-            borderRadius: BorderRadius.circular(2),
-          ),
-        );
-      }),
+    return WrapSlideCard(
+      index: index,
+      content: content,
+      isLast: isLast,
+      currentPage: _currentPage,
+      totalPages: _totalPages,
+      onNext: _nextPage,
     );
   }
 }

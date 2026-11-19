@@ -1,38 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../models/budget_models.dart';
-import '../../weekly_wrap_screen.dart';
-import '../../../widgets/savings_goal_card.dart';
-import '../../../widgets/goal_dialogs.dart';
-
-// PERFORMANCE: Pre-define transparent colors to avoid runtime alpha calculations
-class _PerformanceColors {
-  // Replace: Colors.white.withValues(alpha: 0.05)
-  static const white05 = Color(0x0DFFFFFF);
-  // Replace: Colors.white.withValues(alpha: 0.1)
-  static const white10 = Color(0x1AFFFFFF);
-  // Replace: Colors.white.withValues(alpha: 0.2)
-  static const white20 = Color(0x33FFFFFF);
-  // Replace: Colors.white.withValues(alpha: 0.3)
-  static const white30 = Color(0x4DFFFFFF);
-  // Replace: Colors.white.withValues(alpha: 0.5)
-  static const white50 = Color(0x80FFFFFF);
-  // Replace: Colors.white.withValues(alpha: 0.6)
-  static const white60 = Color(0x99FFFFFF);
-  // Replace: Colors.white.withValues(alpha: 0.8)
-  static const white80 = Color(0xCCFFFFFF);
-  // Replace: Colors.white.withValues(alpha: 0.9)
-  static const white90 = Color(0xE6FFFFFF);
-
-  // Replace: Colors.black.withValues(alpha: 0.3)
-  static const black30 = Color(0x4D000000);
-
-  // Replace: Color(0xFF2A3B5C).withValues(alpha: 0.8)
-  static const surfaceDark80 = Color(0xCC2A3B5C);
-  // Replace: Color(0xFF1A1F3A).withValues(alpha: 0.8)
-  static const background80 = Color(0xCC1A1F3A);
-  // Replace: Color(0xFF1A1F3A).withValues(alpha: 0.5)
-  static const background50 = Color(0x801A1F3A);
-}
+import 'overview_colors.dart';
+import 'transactions_month_view.dart';
+import 'savings_goals_section.dart';
+import 'weekly_insights_card.dart';
 
 class WalletOverviewContent extends StatefulWidget {
   final List<Transaction>? transactions;
@@ -137,7 +108,6 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
     // PERFORMANCE: Wrap static button in RepaintBoundary
     // Commented out - Transactions now have a dedicated tab in bottom navigation
     return const SizedBox.shrink();
-
   }
 
   Widget _buildPersonalWalletCard() {
@@ -196,11 +166,10 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
             width: double.infinity,
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color:
-                  _PerformanceColors.surfaceDark80, // PERFORMANCE: Pre-computed
+              color: OverviewColors.surfaceDark80, // PERFORMANCE: Pre-computed
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: _PerformanceColors.white10,
+                color: OverviewColors.white10,
               ), // PERFORMANCE: Pre-computed
             ),
             child: Column(
@@ -213,7 +182,7 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
                         text: '${leftToSpend.abs().toStringAsFixed(0)} € ',
                         style: TextStyle(
                           color: leftToSpend < 0
-                                ? Colors.red
+                              ? Colors.red
                               : const Color(0xFF4CAF50),
                           fontSize: 28,
                           fontWeight: FontWeight.w700,
@@ -221,15 +190,13 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
                       ),
                       TextSpan(
                         text: leftToSpend < 0
-                              ? 'budget exceeded'
-                              : 'left to spend',
-                          style: TextStyle(
-                            color: leftToSpend < 0
-                                ? Colors.red
-                                : Colors.white,
-                            fontSize: 28,
-                            fontWeight: FontWeight.w700,
-                          ),
+                            ? 'budget exceeded'
+                            : 'left to spend',
+                        style: TextStyle(
+                          color: leftToSpend < 0 ? Colors.red : Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ],
                   ),
@@ -255,7 +222,7 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
       child: Container(
         height: 60,
         decoration: const BoxDecoration(
-          color: _PerformanceColors.background80, // PERFORMANCE: Pre-computed
+          color: OverviewColors.background80, // PERFORMANCE: Pre-computed
           borderRadius: BorderRadius.all(Radius.circular(12)),
         ),
         child: Stack(
@@ -264,8 +231,7 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
               width: double.infinity,
               height: 60,
               decoration: const BoxDecoration(
-                color: _PerformanceColors
-                    .background50, // PERFORMANCE: Pre-computed
+                color: OverviewColors.background50, // PERFORMANCE: Pre-computed
                 borderRadius: BorderRadius.all(Radius.circular(12)),
               ),
             ),
@@ -274,11 +240,12 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
               child: Container(
                 height: 60,
                 decoration: BoxDecoration(
-                    color: percentage > 100
-                        ? Colors.red // Red - over budget
-                        : percentage > 80
-                        ? const Color(0xFFFF9800) // Orange - warning
-                        : const Color(0xFF4CAF50), // Green - under budget
+                  color: percentage > 100
+                      ? Colors
+                            .red // Red - over budget
+                      : percentage > 80
+                      ? const Color(0xFFFF9800) // Orange - warning
+                      : const Color(0xFF4CAF50), // Green - under budget
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
@@ -317,12 +284,12 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
         _buildSummaryItem(
           incomeLabel,
           '${incomeAmountValue.toStringAsFixed(0)}€',
-            const Color(0xFF4CAF50),
+          const Color(0xFF4CAF50),
         ),
         _buildSummaryItem(
           'EXPENSES',
           '${totalExpenses.toStringAsFixed(0)}€',
-            Colors.red,
+          Colors.red,
         ),
       ],
     );
@@ -337,7 +304,7 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
           Text(
             label,
             style: const TextStyle(
-              color: _PerformanceColors.white60, // PERFORMANCE: Pre-computed
+              color: OverviewColors.white60, // PERFORMANCE: Pre-computed
               fontSize: 10,
               fontWeight: FontWeight.w600,
               letterSpacing: 1.0,
@@ -374,508 +341,22 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
         offset: Offset(0, _slideAnimation.value * 1.5),
         child: FadeTransition(
           opacity: _fadeAnimation,
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: const BoxDecoration(
-              color: Color(
-                0xFF2A3B5C,
-              ), // Use same surface color as other cards for consistency
-              borderRadius: BorderRadius.all(Radius.circular(20)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Row(
-                  children: [
-                    Icon(Icons.insights, color: Colors.white, size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      'WEEKLY INSIGHTS',
-                      style: TextStyle(
-                        color: _PerformanceColors
-                            .white90, // PERFORMANCE: Pre-computed
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Your spending\nlast week',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    height: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Here\'s your breakdown',
-                  style: TextStyle(
-                    color:
-                        _PerformanceColors.white80, // PERFORMANCE: Pre-computed
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                const SizedBox(height: 16),
-                // View Weekly Wrap Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => _showWeeklyWrap(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF5B8DEF),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 2,
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.auto_awesome, size: 20),
-                        SizedBox(width: 8),
-                        Text(
-                          'View My Weekly Wrap',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          child: WeeklyInsightsCard(
+            transactions: widget.transactions ?? [],
+            categories: widget.categories ?? {},
           ),
         ),
       ),
     );
   }
-
-  void _showWeeklyWrap() {
-    final transactions = widget.transactions ?? [];
-
-    // Check if there are any transactions
-    if (transactions.isEmpty) {
-      _showNoTransactionsDialog();
-      return;
-    }
-
-    Navigator.of(context).push(
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            WeeklyWrapScreen(
-              transactions: transactions,
-              categories: widget.categories ?? {},
-            ),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          const begin = Offset(0.0, 1.0);
-          const end = Offset.zero;
-          const curve = Curves.easeInOutCubic;
-
-          var tween = Tween(
-            begin: begin,
-            end: end,
-          ).chain(CurveTween(curve: curve));
-          var offsetAnimation = animation.drive(tween);
-
-          return SlideTransition(position: offsetAnimation, child: child);
-        },
-        transitionDuration: const Duration(milliseconds: 600),
-      ),
-    );
-  }
-
-  void _showNoTransactionsDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          margin: const EdgeInsets.all(20),
-          padding: const EdgeInsets.all(32),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFFE1A3E8), Color(0xFFD896E0), Color(0xFFCF89D8)],
-            ),
-            borderRadius: BorderRadius.circular(24),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Close button
-              Align(
-                alignment: Alignment.topRight,
-                child: GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
-                  child: const Icon(
-                    Icons.close,
-                    color: _PerformanceColors.white80,
-                    size: 24,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Empty wallet icon
-              Container(
-                width: 80,
-                height: 80,
-                decoration: const BoxDecoration(
-                  color: _PerformanceColors.white20,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.account_balance_wallet_outlined,
-                  size: 40,
-                  color: Colors.white,
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              // Title
-              const Text(
-                'No Transactions Yet',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Subtitle
-              const Text(
-                'Start spending to see your\nweekly insights',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: _PerformanceColors.white80,
-                  fontSize: 16,
-                  height: 1.4,
-                ),
-              ),
-
-              const SizedBox(height: 32),
-
-              // Continue button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _PerformanceColors.black30,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                  ),
-                  child: const Text(
-                    'Got it',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-
 
   Widget _buildSavingsGoalsSection() {
-    final goals = widget.savingsGoals ?? [];
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Color(0xFF2A3B5C),
-        borderRadius: BorderRadius.all(Radius.circular(20)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Row(
-                children: [
-                  Icon(Icons.savings, color: Colors.white, size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    'SAVINGS GOALS',
-                    style: TextStyle(
-                      color: _PerformanceColors.white90,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ],
-              ),
-              GestureDetector(
-                onTap: () {
-                  if (widget.onGoalCreated != null) {
-                    showCreateGoalDialog(context, widget.onGoalCreated!);
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2A3B5C),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: const Color(0xFF5B8DEF),
-                      width: 2,
-                    ),
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.add, color: Color(0xFF5B8DEF), size: 18),
-                      SizedBox(width: 4),
-                      Text(
-                        'New Goal',
-                        style: TextStyle(
-                          color: Color(0xFF5B8DEF),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          if (goals.isEmpty)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(32),
-              decoration: BoxDecoration(
-                color: _PerformanceColors.white05,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: _PerformanceColors.white10),
-              ),
-              child: Column(
-                children: [
-                  const Icon(
-                    Icons.track_changes,
-                    size: 48,
-                    color: _PerformanceColors.white30,
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'No Goals Yet',
-                    style: TextStyle(
-                      color: _PerformanceColors.white80,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Create a savings goal to start tracking',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: _PerformanceColors.white50,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else
-            SizedBox(
-              height: 300,
-              child: PageView.builder(
-                itemCount: goals.length,
-                padEnds: false,
-                controller: PageController(viewportFraction: 0.9),
-                itemBuilder: (context, index) {
-                  final goal = goals[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 12),
-                    child: SavingsGoalCard(
-                      goal: goal,
-                      onTap: () {
-                        showModalBottomSheet(
-                          context: context,
-                          backgroundColor: Colors.transparent,
-                          builder: (ctx) {
-                            return Container(
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF1A1F33),
-                                borderRadius: BorderRadius.vertical(
-                                  top: Radius.circular(16),
-                                ),
-                                border: Border.fromBorderSide(
-                                  BorderSide(color: _PerformanceColors.white10),
-                                ),
-                              ),
-                              child: SafeArea(
-                                top: false,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    ListTile(
-                                      leading: const Icon(
-                                        Icons.add_circle_outline,
-                                        color: Colors.white,
-                                      ),
-                                      title: const Text(
-                                        'Add Money',
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                                      onTap: () {
-                                        Navigator.pop(ctx);
-                                        showAddMoneyDialog(context, goal, (
-                                          amount,
-                                        ) {
-                                          final updatedGoal = goal;
-                                          updatedGoal.currentAmount += amount;
-                                          widget.onGoalUpdated?.call(
-                                            updatedGoal,
-                                          );
-                                          if (widget.onTransactionAdded !=
-                                              null) {
-                                            final transaction = Transaction(
-                                              id: DateTime.now()
-                                                  .millisecondsSinceEpoch
-                                                  .toString(),
-                                              type: TransactionType.expense,
-                                              amount: amount,
-                                              category: 'Savings',
-                                              categoryKey: 'savings',
-                                              note: 'Saved for ${goal.name}',
-                                              date: DateTime.now(),
-                                              excludeFromBudget: true,
-                                              description:
-                                                  'Added to savings goal: ${goal.name}',
-                                            );
-                                            widget.onTransactionAdded?.call(
-                                              transaction,
-                                            );
-                                          }
-                                        });
-                                      },
-                                    ),
-                                    ListTile(
-                                      leading: const Icon(
-                                        Icons.edit,
-                                        color: Colors.white,
-                                      ),
-                                      title: const Text(
-                                        'Edit Goal',
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                                      onTap: () {
-                                        Navigator.pop(ctx);
-                                        showEditGoalDialog(
-                                          context,
-                                          goal,
-                                          onGoalUpdated: (g) =>
-                                              widget.onGoalUpdated?.call(g),
-                                          onGoalDeleted: () =>
-                                              widget.onGoalDeleted?.call(goal),
-                                        );
-                                      },
-                                    ),
-                                    ListTile(
-                                      leading: const Icon(
-                                        Icons.delete,
-                                        color: Color(0xFFFF4D67),
-                                      ),
-                                      title: const Text(
-                                        'Delete Goal',
-                                        style: TextStyle(
-                                          color: Color(0xFFFF4D67),
-                                        ),
-                                      ),
-                                      onTap: () {
-                                        Navigator.pop(ctx);
-                                        showEditGoalDialog(
-                                          context,
-                                          goal,
-                                          onGoalUpdated: (g) =>
-                                              widget.onGoalUpdated?.call(g),
-                                          onGoalDeleted: () =>
-                                              widget.onGoalDeleted?.call(goal),
-                                        );
-                                      },
-                                    ),
-                                    const SizedBox(height: 8),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                      onAddMoney: () {
-                        showAddMoneyDialog(context, goal, (amount) {
-                          // Update the goal
-                          final updatedGoal = goal;
-                          updatedGoal.currentAmount += amount;
-                          widget.onGoalUpdated?.call(updatedGoal);
-
-                          // Create a transaction for the savings
-                          if (widget.onTransactionAdded != null) {
-                            final transaction = Transaction(
-                              id: DateTime.now().millisecondsSinceEpoch
-                                  .toString(),
-                              type: TransactionType.expense,
-                              amount: amount,
-                              category: 'Savings',
-                              categoryKey: 'savings',
-                              note: 'Saved for ${goal.name}',
-                              date: DateTime.now(),
-                              excludeFromBudget:
-                                  true, // Don't count towards budget
-                              description:
-                                  'Added to savings goal: ${goal.name}',
-                            );
-                            widget.onTransactionAdded?.call(transaction);
-                          }
-
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Added €${amount.toStringAsFixed(0)} to ${goal.name}',
-                              ),
-                              backgroundColor: const Color(0xFF4CAF50),
-                            ),
-                          );
-                        });
-                      },
-                    ),
-                  );
-                },
-              ),
-            ),
-        ],
-      ),
+    return SavingsGoalsSection(
+      goals: widget.savingsGoals ?? [],
+      onGoalCreated: widget.onGoalCreated,
+      onGoalUpdated: widget.onGoalUpdated,
+      onGoalDeleted: widget.onGoalDeleted,
+      onTransactionAdded: widget.onTransactionAdded,
     );
   }
 
@@ -909,19 +390,12 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
         decoration: BoxDecoration(
           color: Colors.transparent,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: const Color(0xFF5B8DEF),
-            width: 2,
-          ),
+          border: Border.all(color: const Color(0xFF5B8DEF), width: 2),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.receipt_long,
-              color: Color(0xFF5B8DEF),
-              size: 20,
-            ),
+            const Icon(Icons.receipt_long, color: Color(0xFF5B8DEF), size: 20),
             const SizedBox(width: 12),
             const Text(
               'VIEW ALL TRANSACTIONS',
@@ -940,7 +414,7 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
 
   void _showAllTransactions() {
     final transactions = widget.transactions ?? [];
-    
+
     if (transactions.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -953,7 +427,7 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
 
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => _TransactionsMonthView(
+        builder: (context) => TransactionsMonthView(
           transactions: transactions,
           categories: widget.categories,
           onTransactionEdit: widget.onTransactionEdit,
@@ -970,466 +444,6 @@ class _WalletOverviewContentState extends State<WalletOverviewContent>
       });
       widget.tabNotifier?.value = 0;
       widget.onListStateChanged?.call(false);
-    }
-  }
-}
-
-// New full-screen month view with swipe navigation
-class _TransactionsMonthView extends StatefulWidget {
-  final List<Transaction> transactions;
-  final Map<String, CategoryData>? categories;
-  final Function(Transaction)? onTransactionEdit;
-
-  const _TransactionsMonthView({
-    required this.transactions,
-    this.categories,
-    this.onTransactionEdit,
-  });
-
-  @override
-  State<_TransactionsMonthView> createState() => _TransactionsMonthViewState();
-}
-
-class _TransactionsMonthViewState extends State<_TransactionsMonthView> {
-  late PageController _pageController;
-  late List<DateTime> _monthsList;
-  late int _currentMonthIndex;
-
-  @override
-  void initState() {
-    super.initState();
-    _monthsList = _generateMonthsList();
-    
-    // Find current month index
-    final now = DateTime.now();
-    _currentMonthIndex = _monthsList.indexWhere(
-      (month) => month.year == now.year && month.month == now.month,
-    );
-    if (_currentMonthIndex == -1) _currentMonthIndex = 0;
-    
-    _pageController = PageController(initialPage: _currentMonthIndex);
-  }
-
-  List<DateTime> _generateMonthsList() {
-    if (widget.transactions.isEmpty) {
-      return [DateTime.now()];
-    }
-
-    // Find earliest and latest transaction dates
-    DateTime earliest = widget.transactions.first.date;
-    DateTime latest = widget.transactions.first.date;
-    
-    for (final transaction in widget.transactions) {
-      if (transaction.date.isBefore(earliest)) earliest = transaction.date;
-      if (transaction.date.isAfter(latest)) latest = transaction.date;
-    }
-
-    // Include current month even if no transactions
-    final now = DateTime.now();
-    if (latest.isBefore(now)) latest = now;
-
-    // Generate list of months from earliest to latest
-    final List<DateTime> months = [];
-    DateTime current = DateTime(earliest.year, earliest.month);
-    final end = DateTime(latest.year, latest.month);
-
-    while (!current.isAfter(end)) {
-      months.add(current);
-      current = DateTime(current.year, current.month + 1);
-    }
-
-    // Reverse so newest months come first
-    return months.reversed.toList();
-  }
-
-  List<Transaction> _getTransactionsForMonth(DateTime month) {
-    return widget.transactions.where((transaction) {
-      return transaction.date.year == month.year &&
-          transaction.date.month == month.month;
-    }).toList()
-      ..sort((a, b) => b.date.compareTo(a.date));
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0A0E1A),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF1A1F3A),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: const Text(
-          'All Transactions',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          _buildMonthNavigationHeader(),
-          Expanded(
-            child: PageView.builder(
-              controller: _pageController,
-              reverse: true,
-              onPageChanged: (index) {
-                setState(() {
-                  _currentMonthIndex = index;
-                });
-              },
-              itemCount: _monthsList.length,
-              itemBuilder: (context, index) {
-                final month = _monthsList[index];
-                final transactions = _getTransactionsForMonth(month);
-                return _buildMonthTransactions(month, transactions);
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMonthNavigationHeader() {
-    final currentMonth = _monthsList[_currentMonthIndex];
-    final monthName = _getMonthName(currentMonth.month);
-    final year = currentMonth.year;
-    final canGoPrevious = _currentMonthIndex > 0;
-    final canGoNext = _currentMonthIndex < _monthsList.length - 1;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      decoration: const BoxDecoration(
-        color: Color(0xFF1A1F3A),
-        border: Border(
-          bottom: BorderSide(
-            color: _PerformanceColors.white10,
-            width: 1,
-          ),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          IconButton(
-            onPressed: canGoPrevious
-                ? () {
-                    _pageController.nextPage(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                    );
-                  }
-                : null,
-            icon: Icon(
-              Icons.chevron_left,
-              color: canGoPrevious
-                  ? const Color(0xFF5B8DEF)
-                  : _PerformanceColors.white30,
-              size: 32,
-            ),
-          ),
-          Expanded(
-            child: GestureDetector(
-              onTap: () {
-                // Could show month picker here
-              },
-              child: Column(
-                children: [
-                  Text(
-                    monthName,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    year.toString(),
-                    style: const TextStyle(
-                      color: _PerformanceColors.white60,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          IconButton(
-            onPressed: canGoNext
-                ? () {
-                    _pageController.previousPage(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                    );
-                  }
-                : null,
-            icon: Icon(
-              Icons.chevron_right,
-              color: canGoNext
-                  ? const Color(0xFF5B8DEF)
-                  : _PerformanceColors.white30,
-              size: 32,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMonthTransactions(DateTime month, List<Transaction> transactions) {
-    if (transactions.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.inbox_outlined,
-              size: 64,
-              color: _PerformanceColors.white30,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No transactions this month',
-              style: TextStyle(
-                color: _PerformanceColors.white60,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Swipe left or right to view other months',
-              style: TextStyle(
-                color: _PerformanceColors.white50,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // Calculate monthly totals
-    double totalIncome = 0;
-    double totalExpenses = 0;
-    for (final transaction in transactions) {
-      if (transaction.type == TransactionType.income) {
-        totalIncome += transaction.amount;
-      } else if (transaction.type == TransactionType.expense) {
-        totalExpenses += transaction.amount;
-      }
-    }
-
-    return ListView(
-      padding: const EdgeInsets.all(20),
-      children: [
-        // Monthly summary
-        Row(
-          children: [
-            Expanded(
-              child: _buildMonthlySummaryCard(
-                'Income',
-                totalIncome,
-                const Color(0xFF4CAF50),
-                Icons.arrow_downward,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildMonthlySummaryCard(
-                'Expenses',
-                totalExpenses,
-                Colors.red,
-                Icons.arrow_upward,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
-        
-        // Transaction count
-        Padding(
-          padding: const EdgeInsets.only(bottom: 16),
-          child: Text(
-            '${transactions.length} transaction${transactions.length != 1 ? 's' : ''}',
-            style: const TextStyle(
-              color: _PerformanceColors.white60,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-
-        // Transactions list
-        ...transactions.map((transaction) => _buildTransactionItem(transaction)),
-      ],
-    );
-  }
-
-  Widget _buildMonthlySummaryCard(
-    String title,
-    double amount,
-    Color color,
-    IconData icon,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF2A3B5C),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withValues(alpha: 0.3),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: color, size: 16),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: TextStyle(
-                  color: _PerformanceColors.white60,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '€${amount.toStringAsFixed(2)}',
-            style: TextStyle(
-              color: color,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTransactionItem(Transaction transaction) {
-    final category = widget.categories?[transaction.categoryKey];
-    final isIncome = transaction.type == TransactionType.income;
-    
-    return GestureDetector(
-      onTap: () {
-        Navigator.pop(context);
-        widget.onTransactionEdit?.call(transaction);
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFF2A3B5C),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: (category?.solidColor ?? Colors.grey).withValues(alpha: 0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  category?.icon ?? '💰',
-                  style: const TextStyle(fontSize: 20),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    transaction.category,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  if (transaction.note.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        transaction.note,
-                        style: const TextStyle(
-                          color: _PerformanceColors.white60,
-                          fontSize: 12,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      _formatDate(transaction.date),
-                      style: const TextStyle(
-                        color: _PerformanceColors.white50,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Text(
-              '${isIncome ? '+' : '-'}€${transaction.amount.toStringAsFixed(2)}',
-              style: TextStyle(
-                color: isIncome ? const Color(0xFF4CAF50) : Colors.red,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _getMonthName(int month) {
-    const monthNames = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
-    ];
-    return monthNames[month - 1];
-  }
-
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
-    final transactionDate = DateTime(date.year, date.month, date.day);
-
-    if (transactionDate == today) {
-      return 'Today';
-    } else if (transactionDate == yesterday) {
-      return 'Yesterday';
-    } else {
-      return '${date.day} ${_getMonthName(date.month).substring(0, 3)}';
     }
   }
 }

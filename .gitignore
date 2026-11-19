@@ -54,3 +54,16 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# OS / editor / tooling junk
+Thumbs.db
+.snapshots/
+
+# Secrets and AI assistant scaffolding
+.env
+.env.*
+CLAUDE.md
+AGENTS.md
+
+# Course reports contain student IDs and participant data; keep them out of the repo
+*.pdf

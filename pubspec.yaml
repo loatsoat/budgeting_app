@@ -1,5 +1,5 @@
 name: hci_app
-description: "A new Flutter project."
+description: "Offline-first personal budgeting app with savings goals, spending insights and live exchange rates."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -47,15 +47,6 @@ dependencies:
   # HTTP Requests for external API
   http: ^1.1.0
   
-  # Machine Learning
-  google_ml_kit: ^0.17.0
-  tflite_flutter: ^0.10.0
-  
-  # Charts for analytics
-  fl_chart: ^0.68.0
-  
-  # Data science and statistics
-  stats: ^3.0.0
 
 dev_dependencies:
   flutter_test:
