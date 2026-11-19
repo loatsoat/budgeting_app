@@ -69,7 +69,7 @@ class BudgetHeader extends StatelessWidget {
                 shape: BoxShape.circle,
                 color: const Color(0xFF2A3B5C), // Solid subtle background
                 border: Border.all(
-                  color: const Color(0xFF5B8DEF).withOpacity(0.3),
+                  color: const Color(0xFF5B8DEF).withValues(alpha: 0.3),
                   width: 1.5,
                 ),
               ),

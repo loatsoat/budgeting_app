@@ -8,12 +8,12 @@ class CategorySuggestionWidget extends StatefulWidget {
   final String? initialCategory;
 
   const CategorySuggestionWidget({
-    Key? key,
+    super.key,
     required this.description,
     this.merchantName,
     required this.onCategorySelected,
     this.initialCategory,
-  }) : super(key: key);
+  });
 
   @override
   State<CategorySuggestionWidget> createState() =>
@@ -88,7 +88,7 @@ class _CategorySuggestionWidgetState extends State<CategorySuggestionWidget> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _getConfidenceColor().withOpacity(0.2),
+                    color: _getConfidenceColor().withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(

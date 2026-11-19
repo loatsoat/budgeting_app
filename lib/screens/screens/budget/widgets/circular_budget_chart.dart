@@ -80,7 +80,7 @@ class CircularBudgetChart extends StatelessWidget {
                       budgetLeft < 0 ? 'budget exceeded' : 'left to spend',
                       style: TextStyle(
                         color: budgetLeft < 0
-                            ? const Color(0xFFDC3545).withOpacity(0.7)
+                            ? const Color(0xFFDC3545).withValues(alpha: 0.7)
                             : Colors.white70,
                         fontSize: 14,
                       ),

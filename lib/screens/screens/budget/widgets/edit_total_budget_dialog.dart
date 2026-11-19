@@ -129,7 +129,7 @@ void showEditTotalBudgetDialog(
                             }
                           });
                         },
-                        activeColor: const Color(0xFF0D47A1),
+                        activeThumbColor: const Color(0xFF0D47A1),
                         activeTrackColor: const Color(
                           0xFF0D47A1,
                         ).withValues(alpha: 0.5),
