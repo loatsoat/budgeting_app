@@ -176,6 +176,3 @@ The sample sizes are small (course scope), so these are directional findings, no
 
 HCI WS 25/26, Group 04. See the commit history for individual contributions.
 
-## License
-
-[MIT](LICENSE)
