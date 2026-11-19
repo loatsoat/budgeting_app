@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hci_app/models/budget_models.dart';
-import 'package:hci_app/services/budget_ledger.dart';
+import 'package:smartspend/models/budget_models.dart';
+import 'package:smartspend/services/budget_ledger.dart';
 
 Transaction tx(
   String id, {

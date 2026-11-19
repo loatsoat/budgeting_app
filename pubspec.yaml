@@ -1,4 +1,4 @@
-name: hci_app
+name: smartspend
 description: "Offline-first personal budgeting app with savings goals, spending insights and live exchange rates."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.

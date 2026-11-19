@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hci_app/services/expense_categorizer.dart';
+import 'package:smartspend/services/expense_categorizer.dart';
 
 void main() {
   group('ExpenseCategorizer', () {
